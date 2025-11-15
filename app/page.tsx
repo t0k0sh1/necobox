@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Lock, Globe, Type, Dices } from "lucide-react";
+import { Lock, Globe, Type, Dices, Image } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -41,6 +41,15 @@ export default function Home() {
             >
               <Dices className="w-10 h-10" />
               <span className="text-sm">Random Integer Generator</span>
+            </Button>
+          </Link>
+          <Link href="/image-resizer" className="block">
+            <Button
+              variant="outline"
+              className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
+            >
+              <Image className="w-10 h-10" />
+              <span className="text-sm">Image Resizer</span>
             </Button>
           </Link>
         </div>
