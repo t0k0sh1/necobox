@@ -16,13 +16,13 @@ export default function Home() {
               <span className="text-sm">Password Generator</span>
             </Button>
           </Link>
-          <Link href="/show-gip" className="block">
+          <Link href="/random-integer" className="block">
             <Button
               variant="outline"
               className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
             >
-              <Globe className="w-10 h-10" />
-              <span className="text-sm">Show Global IP</span>
+              <Dices className="w-10 h-10" />
+              <span className="text-sm">Random Integer Generator</span>
             </Button>
           </Link>
           <Link href="/dummy-text" className="block">
@@ -34,13 +34,13 @@ export default function Home() {
               <span className="text-sm">Dummy Text Generator</span>
             </Button>
           </Link>
-          <Link href="/random-integer" className="block">
+          <Link href="/show-gip" className="block">
             <Button
               variant="outline"
               className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
             >
-              <Dices className="w-10 h-10" />
-              <span className="text-sm">Random Integer Generator</span>
+              <Globe className="w-10 h-10" />
+              <span className="text-sm">Show Global IP</span>
             </Button>
           </Link>
         </div>
