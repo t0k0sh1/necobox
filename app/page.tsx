@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Dices, Globe, Lock, Type } from "lucide-react";
+import { Clock, Dices, Globe, Lock, Type } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -41,6 +41,15 @@ export default function Home() {
             >
               <Globe className="w-10 h-10" />
               <span className="text-sm">Show Global IP</span>
+            </Button>
+          </Link>
+          <Link href="/time-zone-converter" className="block">
+            <Button
+              variant="outline"
+              className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
+            >
+              <Clock className="w-10 h-10" />
+              <span className="text-sm">Time Zone Converter</span>
             </Button>
           </Link>
         </div>
