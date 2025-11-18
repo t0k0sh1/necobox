@@ -17,6 +17,9 @@ export default function JWTDecoderPage() {
   const [error, setError] = useState<string | null>(null)
   const [copiedSection, setCopiedSection] = useState<string | null>(null)
 
+  // コピー成功時のボタンスタイル
+  const COPIED_BUTTON_CLASSES = "bg-green-50 border-green-200 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
+
   /**
    * Base64URLデコード
    */
@@ -33,14 +36,11 @@ export default function JWTDecoderPage() {
       base64 += '==='.slice(0, 4 - pad)
     }
 
-    // デコード
+    // デコード（TextDecoder APIを使用）
     try {
-      return decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      )
+      const binaryString = atob(base64)
+      const bytes = Uint8Array.from(binaryString, (c) => c.charCodeAt(0))
+      return new TextDecoder().decode(bytes)
     } catch (e) {
       throw new Error('Failed to decode Base64URL string')
     }
@@ -70,6 +70,12 @@ export default function JWTDecoderPage() {
 
       const [headerPart, payloadPart, signaturePart] = parts
 
+      // Validate that headerPart and payloadPart are non-empty
+      if (!headerPart || !payloadPart) {
+        setError('Invalid JWT: header and payload must be non-empty')
+        return
+      }
+
       // Header をデコード
       const headerJson = base64UrlDecode(headerPart)
       const header = JSON.parse(headerJson)
@@ -91,16 +97,21 @@ export default function JWTDecoderPage() {
   /**
    * セクションをコピー
    */
-  const handleCopy = (section: string, data: string) => {
-    navigator.clipboard.writeText(data)
-    setCopiedSection(section)
-    setTimeout(() => setCopiedSection(null), 2000)
+  const handleCopy = async (section: string, data: string) => {
+    try {
+      await navigator.clipboard.writeText(data)
+      setCopiedSection(section)
+      setTimeout(() => setCopiedSection(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy text:', err)
+      setError('Failed to copy to clipboard.')
+    }
   }
 
   /**
    * すべてをコピー
    */
-  const handleCopyAll = () => {
+  const handleCopyAll = async () => {
     if (!decodedData) return
 
     const text = JSON.stringify(
@@ -112,9 +123,14 @@ export default function JWTDecoderPage() {
       null,
       2
     )
-    navigator.clipboard.writeText(text)
-    setCopiedSection('all')
-    setTimeout(() => setCopiedSection(null), 2000)
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedSection('all')
+      setTimeout(() => setCopiedSection(null), 2000)
+    } catch (err) {
+      console.error('Failed to copy all text:', err)
+      setError('Failed to copy to clipboard.')
+    }
   }
 
   /**
@@ -184,11 +200,7 @@ export default function JWTDecoderPage() {
                   variant="outline"
                   size="sm"
                   onClick={handleCopyAll}
-                  className={
-                    copiedSection === 'all'
-                      ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
-                      : ""
-                  }
+                  className={copiedSection === 'all' ? COPIED_BUTTON_CLASSES : ""}
                 >
                   {copiedSection === 'all' ? (
                     <>
@@ -212,11 +224,7 @@ export default function JWTDecoderPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleCopy('header', JSON.stringify(decodedData.header, null, 2))}
-                    className={
-                      copiedSection === 'header'
-                        ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
-                        : ""
-                    }
+                    className={copiedSection === 'header' ? COPIED_BUTTON_CLASSES : ""}
                   >
                     {copiedSection === 'header' ? (
                       <Check className="w-4 h-4" />
@@ -238,11 +246,7 @@ export default function JWTDecoderPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleCopy('payload', JSON.stringify(decodedData.payload, null, 2))}
-                    className={
-                      copiedSection === 'payload'
-                        ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
-                        : ""
-                    }
+                    className={copiedSection === 'payload' ? COPIED_BUTTON_CLASSES : ""}
                   >
                     {copiedSection === 'payload' ? (
                       <Check className="w-4 h-4" />
@@ -264,11 +268,7 @@ export default function JWTDecoderPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleCopy('signature', decodedData.signature)}
-                    className={
-                      copiedSection === 'signature'
-                        ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
-                        : ""
-                    }
+                    className={copiedSection === 'signature' ? COPIED_BUTTON_CLASSES : ""}
                   >
                     {copiedSection === 'signature' ? (
                       <Check className="w-4 h-4" />
