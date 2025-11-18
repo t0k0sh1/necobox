@@ -299,6 +299,12 @@ export function convertTimeZone(
     throw new Error("Day must be between 1 and 31");
   }
 
+  // Check for invalid dates like Feb 30
+  const testDate = new Date(Date.UTC(year, month - 1, day));
+  if (testDate.getUTCDate() !== day) {
+    throw new Error("Invalid day for the given month and year");
+  }
+
   if (hour < 0 || hour > 23) {
     throw new Error("Hour must be between 0 and 23");
   }

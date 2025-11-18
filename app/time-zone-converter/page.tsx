@@ -60,6 +60,7 @@ export default function TimeZoneConverterPage() {
       })
       .catch((err) => {
         console.error("Failed to fetch timezones:", err);
+        setError("Failed to load timezones. Please refresh the page.");
       });
   }, []);
 
