@@ -126,20 +126,6 @@ function getTimeZoneOffset(date: Date, timeZone: string): string {
 }
 
 /**
- * Parse offset string to minutes (e.g., "UTC+0900" -> 540, "UTC-0500" -> -300)
- */
-function parseOffset(offset: string): number {
-  const match = offset.match(/UTC([+-])(\d{2})(\d{2})/);
-  if (!match) return 0;
-
-  const sign = match[1] === "+" ? 1 : -1;
-  const hours = parseInt(match[2]);
-  const minutes = parseInt(match[3]);
-
-  return sign * (hours * 60 + minutes);
-}
-
-/**
  * Check if a timezone is currently in daylight saving time
  */
 function isDST(date: Date, timeZone: string): boolean {
@@ -342,7 +328,7 @@ export function getAvailableTimeZonesWithInfo(): TimeZoneInfo[] {
 
   // Intl.supportedValuesOf is available in Node.js 18+
   if (typeof Intl !== "undefined" && "supportedValuesOf" in Intl) {
-    timeZones = (Intl as any).supportedValuesOf("timeZone");
+    timeZones = (Intl as { supportedValuesOf: (key: string) => string[] }).supportedValuesOf("timeZone");
   } else {
     // Fallback: List of major timezones
     timeZones = [

@@ -2,8 +2,6 @@ import {
   countLength,
   shuffleString,
   generateDummyTexts,
-  type TextType,
-  type LengthMode,
 } from "../dummy-text";
 
 describe("countLength", () => {

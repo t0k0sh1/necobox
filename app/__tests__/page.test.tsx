@@ -3,9 +3,11 @@ import Home from "../page";
 
 // Mock next/link
 jest.mock("next/link", () => {
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
+  const MockLink = ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   );
+  MockLink.displayName = "MockLink";
+  return MockLink;
 });
 
 describe("Home Page", () => {
@@ -17,6 +19,7 @@ describe("Home Page", () => {
     expect(screen.getByText("Dummy Text Generator")).toBeInTheDocument();
     expect(screen.getByText("Show Global IP")).toBeInTheDocument();
     expect(screen.getByText("JWT Decoder")).toBeInTheDocument();
+    expect(screen.getByText("Time Zone Converter")).toBeInTheDocument();
   });
 
   it("has correct links for each tool", () => {
@@ -40,13 +43,17 @@ describe("Home Page", () => {
       "href",
       "/jwt-decoder"
     );
+    expect(screen.getByText("Time Zone Converter").closest("a")).toHaveAttribute(
+      "href",
+      "/time-zone-converter"
+    );
   });
 
-  it("renders 5 tool buttons", () => {
+  it("renders 6 tool buttons", () => {
     render(<Home />);
 
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(5);
+    expect(buttons).toHaveLength(6);
   });
 
   it("displays buttons with correct styling", () => {

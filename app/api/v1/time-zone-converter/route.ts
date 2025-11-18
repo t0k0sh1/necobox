@@ -1,7 +1,6 @@
 import {
   convertTimeZone,
   getAvailableTimeZonesWithInfo,
-  type TimeZoneConverterOptions,
 } from "@/lib/utils/time-zone-converter";
 import { NextRequest, NextResponse } from "next/server";
 

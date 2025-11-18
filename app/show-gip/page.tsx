@@ -20,7 +20,7 @@ export default function ShowGipPage() {
         } else {
           setError(data.error || "Failed to fetch IP");
         }
-      } catch (err) {
+      } catch {
         setError("Failed to fetch IP address");
       }
     };
