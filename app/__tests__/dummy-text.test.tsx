@@ -1,19 +1,9 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import DummyTextPage from "../dummy-text/page";
 
-// Mock clipboard API
-const mockWriteText = jest.fn();
-Object.defineProperty(navigator, "clipboard", {
-  value: {
-    writeText: mockWriteText,
-  },
-  writable: true,
-});
-
 describe("Dummy Text Page", () => {
   beforeEach(() => {
-    mockWriteText.mockClear();
-    mockWriteText.mockResolvedValue(undefined);
+    (navigator.clipboard.writeText as jest.Mock).mockClear();
   });
 
   it("renders page title", () => {
@@ -105,14 +95,10 @@ describe("Dummy Text Page", () => {
       expect(screen.getByText("Generated Texts")).toBeInTheDocument();
     });
 
-    const copyButtons = screen.getAllByRole("button").filter((btn) => {
-      return btn.querySelector('svg[class*="lucide-copy"]');
-    });
-
-    if (copyButtons.length > 0) {
-      fireEvent.click(copyButtons[0]);
-      expect(mockWriteText).toHaveBeenCalled();
-    }
+    const copyButtons = screen.getAllByRole("button", { name: "Copy" });
+    expect(copyButtons.length).toBeGreaterThan(0);
+    fireEvent.click(copyButtons[0]);
+    expect(navigator.clipboard.writeText).toHaveBeenCalled();
   });
 
   it("defaults to alphanumeric character type", () => {

@@ -1,22 +1,12 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import ShowGipPage from "../show-gip/page";
 
-// Mock clipboard API
-const mockWriteText = jest.fn();
-Object.defineProperty(navigator, "clipboard", {
-  value: {
-    writeText: mockWriteText,
-  },
-  writable: true,
-});
-
 // Mock fetch
 global.fetch = jest.fn();
 
 describe("Show Global IP Page", () => {
   beforeEach(() => {
-    mockWriteText.mockClear();
-    mockWriteText.mockResolvedValue(undefined);
+    (navigator.clipboard.writeText as jest.Mock).mockClear();
     (global.fetch as jest.Mock).mockClear();
   });
 
@@ -120,9 +110,9 @@ describe("Show Global IP Page", () => {
       expect(screen.getByText("203.0.113.42")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button"));
+    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
 
-    expect(mockWriteText).toHaveBeenCalledWith("203.0.113.42");
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("203.0.113.42");
   });
 
   it("shows check icon after copying", async () => {

@@ -1,19 +1,9 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import JWTDecoderPage from "../jwt-decoder/page";
 
-// Mock clipboard API
-const mockWriteText = jest.fn();
-Object.defineProperty(navigator, "clipboard", {
-  value: {
-    writeText: mockWriteText,
-  },
-  writable: true,
-});
-
 describe("JWT Decoder Page", () => {
   beforeEach(() => {
-    mockWriteText.mockClear();
-    mockWriteText.mockResolvedValue(undefined);
+    (navigator.clipboard.writeText as jest.Mock).mockClear();
   });
 
   // Sample valid JWT for testing
@@ -160,15 +150,8 @@ describe("JWT Decoder Page", () => {
       expect(screen.getByText("Decoded Data")).toBeInTheDocument();
     });
 
-    // Find copy buttons
-    const copyButtons = screen.getAllByRole("button");
-    const copyAllButton = copyButtons.find((btn) =>
-      btn.textContent?.includes("Copy All")
-    );
-
-    if (copyAllButton) {
-      fireEvent.click(copyAllButton);
-      expect(mockWriteText).toHaveBeenCalled();
-    }
+    const copyAllButton = screen.getByRole("button", { name: /Copy All/i });
+    fireEvent.click(copyAllButton);
+    expect(navigator.clipboard.writeText).toHaveBeenCalled();
   });
 });

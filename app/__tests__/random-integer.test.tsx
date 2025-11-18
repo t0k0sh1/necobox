@@ -1,22 +1,12 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import RandomIntegerPage from "../random-integer/page";
 
-// Mock clipboard API
-const mockWriteText = jest.fn();
-Object.defineProperty(navigator, "clipboard", {
-  value: {
-    writeText: mockWriteText,
-  },
-  writable: true,
-});
-
 // Mock fetch
 global.fetch = jest.fn();
 
 describe("Random Integer Page", () => {
   beforeEach(() => {
-    mockWriteText.mockClear();
-    mockWriteText.mockResolvedValue(undefined);
+    (navigator.clipboard.writeText as jest.Mock).mockClear();
     (global.fetch as jest.Mock).mockClear();
     (global.fetch as jest.Mock).mockResolvedValue({
       json: () =>
@@ -176,7 +166,7 @@ describe("Random Integer Page", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Copy All/ }));
 
-    expect(mockWriteText).toHaveBeenCalledWith("42\n73\n156");
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("42\n73\n156");
   });
 
   it("normalizes count value on blur", () => {

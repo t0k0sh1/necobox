@@ -42,6 +42,7 @@ export function CopyButton({
       size="sm"
       className={`${copied ? copiedStyles : ""} ${className}`}
       onClick={handleCopy}
+      aria-label={!label ? (copied ? (copiedLabel || "Copied") : "Copy") : undefined}
     >
       {copied ? (
         <>

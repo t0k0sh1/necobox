@@ -1,22 +1,12 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import RandomPasswordPage from "../random/page";
 
-// Mock clipboard API
-const mockWriteText = jest.fn();
-Object.defineProperty(navigator, "clipboard", {
-  value: {
-    writeText: mockWriteText,
-  },
-  writable: true,
-});
-
 // Mock fetch
 global.fetch = jest.fn();
 
 describe("Random Password Page", () => {
   beforeEach(() => {
-    mockWriteText.mockClear();
-    mockWriteText.mockResolvedValue(undefined);
+    (navigator.clipboard.writeText as jest.Mock).mockClear();
     (global.fetch as jest.Mock).mockClear();
     (global.fetch as jest.Mock).mockResolvedValue({
       json: () =>
@@ -126,18 +116,9 @@ describe("Random Password Page", () => {
       expect(screen.getByText("TestPassword123!")).toBeInTheDocument();
     });
 
-    // Find the copy button near the password
-    const buttons = screen.getAllByRole("button");
-    const copyButton = buttons.find(
-      (btn) =>
-        btn.querySelector('svg[class*="lucide-copy"]') ||
-        btn.querySelector('svg[class*="lucide-check"]')
-    );
-
-    if (copyButton) {
-      fireEvent.click(copyButton);
-      expect(mockWriteText).toHaveBeenCalledWith("TestPassword123!");
-    }
+    const copyButton = screen.getByRole("button", { name: "Copy" });
+    fireEvent.click(copyButton);
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith("TestPassword123!");
   });
 
   it("shows password strength indicator", async () => {

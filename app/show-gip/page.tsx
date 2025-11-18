@@ -1,14 +1,12 @@
 "use client";
 
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/app/components/CopyButton";
 import { useState, useEffect } from "react";
-import { Copy, Check } from "lucide-react";
 
 export default function ShowGipPage() {
   const [ip, setIp] = useState<string>("Loading...");
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const fetchIp = async () => {
@@ -43,19 +41,7 @@ export default function ShowGipPage() {
                   <p className="text-gray-600 dark:text-gray-400 mb-2">Your IP Address:</p>
                   <div className="flex items-center justify-center gap-3">
                     <p className="text-2xl font-mono font-semibold">{ip}</p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className={copied ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100" : ""}
-                      onClick={() => {
-                        navigator.clipboard.writeText(ip);
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 2000);
-                      }}
-                    >
-                      {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    </Button>
+                    <CopyButton text={ip} />
                   </div>
                 </div>
               </div>
