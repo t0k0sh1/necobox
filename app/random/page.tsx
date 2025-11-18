@@ -4,7 +4,8 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Check, Copy, Info, RefreshCw } from "lucide-react";
+import { CopyButton } from "@/app/components/CopyButton";
+import { Info, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function RandomPasswordPage() {
@@ -44,7 +45,6 @@ export default function RandomPasswordPage() {
   const [excludeSimilar, setExcludeSimilar] = useState(false);
   const [noRepeat, setNoRepeat] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState<string>("");
-  const [copied, setCopied] = useState(false);
 
   // 「同じ文字を2回以上使わない」が有効な条件をチェック
   const isNoRepeatAvailable = () => {
@@ -192,27 +192,7 @@ export default function RandomPasswordPage() {
                   <span className="font-mono text-lg flex-1 break-all">
                     {generatedPassword}
                   </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className={
-                      copied
-                        ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100"
-                        : ""
-                    }
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatedPassword);
-                      setCopied(true);
-                      setTimeout(() => setCopied(false), 2000);
-                    }}
-                  >
-                    {copied ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </Button>
+                  <CopyButton text={generatedPassword} />
                   <Button
                     type="button"
                     variant="outline"

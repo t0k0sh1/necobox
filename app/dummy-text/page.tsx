@@ -5,19 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { CopyButton } from "@/app/components/CopyButton";
 import {
   countLength,
   generateDummyTexts,
   type TextType,
 } from "@/lib/utils/dummy-text";
-import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 
 export default function DummyTextPage() {
   const [textType, setTextType] = useState<TextType>("alphanumeric");
   const [length, setLength] = useState<string>("10");
   const [generatedTexts, setGeneratedTexts] = useState<string[]>([]);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const generateDummyText = () => {
     const texts = generateDummyTexts(textType, "character", length);
@@ -107,27 +106,7 @@ export default function DummyTextPage() {
                       <p className="font-mono text-sm break-all flex-1">
                         {text}
                       </p>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className={
-                          copiedIndex === index
-                            ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100"
-                            : ""
-                        }
-                        onClick={() => {
-                          navigator.clipboard.writeText(text);
-                          setCopiedIndex(index);
-                          setTimeout(() => setCopiedIndex(null), 2000);
-                        }}
-                      >
-                        {copiedIndex === index ? (
-                          <Check className="w-4 h-4" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </Button>
+                      <CopyButton text={text} />
                     </div>
                   </div>
                 ))}

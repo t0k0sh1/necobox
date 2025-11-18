@@ -44,7 +44,7 @@ export default function JWTDecoderPage() {
       const binaryString = atob(base64)
       const bytes = Uint8Array.from(binaryString, (c) => c.charCodeAt(0))
       return new TextDecoder().decode(bytes)
-    } catch (e) {
+    } catch {
       throw new Error('Failed to decode Base64URL string')
     }
   }
