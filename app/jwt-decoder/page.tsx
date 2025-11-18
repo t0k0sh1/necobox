@@ -3,7 +3,7 @@
 import { Breadcrumbs } from "@/components/ui/breadcrumbs"
 import { Button } from "@/components/ui/button"
 import { Check, Copy } from "lucide-react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 
 interface DecodedJWT {
   header: Record<string, unknown>
@@ -16,6 +16,9 @@ export default function JWTDecoderPage() {
   const [decodedData, setDecodedData] = useState<DecodedJWT | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copiedSection, setCopiedSection] = useState<string | null>(null)
+
+  // コピーフィードバックのタイムアウトIDを保持
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // コピー成功時のボタンスタイル
   const COPIED_BUTTON_CLASSES = "bg-green-50 border-green-200 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
@@ -100,8 +103,19 @@ export default function JWTDecoderPage() {
   const handleCopy = async (section: string, data: string) => {
     try {
       await navigator.clipboard.writeText(data)
+
+      // 以前のタイムアウトをクリア
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+
       setCopiedSection(section)
-      setTimeout(() => setCopiedSection(null), 2000)
+
+      // 新しいタイムアウトを設定し、IDを保存
+      timeoutRef.current = setTimeout(() => {
+        setCopiedSection(null)
+        timeoutRef.current = null
+      }, 2000)
     } catch (err) {
       console.error('Failed to copy text:', err)
       setError('Failed to copy to clipboard.')
@@ -125,8 +139,19 @@ export default function JWTDecoderPage() {
     )
     try {
       await navigator.clipboard.writeText(text)
+
+      // 以前のタイムアウトをクリア
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+
       setCopiedSection('all')
-      setTimeout(() => setCopiedSection(null), 2000)
+
+      // 新しいタイムアウトを設定し、IDを保存
+      timeoutRef.current = setTimeout(() => {
+        setCopiedSection(null)
+        timeoutRef.current = null
+      }, 2000)
     } catch (err) {
       console.error('Failed to copy all text:', err)
       setError('Failed to copy to clipboard.')
