@@ -1,18 +1,25 @@
 # Product Overview
 
-**言語**: このプロジェクトに関するすべての回答、ドキュメント、spec は日本語で出力してください。
+Necobox is a web-based utility toolbox providing practical generators and converters for developers and general users.
 
-**Necobox** is a utility web application that provides a collection of small, focused tools for common tasks.
+## Core Capabilities
 
-## Current Features
+- **Password Generation**: Cryptographically secure password generation with customizable character sets and constraints
+- **Random Integer Generation**: Generate random numbers within specified ranges
+- **Dummy Text Generation**: Create placeholder text (alphanumeric, Japanese, Lorem ipsum) for design and testing
+- **Image Processing**: Client-side image resizing with aspect ratio preservation
+- **Network Utilities**: Display user's global IP address
 
-- **Password Generator**: Generate secure passwords with customizable options (uppercase, lowercase, numbers, symbols, length, exclude similar characters, no repeat)
-- **Show Global IP**: Display the user's global IP address
-- **Dummy Text Generator**: Generate placeholder text for design and development
+## Target Use Cases
 
-## Design Philosophy
+- Developers needing secure credentials during development
+- Designers requiring placeholder content for mockups
+- Users looking for quick, privacy-focused utility tools
+- Testing and QA scenarios requiring randomized data
 
-- Modular tool-based architecture where each feature is independent
-- Clean, minimal UI with dark mode support
-- Responsive grid layout for tool discovery
-- Focus on security (e.g., cryptographically secure random generation for passwords)
+## Value Proposition
+
+Privacy-first, client-side tools with modern UI. All utilities run in the browser without external API dependencies (where possible), ensuring user data never leaves their device.
+
+---
+_Focus on patterns and purpose, not exhaustive feature lists_

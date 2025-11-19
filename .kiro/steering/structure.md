@@ -1,59 +1,70 @@
 # Project Structure
 
-**言語**: このプロジェクトに関するすべての回答、ドキュメント、spec は日本語で出力してください。
+## Organization Philosophy
 
-## Directory Organization
+Feature-organized Next.js App Router structure. Each tool gets dedicated page and API routes. Shared UI components live in `/components/ui/`.
 
+## Directory Patterns
+
+### App Router (`/app/`)
+**Location**: `/app/`
+**Purpose**: Pages, layouts, and API routes following Next.js conventions
+**Pattern**:
+- Tools: `/app/{tool-name}/page.tsx` (e.g., `/random`, `/show-gip`)
+- APIs: `/app/api/v1/{tool-name}/route.ts`
+- Shared: `layout.tsx`, `page.tsx` (home)
+
+### UI Components (`/components/ui/`)
+**Location**: `/components/ui/`
+**Purpose**: Reusable, design-system aligned primitives
+**Pattern**:
+- Based on Radix UI + CVA
+- Export component + types
+- No business logic
+- Examples: `button.tsx`, `input.tsx`, `slider.tsx`, `breadcrumbs.tsx`
+
+### Theme Components (`/components/`)
+**Location**: `/components/` (top-level)
+**Purpose**: App-level providers and wrappers
+**Example**: `theme-provider.tsx`
+
+### Shared Utilities (`/lib/`)
+**Location**: `/lib/`
+**Purpose**: Framework-agnostic utility functions
+**Pattern**:
+- `/lib/utils.ts` - Core helpers (e.g., `cn()` for className merging)
+- `/lib/utils/` - Domain utilities (e.g., `generate.ts` for password generation)
+
+### Static Assets (`/public/`)
+**Location**: `/public/`
+**Purpose**: Static files served at root
+
+## Naming Conventions
+
+- **Files**: kebab-case (e.g., `show-gip`, `mode-toggle`)
+- **Components**: PascalCase exports (e.g., `Button`, `Header`)
+- **Functions**: camelCase (e.g., `generatePassword`)
+
+## Import Organization
+
+```typescript
+// Absolute imports (preferred)
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+
+// Relative imports (same directory)
+import { generatePassword } from "./generate"
 ```
-necobox/
-├── app/                          # Next.js App Router
-│   ├── api/v1/                   # API routes (versioned)
-│   │   ├── random/               # Password generator endpoint
-│   │   └── show-gip/             # IP address endpoint
-│   ├── [feature]/                # Feature pages (random, show-gip, dummy-text)
-│   ├── layout.tsx                # Root layout with Header, Footer, ThemeProvider
-│   ├── page.tsx                  # Home page with tool grid
-│   └── globals.css               # Global styles
-├── components/                   # Reusable React components
-│   ├── ui/                       # UI component library
-│   │   ├── button.tsx            # Button with CVA variants
-│   │   ├── header.tsx            # Navigation header
-│   │   ├── footer.tsx            # Footer
-│   │   ├── breadcrumbs.tsx       # Navigation breadcrumbs
-│   │   ├── mode-toggle.tsx       # Dark mode toggle
-│   │   └── [form-controls]/      # Input, checkbox, radio, slider, dropdown
-│   └── theme-provider.tsx        # Next-themes wrapper
-├── lib/                          # Utilities and helpers
-│   ├── utils/
-│   │   ├── generate.ts           # Password generation logic
-│   │   └── dummy-text.ts         # Dummy text generation
-│   └── utils.ts                  # General utilities (cn function)
-├── public/                       # Static assets
-└── [config files]                # tsconfig, next.config, eslint, etc.
-```
 
-## Routing Pattern
+**Path Aliases**:
+- `@/*` → Project root (configured in `tsconfig.json`)
 
-- **Pages**: `app/[feature]/page.tsx` - Feature UI pages
-- **API**: `app/api/v1/[endpoint]/route.ts` - RESTful endpoints
-- **Versioning**: API routes use `/v1/` prefix for future versioning
+## Code Organization Principles
 
-## Component Patterns
+- **API Versioning**: All public APIs under `/api/v1/`
+- **Component Isolation**: UI components are stateless; business logic in pages/routes
+- **Utility Separation**: Framework utilities (`lib/utils.ts`) vs domain utilities (`lib/utils/*`)
+- **Layout Hierarchy**: Root layout provides theme, header, footer; pages focus on content
 
-- **UI Components**: Use CVA (class-variance-authority) for variant management
-- **Styling**: Tailwind CSS with dark mode support via `next-themes`
-- **Icons**: lucide-react for consistent iconography
-- **Accessibility**: Radix UI primitives for accessible form controls
-
-## Utility Functions
-
-- **generate.ts**: Cryptographically secure password generation with Fisher-Yates shuffling
-- **dummy-text.ts**: Placeholder text generation
-- **utils.ts**: `cn()` function for className merging (clsx + tailwind-merge)
-
-## Code Style Conventions
-
-- **TypeScript**: Strict mode, explicit types on exports
-- **Naming**: camelCase for functions/variables, PascalCase for components
-- **Imports**: Use `@/*` path alias for all imports
-- **API Responses**: Consistent JSON structure with error handling
+---
+_Document patterns, not file trees. New files following patterns shouldn't require updates_

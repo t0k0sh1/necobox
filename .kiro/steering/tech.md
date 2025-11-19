@@ -1,45 +1,62 @@
-# Tech Stack & Build System
+# Technology Stack
 
-**言語**: このプロジェクトに関するすべての回答、ドキュメント、spec は日本語で出力してください。
+## Architecture
 
-## Core Framework & Runtime
+App Router-based Next.js application with server-side API routes and client-side utilities. Route handlers provide JSON APIs for tool functionality.
 
-- **Next.js 16.0.1**: React framework with App Router (file-based routing)
-- **React 19.2.0**: UI library
-- **TypeScript 5**: Strict mode enabled for type safety
-- **Node.js**: Runtime (ES2017 target)
+## Core Technologies
 
-## Styling & UI
+- **Language**: TypeScript (strict mode enabled)
+- **Framework**: Next.js 16 (App Router)
+- **Runtime**: Node.js 20+
+- **UI Library**: React 19.2
 
-- **Tailwind CSS 4**: Utility-first CSS framework
-- **Radix UI**: Headless component library (checkbox, dropdown, label, radio, slider)
-- **class-variance-authority**: Component variant management
-- **clsx & tailwind-merge**: Utility functions for className handling
-- **lucide-react**: Icon library
-- **next-themes**: Dark mode support
+## Key Libraries
 
-## Development Tools
+- **UI Framework**: Radix UI primitives for accessible components
+- **Styling**: Tailwind CSS v4 with design token system
+- **Theme**: next-themes for dark/light mode
+- **Icons**: lucide-react for consistent iconography
+- **CSS Utilities**:
+  - `clsx` + `tailwind-merge` for className composition
+  - `class-variance-authority` for component variants
 
-- **ESLint 9**: Code linting (with Next.js config)
-- **pnpm**: Package manager (workspace configured)
+## Development Standards
 
-## Common Commands
+### Type Safety
+- TypeScript strict mode enforced
+- Path aliases via `@/*` mapping to project root
+- No implicit any types
 
+### Code Quality
+- ESLint with Next.js config
+- Automatic code formatting expected
+
+### Testing
+- **Unit Testing**: Jest with jsdom environment
+- **E2E Testing**: Playwright configured for browser testing
+- Testing infrastructure in place but test coverage incomplete
+
+## Development Environment
+
+### Required Tools
+- Node.js 20+
+- npm/yarn/pnpm/bun
+
+### Common Commands
 ```bash
-# Development
-pnpm dev              # Start dev server (http://localhost:3000)
-
-# Production
-pnpm build            # Build for production
-pnpm start            # Start production server
-
-# Code Quality
-pnpm lint             # Run ESLint
+# Dev: npm run dev (localhost:3000)
+# Build: npm run build
+# Lint: npm run lint
 ```
 
-## Key Configuration
+## Key Technical Decisions
 
-- **Path aliases**: `@/*` maps to project root for clean imports
-- **Strict TypeScript**: All strict compiler options enabled
-- **Module resolution**: Bundler mode for modern module handling
-- **JSX**: React 17+ automatic JSX transform
+- **Component Architecture**: Radix UI + CVA for variant-based component library
+- **Styling Strategy**: Tailwind utility-first with custom design tokens
+- **API Pattern**: Next.js Route Handlers for utility endpoints (`/api/v1/*`)
+- **Theme System**: System-aware dark mode with persistent preference
+- **Fonts**: Geist Sans + Geist Mono (Vercel's optimized fonts)
+
+---
+_Document standards and patterns, not every dependency_
