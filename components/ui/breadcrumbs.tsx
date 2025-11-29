@@ -1,4 +1,6 @@
-import Link from "next/link";
+"use client";
+
+import { Link } from "@/i18n/routing";
 import { ChevronRight, Home } from "lucide-react";
 
 interface BreadcrumbItem {
@@ -16,7 +18,10 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
       <div className="container mx-auto px-4 py-2">
         <ol className="flex items-center gap-2 text-sm">
           <li>
-            <Link href="/" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
+            <Link
+              href="/"
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+            >
               <Home className="w-4 h-4" />
             </Link>
           </li>
@@ -31,7 +36,9 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
                   {item.label}
                 </Link>
               ) : (
-                <span className="text-gray-900 dark:text-gray-100 font-medium">{item.label}</span>
+                <span className="text-gray-900 dark:text-gray-100 font-medium">
+                  {item.label}
+                </span>
               )}
             </li>
           ))}
@@ -40,4 +47,3 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
     </nav>
   );
 }
-

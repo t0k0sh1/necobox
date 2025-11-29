@@ -1,0 +1,145 @@
+{
+  "common": {
+    "siteName": "Neco Box",
+    "toggleTheme": "テーマを切り替え",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システム",
+    "home": "ホーム",
+    "chars": "文字",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "copyAll": "すべてコピー",
+    "copiedAll": "すべてコピーしました",
+    "generate": "生成",
+    "generating": "生成中...",
+    "clear": "クリア",
+    "convert": "変換",
+    "converting": "変換中...",
+    "swap": "入れ替え",
+    "loading": "読み込み中...",
+    "error": "エラー"
+  },
+  "home": {
+    "passwordGenerator": "パスワード生成器",
+    "randomIntegerGenerator": "ランダム整数生成器",
+    "dummyTextGenerator": "ダミーテキスト生成器",
+    "showGlobalIP": "グローバルIP表示",
+    "jwtDecoder": "JWTデコーダー",
+    "timeZoneConverter": "タイムゾーン変換器"
+  },
+  "passwordGenerator": {
+    "title": "パスワード生成器",
+    "description": "強力で一意なパスワードを生成",
+    "breadcrumb": "パスワード生成器",
+    "passwordLength": "パスワードの長さ",
+    "generatedPasswordPlaceholder": "生成されたパスワードがここに表示されます",
+    "includeUppercase": "大文字を含める",
+    "includeLowercase": "小文字を含める",
+    "includeNumbers": "数字を含める",
+    "includeSymbols": "記号を含める",
+    "selectSymbols": "記号を選択",
+    "excludeSimilar": "類似文字を除外",
+    "excludeSimilarTooltip": {
+      "title": "除外される文字:",
+      "letters": "英字: I, l, O, o",
+      "numbers": "数字: 0, 1",
+      "symbols": "記号: _, |"
+    },
+    "noRepeat": "同じ文字を2回以上使わない",
+    "noRepeatTooltip": {
+      "title": "利用可能な条件:",
+      "condition1": "• 8文字以下",
+      "condition2": "• 以下の文字セットのいずれか:",
+      "uppercaseOnly": "- 大文字のみ",
+      "lowercaseOnly": "- 小文字のみ",
+      "numbersOnly": "- 数字のみ",
+      "uppercaseNumbers": "- 大文字 + 数字",
+      "lowercaseNumbers": "- 小文字 + 数字"
+    },
+    "strength": {
+      "weak": "弱い",
+      "weakDescription": "短すぎるか単純すぎます。推測やクラックが容易です。",
+      "moderate": "中程度",
+      "moderateDescription": "比較的安全ですが、より強力にできます。長さや種類を追加してください。",
+      "strong": "強い",
+      "strongDescription": "ブルートフォースや推測攻撃に耐えられるほど長く複雑です。"
+    }
+  },
+  "randomInteger": {
+    "title": "ランダム整数生成器",
+    "description": "カスタムパラメータでランダム整数を生成",
+    "breadcrumb": "ランダム整数生成器",
+    "minimumValue": "最小値",
+    "maximumValue": "最大値",
+    "probabilityDistribution": "確率分布",
+    "uniformDistribution": "一様分布",
+    "normalDistribution": "正規分布",
+    "numberOfValues": "生成する値の数 (1-100)",
+    "seedValue": "シード値 (デフォルト: -1 でランダム)",
+    "seedDescription": "ランダムシードには-1を使用、再現可能な結果には値を指定",
+    "generatedValues": "生成された値"
+  },
+  "dummyText": {
+    "title": "ダミーテキスト生成器",
+    "breadcrumb": "ダミーテキスト生成器",
+    "characterType": "文字種",
+    "alphanumericOnly": "英数字のみ",
+    "japaneseFull": "全角ひらがな、カタカナ、漢字",
+    "mixed": "全角/半角混合",
+    "lorem": "自然なテキスト (Lorem ipsum)",
+    "naturalJapanese": "自然なテキスト (これはダミーテキストです。)",
+    "length": "長さ",
+    "characters": "文字",
+    "generatedTexts": "生成されたテキスト"
+  },
+  "jwtDecoder": {
+    "title": "JWTデコーダー",
+    "description": "署名検証なしでJWTトークンをデコード",
+    "breadcrumb": "JWTデコーダー",
+    "jwtToken": "JWTトークン",
+    "decode": "デコード",
+    "decodedData": "デコードされたデータ",
+    "header": "ヘッダー",
+    "payload": "ペイロード",
+    "signature": "署名",
+    "error": {
+      "enterToken": "JWTトークンを入力してください",
+      "invalidFormat": "無効なJWT形式です。形式: header.payload.signature",
+      "invalidJWT": "無効なJWT: ヘッダーとペイロードは空であってはなりません",
+      "decodeFailed": "JWTのデコードに失敗しました: {error}",
+      "copyFailed": "クリップボードへのコピーに失敗しました。"
+    },
+    "warning": "注意: このツールは署名を検証せずにJWTトークンをデコードします。適切な署名検証なしにデコードされたデータを認証や認可に使用しないでください。"
+  },
+  "showGip": {
+    "title": "グローバルIP表示",
+    "breadcrumb": "グローバルIP表示",
+    "yourIpAddress": "あなたのIPアドレス:",
+    "error": {
+      "fetchFailed": "IPアドレスの取得に失敗しました"
+    }
+  },
+  "timeZoneConverter": {
+    "title": "タイムゾーン変換器",
+    "description": "異なるタイムゾーン間で日時を変換",
+    "breadcrumb": "タイムゾーン変換器",
+    "date": "日付",
+    "time": "時刻",
+    "year": "年",
+    "month": "月",
+    "day": "日",
+    "hour": "時",
+    "minute": "分",
+    "fromTimeZone": "変換元タイムゾーン",
+    "toTimeZone": "変換先タイムゾーン",
+    "convertedTime": "変換された時刻",
+    "copyToClipboard": "クリップボードにコピー",
+    "error": {
+      "loadFailed": "タイムゾーンの読み込みに失敗しました。ページを更新してください。",
+      "convertFailed": "タイムゾーンの変換に失敗しました",
+      "processFailed": "リクエストの処理に失敗しました"
+    }
+  }
+}
+

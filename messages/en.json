@@ -1,0 +1,145 @@
+{
+  "common": {
+    "siteName": "Neco Box",
+    "toggleTheme": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "home": "Home",
+    "chars": "chars",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyAll": "Copy All",
+    "copiedAll": "Copied All",
+    "generate": "Generate",
+    "generating": "Generating...",
+    "clear": "Clear",
+    "convert": "Convert",
+    "converting": "Converting...",
+    "swap": "Swap",
+    "loading": "Loading...",
+    "error": "Error"
+  },
+  "home": {
+    "passwordGenerator": "Password Generator",
+    "randomIntegerGenerator": "Random Integer Generator",
+    "dummyTextGenerator": "Dummy Text Generator",
+    "showGlobalIP": "Show Global IP",
+    "jwtDecoder": "JWT Decoder",
+    "timeZoneConverter": "Time Zone Converter"
+  },
+  "passwordGenerator": {
+    "title": "Password Generator",
+    "description": "Generate strong unique passwords",
+    "breadcrumb": "Password Generator",
+    "passwordLength": "Password length",
+    "generatedPasswordPlaceholder": "Generated password will appear here",
+    "includeUppercase": "Include Uppercase Letters",
+    "includeLowercase": "Include Lowercase Letters",
+    "includeNumbers": "Include Numbers",
+    "includeSymbols": "Include Symbols",
+    "selectSymbols": "Select symbols",
+    "excludeSimilar": "Exclude similar characters",
+    "excludeSimilarTooltip": {
+      "title": "Excluded characters:",
+      "letters": "Letters: I, l, O, o",
+      "numbers": "Numbers: 0, 1",
+      "symbols": "Symbols: _, |"
+    },
+    "noRepeat": "No repeated characters",
+    "noRepeatTooltip": {
+      "title": "Available conditions:",
+      "condition1": "• 8 characters or fewer",
+      "condition2": "• One of the following character sets:",
+      "uppercaseOnly": "- Uppercase only",
+      "lowercaseOnly": "- Lowercase only",
+      "numbersOnly": "- Numbers only",
+      "uppercaseNumbers": "- Uppercase + Numbers",
+      "lowercaseNumbers": "- Lowercase + Numbers"
+    },
+    "strength": {
+      "weak": "Weak",
+      "weakDescription": "Too short or too simple. Easy to guess or crack.",
+      "moderate": "Moderate",
+      "moderateDescription": "Reasonably secure but could be stronger. Add more length or variety.",
+      "strong": "Strong",
+      "strongDescription": "Long and complex enough to resist brute-force and guessing attacks."
+    }
+  },
+  "randomInteger": {
+    "title": "Random Integer Generator",
+    "description": "Generate random integers with custom parameters",
+    "breadcrumb": "Random Integer Generator",
+    "minimumValue": "Minimum Value",
+    "maximumValue": "Maximum Value",
+    "probabilityDistribution": "Probability Distribution",
+    "uniformDistribution": "Uniform Distribution",
+    "normalDistribution": "Normal Distribution",
+    "numberOfValues": "Number of Values to Generate (1-100)",
+    "seedValue": "Seed Value (default: -1 for random)",
+    "seedDescription": "Use -1 for random seed, or specify a value for reproducible results",
+    "generatedValues": "Generated Values"
+  },
+  "dummyText": {
+    "title": "Dummy Text Generator",
+    "breadcrumb": "Dummy Text Generator",
+    "characterType": "Character Type",
+    "alphanumericOnly": "Alphanumeric Only",
+    "japaneseFull": "Full-width Hiragana, Katakana, Kanji",
+    "mixed": "Mixed Full/Half-width",
+    "lorem": "Natural Text (Lorem ipsum)",
+    "naturalJapanese": "Natural Text (これはダミーテキストです。)",
+    "length": "Length",
+    "characters": "characters",
+    "generatedTexts": "Generated Texts"
+  },
+  "jwtDecoder": {
+    "title": "JWT Decoder",
+    "description": "Decode JWT tokens without signature verification",
+    "breadcrumb": "JWT Decoder",
+    "jwtToken": "JWT Token",
+    "decode": "Decode",
+    "decodedData": "Decoded Data",
+    "header": "Header",
+    "payload": "Payload",
+    "signature": "Signature",
+    "error": {
+      "enterToken": "Please enter a JWT token",
+      "invalidFormat": "Invalid JWT format. Expected format: header.payload.signature",
+      "invalidJWT": "Invalid JWT: header and payload must be non-empty",
+      "decodeFailed": "Failed to decode JWT: {error}",
+      "copyFailed": "Failed to copy to clipboard."
+    },
+    "warning": "Note: This tool decodes JWT tokens without verifying the signature. Do not use decoded data for authentication or authorization without proper signature verification."
+  },
+  "showGip": {
+    "title": "Show Global IP",
+    "breadcrumb": "Show Global IP",
+    "yourIpAddress": "Your IP Address:",
+    "error": {
+      "fetchFailed": "Failed to fetch IP address"
+    }
+  },
+  "timeZoneConverter": {
+    "title": "Time Zone Converter",
+    "description": "Convert date and time between different time zones",
+    "breadcrumb": "Time Zone Converter",
+    "date": "Date",
+    "time": "Time",
+    "year": "Year",
+    "month": "Month",
+    "day": "Day",
+    "hour": "Hour",
+    "minute": "Minute",
+    "fromTimeZone": "From Time Zone",
+    "toTimeZone": "To Time Zone",
+    "convertedTime": "Converted Time",
+    "copyToClipboard": "Copy to Clipboard",
+    "error": {
+      "loadFailed": "Failed to load timezones. Please refresh the page.",
+      "convertFailed": "Failed to convert timezone",
+      "processFailed": "Failed to process request"
+    }
+  }
+}
+
