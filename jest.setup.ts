@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import React from "react";
 
 // Polyfill TextEncoder/TextDecoder for jsdom
-import { TextEncoder, TextDecoder } from "util";
+import { TextDecoder, TextEncoder } from "util";
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 
@@ -30,20 +30,26 @@ jest.mock("next/navigation", () => ({
 // Mock next-intl
 import enMessages from "./messages/en.json";
 
+type Messages = typeof enMessages;
+type MessageValue = string | Record<string, unknown>;
+
 jest.mock("next-intl", () => {
-  const actualMessages = require("./messages/en.json");
+  const actualMessages: Messages = enMessages;
   return {
     useTranslations: (namespace?: string) => {
       const messages = namespace
-        ? (actualMessages[namespace as keyof typeof actualMessages] as Record<string, any>)
-        : actualMessages;
-      return (key: string, values?: Record<string, any>) => {
+        ? (actualMessages[namespace as keyof Messages] as Record<
+            string,
+            MessageValue
+          >)
+        : (actualMessages as Record<string, MessageValue>);
+      return (key: string, values?: Record<string, string | number>) => {
         // Handle nested keys like "error.enterToken"
         const keys = key.split(".");
-        let value: any = messages;
+        let value: MessageValue = messages;
         for (const k of keys) {
           if (value && typeof value === "object" && k in value) {
-            value = value[k];
+            value = value[k] as MessageValue;
           } else {
             return key; // Return key if not found
           }
@@ -57,7 +63,8 @@ jest.mock("next-intl", () => {
         return typeof value === "string" ? value : key;
       };
     },
-    NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => children,
+    NextIntlClientProvider: ({ children }: { children: React.ReactNode }) =>
+      children,
   };
 });
 
