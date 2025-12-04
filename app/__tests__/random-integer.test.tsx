@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import RandomIntegerPage from "../random-integer/page";
+import RandomIntegerPage from "../[locale]/random-integer/page";
 
 // Mock fetch
 global.fetch = jest.fn();

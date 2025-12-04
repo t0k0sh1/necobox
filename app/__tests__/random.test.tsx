@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import RandomPasswordPage from "../random/page";
+import RandomPasswordPage from "../[locale]/random/page";
 
 // Mock fetch
 global.fetch = jest.fn();
@@ -124,8 +124,14 @@ describe("Random Password Page", () => {
   it("shows password strength indicator", async () => {
     render(<RandomPasswordPage />);
 
+    // Wait for password to be generated first
     await waitFor(() => {
-      // Should show one of the strength levels
+      expect(screen.getByText("TestPassword123!")).toBeInTheDocument();
+    });
+
+    // Then check for strength indicator
+    await waitFor(() => {
+      // Should show one of the strength levels (format: "Strong: description" or "Moderate: description" or "Weak: description")
       const strengthText =
         screen.queryByText(/Strong:/) ||
         screen.queryByText(/Moderate:/) ||

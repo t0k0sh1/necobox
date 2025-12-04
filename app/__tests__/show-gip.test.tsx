@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import ShowGipPage from "../show-gip/page";
+import ShowGipPage from "../[locale]/show-gip/page";
 
 // Mock fetch
 global.fetch = jest.fn();

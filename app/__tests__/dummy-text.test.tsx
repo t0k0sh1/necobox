@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import DummyTextPage from "../dummy-text/page";
+import DummyTextPage from "../[locale]/dummy-text/page";
 
 describe("Dummy Text Page", () => {
   beforeEach(() => {

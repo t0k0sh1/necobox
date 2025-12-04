@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom";
+import React from "react";
 
 // Polyfill TextEncoder/TextDecoder for jsdom
 import { TextEncoder, TextDecoder } from "util";
@@ -24,6 +25,67 @@ jest.mock("next/navigation", () => ({
     get: jest.fn(),
   }),
   usePathname: () => "",
+}));
+
+// Mock next-intl
+import enMessages from "./messages/en.json";
+
+jest.mock("next-intl", () => {
+  const actualMessages = require("./messages/en.json");
+  return {
+    useTranslations: (namespace?: string) => {
+      const messages = namespace
+        ? (actualMessages[namespace as keyof typeof actualMessages] as Record<string, any>)
+        : actualMessages;
+      return (key: string, values?: Record<string, any>) => {
+        // Handle nested keys like "error.enterToken"
+        const keys = key.split(".");
+        let value: any = messages;
+        for (const k of keys) {
+          if (value && typeof value === "object" && k in value) {
+            value = value[k];
+          } else {
+            return key; // Return key if not found
+          }
+        }
+        // Handle interpolation if values are provided
+        if (values && typeof value === "string") {
+          return value.replace(/\{(\w+)\}/g, (match, key) => {
+            return values[key] !== undefined ? String(values[key]) : match;
+          });
+        }
+        return typeof value === "string" ? value : key;
+      };
+    },
+    NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
+
+jest.mock("next-intl/server", () => ({
+  getMessages: jest.fn().mockResolvedValue({}),
+  getRequestConfig: jest.fn((fn) => fn),
+}));
+
+jest.mock("next-intl/routing", () => ({
+  defineRouting: jest.fn(() => ({
+    locales: ["en", "ja"],
+    defaultLocale: "en",
+  })),
+}));
+
+jest.mock("next-intl/navigation", () => ({
+  createNavigation: jest.fn(() => ({
+    Link: ({ children, href }: { children: React.ReactNode; href: string }) =>
+      React.createElement("a", { href }, children),
+    redirect: jest.fn(),
+    usePathname: jest.fn(() => ""),
+    useRouter: jest.fn(() => ({
+      push: jest.fn(),
+      replace: jest.fn(),
+      prefetch: jest.fn(),
+      back: jest.fn(),
+    })),
+  })),
 }));
 
 // Mock clipboard API

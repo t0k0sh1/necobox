@@ -12,6 +12,9 @@ const config: Config = {
     "^@/(.*)$": "<rootDir>/$1",
   },
   testPathIgnorePatterns: ["<rootDir>/.next/", "<rootDir>/node_modules/"],
+  transformIgnorePatterns: [
+    "node_modules/(?!(next-intl)/)",
+  ],
   collectCoverageFrom: [
     "app/**/*.{ts,tsx}",
     "components/**/*.{ts,tsx}",

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import JWTDecoderPage from "../jwt-decoder/page";
+import JWTDecoderPage from "../[locale]/jwt-decoder/page";
 
 describe("JWT Decoder Page", () => {
   beforeEach(() => {
