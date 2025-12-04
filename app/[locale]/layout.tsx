@@ -1,12 +1,12 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { Footer } from "@/components/ui/footer";
 import { Header } from "@/components/ui/header";
+import { routing } from "@/i18n/routing";
 import type { Metadata } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 import { Geist, Geist_Mono } from "next/font/google";
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-import { routing } from '@/i18n/routing';
+import { notFound } from "next/navigation";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -34,7 +34,7 @@ export default async function RootLayout({
   const { locale } = await params;
 
   // Ensure that the incoming `locale` is valid
-  if (!routing.locales.includes(locale as any)) {
+  if (!(routing.locales as readonly string[]).includes(locale)) {
     notFound();
   }
 
@@ -63,4 +63,3 @@ export default async function RootLayout({
     </html>
   );
 }
-
