@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import ShowGipPage from "../[locale]/show-gip/page";
 
 // Mock fetch
@@ -110,7 +110,9 @@ describe("Show Global IP Page", () => {
       expect(screen.getByText("203.0.113.42")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Copy" }));
+    });
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("203.0.113.42");
   });
@@ -129,7 +131,9 @@ describe("Show Global IP Page", () => {
       expect(screen.getByText("203.0.113.42")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button"));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button"));
+    });
 
     await waitFor(() => {
       expect(screen.getByRole("button")).toHaveClass("bg-green-50");

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { CopyButton } from "../CopyButton";
 
 // Mock clipboard API
@@ -29,7 +29,9 @@ describe("CopyButton", () => {
   it("copies text to clipboard when clicked", async () => {
     render(<CopyButton text="test text" />);
 
-    fireEvent.click(screen.getByRole("button"));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button"));
+    });
 
     expect(mockWriteText).toHaveBeenCalledWith("test text");
   });
@@ -37,7 +39,9 @@ describe("CopyButton", () => {
   it("shows check icon after copying", async () => {
     render(<CopyButton text="test text" />);
 
-    fireEvent.click(screen.getByRole("button"));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button"));
+    });
 
     await waitFor(() => {
       expect(screen.getByRole("button")).toHaveClass("bg-green-50");
@@ -47,13 +51,17 @@ describe("CopyButton", () => {
   it("reverts to copy icon after 2 seconds", async () => {
     render(<CopyButton text="test text" />);
 
-    fireEvent.click(screen.getByRole("button"));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button"));
+    });
 
     await waitFor(() => {
       expect(screen.getByRole("button")).toHaveClass("bg-green-50");
     });
 
-    jest.advanceTimersByTime(2000);
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
 
     await waitFor(() => {
       expect(screen.getByRole("button")).not.toHaveClass("bg-green-50");
@@ -64,7 +72,9 @@ describe("CopyButton", () => {
     const onCopy = jest.fn();
     render(<CopyButton text="test text" onCopy={onCopy} />);
 
-    fireEvent.click(screen.getByRole("button"));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button"));
+    });
 
     await waitFor(() => {
       expect(onCopy).toHaveBeenCalled();
@@ -80,7 +90,9 @@ describe("CopyButton", () => {
   it("displays copiedLabel when copied", async () => {
     render(<CopyButton text="test text" label="Copy" copiedLabel="Copied" />);
 
-    fireEvent.click(screen.getByRole("button"));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button"));
+    });
 
     await waitFor(() => {
       expect(screen.getByText("Copied")).toBeInTheDocument();
@@ -99,7 +111,9 @@ describe("CopyButton", () => {
 
     render(<CopyButton text="test text" />);
 
-    fireEvent.click(screen.getByRole("button"));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button"));
+    });
 
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(

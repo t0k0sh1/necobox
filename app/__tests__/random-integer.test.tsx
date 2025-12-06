@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import RandomIntegerPage from "../[locale]/random-integer/page";
 
 // Mock fetch
@@ -164,7 +164,9 @@ describe("Random Integer Page", () => {
       expect(screen.getByText("Generated Values")).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /Copy All/ }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Copy All/ }));
+    });
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("42\n73\n156");
   });

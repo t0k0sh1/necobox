@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import JWTDecoderPage from "../[locale]/jwt-decoder/page";
 
 describe("JWT Decoder Page", () => {
@@ -151,7 +151,9 @@ describe("JWT Decoder Page", () => {
     });
 
     const copyAllButton = screen.getByRole("button", { name: /Copy All/i });
-    fireEvent.click(copyAllButton);
+    await act(async () => {
+      fireEvent.click(copyAllButton);
+    });
     expect(navigator.clipboard.writeText).toHaveBeenCalled();
   });
 });
