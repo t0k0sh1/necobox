@@ -152,6 +152,106 @@ describe("generateDummyTexts", () => {
     });
   });
 
+  describe("numeric-only type", () => {
+    it("generates only numeric characters", () => {
+      const results = generateDummyTexts("numeric-only", "character", { mode: "single", single: 20 }, 1);
+      expect(results.length).toBe(1);
+      expect(results[0].length).toBe(20);
+      const numericRegex = /^[0-9]+$/;
+      expect(results[0]).toMatch(numericRegex);
+    });
+
+    it("generates multiple numeric texts", () => {
+      const results = generateDummyTexts("numeric-only", "character", { mode: "single", single: 10 }, 5);
+      expect(results.length).toBe(5);
+      results.forEach((result) => {
+        expect(result.length).toBe(10);
+        expect(result).toMatch(/^[0-9]+$/);
+      });
+    });
+  });
+
+  describe("lowercase-only type", () => {
+    it("generates only lowercase letters", () => {
+      const results = generateDummyTexts("lowercase-only", "character", { mode: "single", single: 20 }, 1);
+      expect(results.length).toBe(1);
+      expect(results[0].length).toBe(20);
+      const lowercaseRegex = /^[a-z]+$/;
+      expect(results[0]).toMatch(lowercaseRegex);
+    });
+
+    it("generates multiple lowercase texts", () => {
+      const results = generateDummyTexts("lowercase-only", "character", { mode: "single", single: 10 }, 5);
+      expect(results.length).toBe(5);
+      results.forEach((result) => {
+        expect(result.length).toBe(10);
+        expect(result).toMatch(/^[a-z]+$/);
+      });
+    });
+  });
+
+  describe("uppercase-only type", () => {
+    it("generates only uppercase letters", () => {
+      const results = generateDummyTexts("uppercase-only", "character", { mode: "single", single: 20 }, 1);
+      expect(results.length).toBe(1);
+      expect(results[0].length).toBe(20);
+      const uppercaseRegex = /^[A-Z]+$/;
+      expect(results[0]).toMatch(uppercaseRegex);
+    });
+
+    it("generates multiple uppercase texts", () => {
+      const results = generateDummyTexts("uppercase-only", "character", { mode: "single", single: 10 }, 5);
+      expect(results.length).toBe(5);
+      results.forEach((result) => {
+        expect(result.length).toBe(10);
+        expect(result).toMatch(/^[A-Z]+$/);
+      });
+    });
+  });
+
+  describe("uuid-v4 type", () => {
+    it("generates valid UUIDv4 format", () => {
+      const results = generateDummyTexts("uuid-v4", "character", { mode: "single", single: 10 }, 1);
+      expect(results.length).toBe(1);
+      // UUIDv4は固定長36文字（ハイフン含む）
+      expect(results[0].length).toBe(36);
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      expect(results[0]).toMatch(uuidRegex);
+    });
+
+    it("generates multiple UUIDs", () => {
+      const results = generateDummyTexts("uuid-v4", "character", { mode: "single", single: 10 }, 5);
+      expect(results.length).toBe(5);
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      results.forEach((result) => {
+        expect(result.length).toBe(36);
+        expect(result).toMatch(uuidRegex);
+      });
+      // すべて異なるUUIDであることを確認
+      const uniqueUUIDs = new Set(results);
+      expect(uniqueUUIDs.size).toBe(5);
+    });
+
+    it("generates UUIDs with correct version and variant bits", () => {
+      const results = generateDummyTexts("uuid-v4", "character", { mode: "single", single: 10 }, 10);
+      expect(results.length).toBe(10);
+      results.forEach((result) => {
+        // バージョン4のビット（13文字目が4）
+        expect(result[14]).toBe("4");
+        // バリアントビット（17文字目が8, 9, a, bのいずれか）
+        expect(["8", "9", "a", "b", "A", "B"]).toContain(result[19]);
+      });
+    });
+
+    it("ignores length parameter for UUIDv4", () => {
+      // 長さパラメータに関係なく、常に36文字のUUIDを生成
+      const results1 = generateDummyTexts("uuid-v4", "character", { mode: "single", single: 1 }, 1);
+      const results2 = generateDummyTexts("uuid-v4", "character", { mode: "single", single: 100 }, 1);
+      expect(results1[0].length).toBe(36);
+      expect(results2[0].length).toBe(36);
+    });
+  });
+
   describe("edge cases", () => {
     it("returns empty array for count less than 1", () => {
       const results = generateDummyTexts("alphanumeric", "character", { mode: "single", single: 10 }, 0);
