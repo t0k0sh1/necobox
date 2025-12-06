@@ -27,19 +27,36 @@ export default function DummyTextPage() {
   const [numberOfTexts, setNumberOfTexts] = useState<string>("1");
   const [generatedTexts, setGeneratedTexts] = useState<string[]>([]);
   const [copiedAll, setCopiedAll] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const generateDummyText = () => {
+    setError(null);
+
     const count = parseInt(numberOfTexts, 10);
     if (isNaN(count) || count < 1 || count > 100) {
+      setError(t('error.invalidCount'));
       return;
     }
 
     const single = parseInt(singleLength, 10);
     const min = parseInt(minLength, 10);
     const max = parseInt(maxLength, 10);
+
+    if (lengthMode === "single") {
+      if (isNaN(single) || single < 1) {
+        setError(t('error.invalidLength'));
+        return;
+      }
+    } else {
+      if (isNaN(min) || isNaN(max) || min < 1 || max < 1 || min > max) {
+        setError(t('error.invalidRange'));
+        return;
+      }
+    }
+
     const lengthSpec = lengthMode === "single"
-      ? { mode: "single" as const, single: isNaN(single) ? 0 : single }
-      : { mode: "range" as const, min: isNaN(min) ? 0 : min, max: isNaN(max) ? 0 : max };
+      ? { mode: "single" as const, single }
+      : { mode: "range" as const, min, max };
 
     const texts = generateDummyTexts(textType, "character", lengthSpec, count);
     setGeneratedTexts(texts);
@@ -189,6 +206,13 @@ export default function DummyTextPage() {
                 <span>{tCommon('generate')}</span>
               </div>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md">
+                <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+              </div>
+            )}
 
             {/* Generate Button */}
             <Button onClick={generateDummyText} size="lg" className="w-full">

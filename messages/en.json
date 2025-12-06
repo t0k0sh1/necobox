@@ -97,7 +97,12 @@
     "maxLength": "Maximum Length",
     "characters": "characters",
     "numberOfTexts": "Number of Texts to Generate",
-    "generatedTexts": "Generated Texts"
+    "generatedTexts": "Generated Texts",
+    "error": {
+      "invalidLength": "Please enter a valid length",
+      "invalidRange": "Please enter a valid length range (minimum must be less than or equal to maximum)",
+      "invalidCount": "Number of texts to generate must be between 1 and 100"
+    }
   },
   "jwtDecoder": {
     "title": "JWT Decoder",

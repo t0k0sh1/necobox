@@ -326,4 +326,60 @@ describe("Dummy Text Page", () => {
 
     jest.useRealTimers();
   });
+
+  it("shows error message for invalid count", async () => {
+    render(<DummyTextPage />);
+
+    const lengthInputs = screen.getAllByRole("spinbutton");
+    const numberOfTextsInput = lengthInputs.find((input) => (input as HTMLInputElement).value === "1");
+    
+    if (numberOfTextsInput) {
+      fireEvent.change(numberOfTextsInput, { target: { value: "0" } });
+    }
+
+    const generateButton = screen.getByRole("button", { name: "Generate" });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Number of texts to generate must be between 1 and 100/i)).toBeInTheDocument();
+    });
+  });
+
+  it("shows error message for invalid single length", async () => {
+    render(<DummyTextPage />);
+
+    const lengthInputs = screen.getAllByRole("spinbutton");
+    const singleLengthInput = lengthInputs.find((input) => (input as HTMLInputElement).value === "10");
+    
+    if (singleLengthInput) {
+      fireEvent.change(singleLengthInput, { target: { value: "0" } });
+    }
+
+    const generateButton = screen.getByRole("button", { name: "Generate" });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Please enter a valid length/i)).toBeInTheDocument();
+    });
+  });
+
+  it("shows error message for invalid range", async () => {
+    render(<DummyTextPage />);
+
+    const rangeOption = screen.getByRole("radio", { name: "Length Range" });
+    fireEvent.click(rangeOption);
+
+    const minLengthInput = screen.getByLabelText("Minimum Length");
+    const maxLengthInput = screen.getByLabelText("Maximum Length");
+
+    fireEvent.change(minLengthInput, { target: { value: "20" } });
+    fireEvent.change(maxLengthInput, { target: { value: "10" } });
+
+    const generateButton = screen.getByRole("button", { name: "Generate" });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Please enter a valid length range/i)).toBeInTheDocument();
+    });
+  });
 });
