@@ -3,7 +3,11 @@ export type TextType =
   | "japanese-full"
   | "mixed"
   | "lorem"
-  | "natural-japanese";
+  | "natural-japanese"
+  | "numeric-only"
+  | "lowercase-only"
+  | "uppercase-only"
+  | "uuid-v4";
 
 export type LengthMode = "character" | "half-width" | "bytes";
 
@@ -44,6 +48,15 @@ export function shuffleString(str: string): string {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr.join("");
+}
+
+// UUIDv4生成関数
+function generateUUIDv4(): string {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 // 文字種に応じた生成
@@ -101,6 +114,24 @@ function generateByType(textType: TextType, len: number): string {
         japaneseIndex++;
       }
       return japaneseResult;
+    case "numeric-only":
+      return Array.from({ length: len }, () => {
+        const chars = "0123456789";
+        return chars[Math.floor(Math.random() * chars.length)];
+      }).join("");
+    case "lowercase-only":
+      return Array.from({ length: len }, () => {
+        const chars = "abcdefghijklmnopqrstuvwxyz";
+        return chars[Math.floor(Math.random() * chars.length)];
+      }).join("");
+    case "uppercase-only":
+      return Array.from({ length: len }, () => {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        return chars[Math.floor(Math.random() * chars.length)];
+      }).join("");
+    case "uuid-v4":
+      // UUIDv4は固定長（36文字）のため、長さパラメータを無視
+      return generateUUIDv4();
     default:
       return "";
   }

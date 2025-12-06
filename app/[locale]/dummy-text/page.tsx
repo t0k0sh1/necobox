@@ -117,6 +117,22 @@ export default function DummyTextPage() {
                     {t('naturalJapanese')}
                   </Label>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="numeric-only" id="numeric-only" />
+                  <Label htmlFor="numeric-only">{t('numericOnly')}</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="lowercase-only" id="lowercase-only" />
+                  <Label htmlFor="lowercase-only">{t('lowercaseOnly')}</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="uppercase-only" id="uppercase-only" />
+                  <Label htmlFor="uppercase-only">{t('uppercaseOnly')}</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="uuid-v4" id="uuid-v4" />
+                  <Label htmlFor="uuid-v4">{t('uuidV4')}</Label>
+                </div>
               </RadioGroup>
             </div>
 
