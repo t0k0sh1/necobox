@@ -29,24 +29,31 @@ export default function DummyTextPage() {
   const [copiedAll, setCopiedAll] = useState(false);
 
   const generateDummyText = () => {
-    const count = parseInt(numberOfTexts);
-    if (count < 1 || count > 100) {
+    const count = parseInt(numberOfTexts, 10);
+    if (isNaN(count) || count < 1 || count > 100) {
       return;
     }
 
+    const single = parseInt(singleLength, 10);
+    const min = parseInt(minLength, 10);
+    const max = parseInt(maxLength, 10);
     const lengthSpec = lengthMode === "single"
-      ? { mode: "single" as const, single: parseInt(singleLength) }
-      : { mode: "range" as const, min: parseInt(minLength), max: parseInt(maxLength) };
+      ? { mode: "single" as const, single: isNaN(single) ? 0 : single }
+      : { mode: "range" as const, min: isNaN(min) ? 0 : min, max: isNaN(max) ? 0 : max };
 
     const texts = generateDummyTexts(textType, "character", lengthSpec, count);
     setGeneratedTexts(texts);
   };
 
-  const handleCopyAll = () => {
-    const text = generatedTexts.join('\n');
-    navigator.clipboard.writeText(text);
-    setCopiedAll(true);
-    setTimeout(() => setCopiedAll(false), 2000);
+  const handleCopyAll = async () => {
+    try {
+      const text = generatedTexts.join('\n');
+      await navigator.clipboard.writeText(text);
+      setCopiedAll(true);
+      setTimeout(() => setCopiedAll(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text:', err);
+    }
   };
 
   return (
@@ -119,13 +126,16 @@ export default function DummyTextPage() {
               <h2 className="text-xl font-semibold">{t('length')}</h2>
               {lengthMode === "single" ? (
                 <div className="flex items-center gap-4">
+                  <Label htmlFor="single-length-input" className="sr-only">{t('length')}</Label>
                   <Input
+                    id="single-length-input"
                     type="number"
                     min="1"
                     max="4000"
                     value={singleLength}
                     onChange={(e) => setSingleLength(e.target.value)}
                     className="w-32"
+                    aria-label={t('length')}
                   />
                   <span>{t('characters')}</span>
                 </div>
@@ -165,13 +175,16 @@ export default function DummyTextPage() {
             <div className="space-y-4 mb-6">
               <h2 className="text-xl font-semibold">{t('numberOfTexts')}</h2>
               <div className="flex items-center gap-4">
+                <Label htmlFor="number-of-texts-input" className="sr-only">{t('numberOfTexts')}</Label>
                 <Input
+                  id="number-of-texts-input"
                   type="number"
                   min="1"
                   max="100"
                   value={numberOfTexts}
                   onChange={(e) => setNumberOfTexts(e.target.value)}
                   className="w-32"
+                  aria-label={t('numberOfTexts')}
                 />
                 <span>{tCommon('generate')}</span>
               </div>
