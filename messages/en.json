@@ -90,7 +90,13 @@
     "lorem": "Natural Text (Lorem ipsum)",
     "naturalJapanese": "Natural Text (これはダミーテキストです。)",
     "length": "Length",
+    "lengthMode": "Length Specification Mode",
+    "singleLength": "Fixed Length",
+    "rangeLength": "Length Range",
+    "minLength": "Minimum Length",
+    "maxLength": "Maximum Length",
     "characters": "characters",
+    "numberOfTexts": "Number of Texts to Generate",
     "generatedTexts": "Generated Texts"
   },
   "jwtDecoder": {

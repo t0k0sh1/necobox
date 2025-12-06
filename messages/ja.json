@@ -90,7 +90,13 @@
     "lorem": "自然なテキスト (Lorem ipsum)",
     "naturalJapanese": "自然なテキスト (これはダミーテキストです。)",
     "length": "長さ",
+    "lengthMode": "長さの指定方法",
+    "singleLength": "固定文字数",
+    "rangeLength": "文字数範囲",
+    "minLength": "最小文字数",
+    "maxLength": "最大文字数",
     "characters": "文字",
+    "numberOfTexts": "生成する文字列の数",
     "generatedTexts": "生成されたテキスト"
   },
   "jwtDecoder": {

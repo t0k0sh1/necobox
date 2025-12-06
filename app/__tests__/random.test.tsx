@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import RandomPasswordPage from "../[locale]/random/page";
 
 // Mock fetch
@@ -117,7 +117,9 @@ describe("Random Password Page", () => {
     });
 
     const copyButton = screen.getByRole("button", { name: "Copy" });
-    fireEvent.click(copyButton);
+    await act(async () => {
+      fireEvent.click(copyButton);
+    });
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("TestPassword123!");
   });
 

@@ -120,7 +120,6 @@ function generateWithLengthMode(
   let result = "";
   while (countLength(result, lengthMode) < targetLength) {
     const remainingLength = targetLength - countLength(result, lengthMode);
-    let chunk = "";
 
     if (textType === "lorem" || textType === "natural-japanese") {
       // Loremまたは日本語ダミーの場合は固定テキストを順番に切り出す
@@ -147,7 +146,7 @@ function generateWithLengthMode(
         break;
       }
     } else {
-      chunk = generateByType(textType, 1);
+      const chunk = generateByType(textType, 1);
       const testResult = result + chunk;
       if (countLength(testResult, lengthMode) <= targetLength) {
         result = testResult;
@@ -160,67 +159,59 @@ function generateWithLengthMode(
   return result;
 }
 
-// 文字数の重複を排除
-function removeDuplicateLengths(
-  texts: string[],
-  lengthMode: LengthMode,
-  shouldShuffle: boolean = false
-): string[] {
-  const sortedResults = texts.sort(
-    (a, b) => countLength(a, lengthMode) - countLength(b, lengthMode)
-  );
-
-  const uniqueLengthResults: string[] = [];
-  const seenLengths = new Set<number>();
-
-  for (const text of sortedResults) {
-    const length = countLength(text, lengthMode);
-    if (!seenLengths.has(length)) {
-      seenLengths.add(length);
-      uniqueLengthResults.push(shouldShuffle ? shuffleString(text) : text);
-    }
-  }
-
-  return uniqueLengthResults;
-}
-
 // メインのダミーテキスト生成関数
 export function generateDummyTexts(
   textType: TextType,
   lengthMode: LengthMode,
-  length: string
+  lengthSpec: {
+    mode: "single" | "range";
+    single?: number;
+    min?: number;
+    max?: number;
+  },
+  count: number
 ): string[] {
-  const baseLength = parseInt(length);
-  if (baseLength < 1) {
+  if (count < 1 || count > 100) {
     return [];
   }
 
-  // 指定文字数+1文字のテキストを一度だけ生成
-  const fullText = generateWithLengthMode(textType, lengthMode, baseLength + 1);
-  if (!fullText) {
-    return [];
-  }
-
-  // 先頭から1文字、指定文字数-1、指定文字数、指定文字数+1を切り出す
   const results: string[] = [];
 
-  if (fullText.length >= 1) {
-    results.push(fullText.substring(0, 1)); // 1文字
-  }
-  if (fullText.length >= baseLength - 1 && baseLength > 1) {
-    results.push(fullText.substring(0, baseLength - 1)); // 指定文字数-1
-  }
-  if (fullText.length >= baseLength) {
-    results.push(fullText.substring(0, baseLength)); // 指定文字数
-  }
-  if (fullText.length >= baseLength + 1) {
-    results.push(fullText.substring(0, baseLength + 1)); // 指定文字数+1
+  for (let i = 0; i < count; i++) {
+    let targetLength: number;
+
+    if (lengthSpec.mode === "single") {
+      // 単一の文字数指定
+      if (!lengthSpec.single || lengthSpec.single < 1) {
+        continue;
+      }
+      targetLength = lengthSpec.single;
+    } else {
+      // 範囲指定
+      if (
+        !lengthSpec.min ||
+        !lengthSpec.max ||
+        lengthSpec.min < 1 ||
+        lengthSpec.max < lengthSpec.min
+      ) {
+        continue;
+      }
+      // 最小値と最大値の間でランダムに選択
+      targetLength =
+        Math.floor(Math.random() * (lengthSpec.max - lengthSpec.min + 1)) +
+        lengthSpec.min;
+    }
+
+    const text = generateWithLengthMode(textType, lengthMode, targetLength);
+    if (text) {
+      // japanese-full で half-width モードの場合、シャッフルを適用
+      if (textType === "japanese-full" && lengthMode === "half-width") {
+        results.push(shuffleString(text));
+      } else {
+        results.push(text);
+      }
+    }
   }
 
-  // japanese-full で half-width モードの場合、シャッフルを適用
-  const shouldShuffle =
-    textType === "japanese-full" && lengthMode === "half-width";
-
-  // 文字数の重複を排除
-  return removeDuplicateLengths(results, lengthMode, shouldShuffle);
+  return results;
 }

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import DummyTextPage from "../[locale]/dummy-text/page";
 
 describe("Dummy Text Page", () => {
@@ -28,11 +28,27 @@ describe("Dummy Text Page", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders length input with default value", () => {
+  it("renders length mode options", () => {
     render(<DummyTextPage />);
 
-    const lengthInput = screen.getByRole("spinbutton");
-    expect(lengthInput).toHaveValue(10);
+    expect(screen.getByLabelText("Fixed Length")).toBeInTheDocument();
+    expect(screen.getByLabelText("Length Range")).toBeInTheDocument();
+  });
+
+  it("renders single length input with default value", () => {
+    render(<DummyTextPage />);
+
+    const lengthInputs = screen.getAllByRole("spinbutton");
+    const singleLengthInput = lengthInputs.find((input) => (input as HTMLInputElement).value === "10");
+    expect(singleLengthInput).toBeInTheDocument();
+  });
+
+  it("renders number of texts input", () => {
+    render(<DummyTextPage />);
+
+    const lengthInputs = screen.getAllByRole("spinbutton");
+    const numberOfTextsInput = lengthInputs.find((input) => (input as HTMLInputElement).value === "1");
+    expect(numberOfTextsInput).toBeInTheDocument();
   });
 
   it("renders generate button", () => {
@@ -52,13 +68,26 @@ describe("Dummy Text Page", () => {
     expect(loremOption).toHaveAttribute("data-state", "checked");
   });
 
-  it("allows changing length", () => {
+  it("allows changing single length", () => {
     render(<DummyTextPage />);
 
-    const lengthInput = screen.getByRole("spinbutton");
-    fireEvent.change(lengthInput, { target: { value: "20" } });
+    const lengthInputs = screen.getAllByRole("spinbutton");
+    const singleLengthInput = lengthInputs.find((input) => (input as HTMLInputElement).value === "10");
+    if (singleLengthInput) {
+      fireEvent.change(singleLengthInput, { target: { value: "20" } });
+      expect(singleLengthInput).toHaveValue(20);
+    }
+  });
 
-    expect(lengthInput).toHaveValue(20);
+  it("allows switching to range mode", () => {
+    render(<DummyTextPage />);
+
+    const rangeOption = screen.getByRole("radio", { name: "Length Range" });
+    fireEvent.click(rangeOption);
+
+    expect(rangeOption).toHaveAttribute("data-state", "checked");
+    expect(screen.getByLabelText("Minimum Length")).toBeInTheDocument();
+    expect(screen.getByLabelText("Maximum Length")).toBeInTheDocument();
   });
 
   it("generates text when generate button is clicked", async () => {
@@ -97,7 +126,39 @@ describe("Dummy Text Page", () => {
 
     const copyButtons = screen.getAllByRole("button", { name: "Copy" });
     expect(copyButtons.length).toBeGreaterThan(0);
-    fireEvent.click(copyButtons[0]);
+    await act(async () => {
+      fireEvent.click(copyButtons[0]);
+    });
+    expect(navigator.clipboard.writeText).toHaveBeenCalled();
+  });
+
+  it("shows copy all button after generating", async () => {
+    render(<DummyTextPage />);
+
+    const generateButton = screen.getByRole("button", { name: "Generate" });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /Copy All/i })
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("allows copying all generated texts", async () => {
+    render(<DummyTextPage />);
+
+    const generateButton = screen.getByRole("button", { name: "Generate" });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Generated Texts")).toBeInTheDocument();
+    });
+
+    const copyAllButton = screen.getByRole("button", { name: /Copy All/i });
+    await act(async () => {
+      fireEvent.click(copyAllButton);
+    });
     expect(navigator.clipboard.writeText).toHaveBeenCalled();
   });
 
@@ -106,5 +167,163 @@ describe("Dummy Text Page", () => {
 
     const alphanumericOption = screen.getByRole("radio", { name: "Alphanumeric Only" });
     expect(alphanumericOption).toHaveAttribute("data-state", "checked");
+  });
+
+  it("allows changing min and max length in range mode", () => {
+    render(<DummyTextPage />);
+
+    const rangeOption = screen.getByRole("radio", { name: "Length Range" });
+    fireEvent.click(rangeOption);
+
+    const minLengthInput = screen.getByLabelText("Minimum Length");
+    const maxLengthInput = screen.getByLabelText("Maximum Length");
+
+    fireEvent.change(minLengthInput, { target: { value: "10" } });
+    fireEvent.change(maxLengthInput, { target: { value: "20" } });
+
+    expect(minLengthInput).toHaveValue(10);
+    expect(maxLengthInput).toHaveValue(20);
+  });
+
+  it("generates multiple texts when numberOfTexts is greater than 1", async () => {
+    render(<DummyTextPage />);
+
+    const lengthInputs = screen.getAllByRole("spinbutton");
+    const numberOfTextsInput = lengthInputs.find((input) => (input as HTMLInputElement).value === "1");
+
+    if (numberOfTextsInput) {
+      fireEvent.change(numberOfTextsInput, { target: { value: "5" } });
+    }
+
+    const generateButton = screen.getByRole("button", { name: "Generate" });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Generated Texts")).toBeInTheDocument();
+    });
+
+    const copyButtons = screen.getAllByRole("button", { name: "Copy" });
+    expect(copyButtons.length).toBe(5);
+  });
+
+  it("generates texts with correct length in single mode", async () => {
+    render(<DummyTextPage />);
+
+    const lengthInputs = screen.getAllByRole("spinbutton");
+    const singleLengthInput = lengthInputs.find((input) => (input as HTMLInputElement).value === "10");
+
+    if (singleLengthInput) {
+      fireEvent.change(singleLengthInput, { target: { value: "15" } });
+    }
+
+    const generateButton = screen.getByRole("button", { name: "Generate" });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Generated Texts")).toBeInTheDocument();
+    });
+
+    const charLabels = screen.getAllByText(/15 chars$/);
+    expect(charLabels.length).toBeGreaterThan(0);
+  });
+
+  it("generates texts with length within range in range mode", async () => {
+    render(<DummyTextPage />);
+
+    const rangeOption = screen.getByRole("radio", { name: "Length Range" });
+    fireEvent.click(rangeOption);
+
+    const minLengthInput = screen.getByLabelText("Minimum Length");
+    const maxLengthInput = screen.getByLabelText("Maximum Length");
+
+    fireEvent.change(minLengthInput, { target: { value: "5" } });
+    fireEvent.change(maxLengthInput, { target: { value: "10" } });
+
+    const lengthInputs = screen.getAllByRole("spinbutton");
+    const numberOfTextsInput = lengthInputs.find((input) => {
+      const val = (input as HTMLInputElement).value;
+      return val === "1" || val === "";
+    });
+
+    if (numberOfTextsInput) {
+      fireEvent.change(numberOfTextsInput, { target: { value: "10" } });
+    }
+
+    const generateButton = screen.getByRole("button", { name: "Generate" });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Generated Texts")).toBeInTheDocument();
+    });
+
+    // Check that all generated texts have lengths within the range
+    const charLabels = screen.getAllByText(/(\d+) chars$/);
+    charLabels.forEach((label) => {
+      const match = label.textContent?.match(/(\d+) chars$/);
+      if (match) {
+        const length = parseInt(match[1], 10);
+        expect(length).toBeGreaterThanOrEqual(5);
+        expect(length).toBeLessThanOrEqual(10);
+      }
+    });
+  });
+
+  it("copies all texts separated by newlines when copy all is clicked", async () => {
+    render(<DummyTextPage />);
+
+    const lengthInputs = screen.getAllByRole("spinbutton");
+    const numberOfTextsInput = lengthInputs.find((input) => (input as HTMLInputElement).value === "1");
+
+    if (numberOfTextsInput) {
+      fireEvent.change(numberOfTextsInput, { target: { value: "3" } });
+    }
+
+    const generateButton = screen.getByRole("button", { name: "Generate" });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Generated Texts")).toBeInTheDocument();
+    });
+
+    const copyAllButton = screen.getByRole("button", { name: /Copy All/i });
+    await act(async () => {
+      fireEvent.click(copyAllButton);
+    });
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalled();
+    const copiedText = (navigator.clipboard.writeText as jest.Mock).mock.calls[0][0];
+    const lines = copiedText.split('\n');
+    expect(lines.length).toBe(3);
+  });
+
+  it("shows copied state on copy all button after clicking", async () => {
+    jest.useFakeTimers();
+    render(<DummyTextPage />);
+
+    const generateButton = screen.getByRole("button", { name: "Generate" });
+    fireEvent.click(generateButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("Generated Texts")).toBeInTheDocument();
+    });
+
+    const copyAllButton = screen.getByRole("button", { name: /Copy All/i });
+    await act(async () => {
+      fireEvent.click(copyAllButton);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Copied All/i)).toBeInTheDocument();
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Copy All/i)).toBeInTheDocument();
+    });
+
+    jest.useRealTimers();
   });
 });
