@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     // If single file and not requesting ZIP, return single file
     if (convertedFiles.length === 1 && !asZip) {
       const file = convertedFiles[0];
-      return new Response(file.buffer, {
+      return new Response(new Uint8Array(file.buffer), {
         headers: {
           "Content-Type": toFormat === "jpeg" ? "image/jpeg" : "image/png",
           "Content-Disposition": `attachment; filename="${file.name}"`,
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
           chunks.map((chunk) => Buffer.from(chunk))
         );
         resolve(
-          new Response(zipBuffer, {
+          new Response(new Uint8Array(zipBuffer), {
             headers: {
               "Content-Type": "application/zip",
               "Content-Disposition": `attachment; filename="converted-images.zip"`,
