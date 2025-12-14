@@ -270,7 +270,7 @@ export const getSSLInfo = async (
           } else if (typeof cert.issuer === "object") {
             // オブジェクトの場合は各フィールドを組み合わせて文字列化
             const issuerParts: string[] = [];
-            const issuer = cert.issuer as Record<string, string>;
+            const issuer = cert.issuer as unknown as Record<string, string>;
             if (issuer.CN) issuerParts.push(`CN=${issuer.CN}`);
             if (issuer.O) issuerParts.push(`O=${issuer.O}`);
             if (issuer.OU) issuerParts.push(`OU=${issuer.OU}`);
@@ -293,7 +293,7 @@ export const getSSLInfo = async (
           } else if (typeof cert.subject === "object") {
             // オブジェクトの場合は各フィールドを組み合わせて文字列化
             const subjectParts: string[] = [];
-            const subject = cert.subject as Record<string, string>;
+            const subject = cert.subject as unknown as Record<string, string>;
             if (subject.CN) subjectParts.push(`CN=${subject.CN}`);
             if (subject.O) subjectParts.push(`O=${subject.O}`);
             if (subject.OU) subjectParts.push(`OU=${subject.OU}`);

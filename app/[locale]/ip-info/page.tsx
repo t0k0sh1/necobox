@@ -348,46 +348,58 @@ export default function IPInfoPage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {data.whois.ip && (
-                          <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              IP
-                            </p>
-                            <p className="text-lg font-semibold">
-                              {data.whois.ip}
-                            </p>
-                          </div>
-                        )}
-                        {data.whois.country && (
-                          <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {t("geoipInfo.country")}
-                            </p>
-                            <p className="text-lg font-semibold">
-                              {data.whois.country}
-                            </p>
-                          </div>
-                        )}
-                        {data.whois.isp && (
-                          <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {t("geoipInfo.isp")}
-                            </p>
-                            <p className="text-lg font-semibold">
-                              {data.whois.isp}
-                            </p>
-                          </div>
-                        )}
-                        {data.whois.as && (
-                          <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {t("geoipInfo.as")}
-                            </p>
-                            <p className="text-lg font-semibold">
-                              {data.whois.as}
-                            </p>
-                          </div>
-                        )}
+                        {typeof data.whois === "object" &&
+                          data.whois !== null &&
+                          "ip" in data.whois &&
+                          typeof data.whois.ip === "string" && (
+                            <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                IP
+                              </p>
+                              <p className="text-lg font-semibold">
+                                {data.whois.ip}
+                              </p>
+                            </div>
+                          )}
+                        {typeof data.whois === "object" &&
+                          data.whois !== null &&
+                          "country" in data.whois &&
+                          typeof data.whois.country === "string" && (
+                            <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {t("geoipInfo.country")}
+                              </p>
+                              <p className="text-lg font-semibold">
+                                {data.whois.country}
+                              </p>
+                            </div>
+                          )}
+                        {typeof data.whois === "object" &&
+                          data.whois !== null &&
+                          "isp" in data.whois &&
+                          typeof data.whois.isp === "string" && (
+                            <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {t("geoipInfo.isp")}
+                              </p>
+                              <p className="text-lg font-semibold">
+                                {data.whois.isp}
+                              </p>
+                            </div>
+                          )}
+                        {typeof data.whois === "object" &&
+                          data.whois !== null &&
+                          "as" in data.whois &&
+                          typeof data.whois.as === "string" && (
+                            <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border">
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {t("geoipInfo.as")}
+                              </p>
+                              <p className="text-lg font-semibold">
+                                {data.whois.as}
+                              </p>
+                            </div>
+                          )}
                       </div>
                     )}
                   </div>
