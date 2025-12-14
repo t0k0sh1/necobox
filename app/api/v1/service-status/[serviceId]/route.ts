@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic"; // キャッシュ無効化（手動リフレッシュのため）
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ serviceId: string }> }
 ) {
   try {
@@ -13,7 +13,7 @@ export async function GET(
 
     if (!status) {
       return NextResponse.json(
-        { error: "サービスが見つかりません" },
+        { error: "Service not found" },
         { status: 404 }
       );
     }
@@ -26,7 +26,7 @@ export async function GET(
         error:
           error instanceof Error
             ? error.message
-            : "ステータスの取得に失敗しました",
+            : "Failed to fetch service status",
       },
       { status: 500 }
     );

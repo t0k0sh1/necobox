@@ -252,7 +252,8 @@
       "geoip": "Fetching GeoIP information...",
       "whois": "Fetching whois information...",
       "dns": "Fetching DNS information...",
-      "ssl": "Fetching SSL certificate information..."
+      "ssl": "Fetching SSL certificate information...",
+      "map": "Loading map..."
     },
     "error": {
       "emptyInput": "Please enter an IP address or hostname",

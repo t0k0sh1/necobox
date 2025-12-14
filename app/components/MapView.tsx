@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface MapViewProps {
   lat: number;
@@ -14,6 +15,7 @@ export function MapView({ lat, lon, city, country }: MapViewProps) {
   const mapRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
+  const t = useTranslations("ipInfo");
 
   useEffect(() => {
     setIsClient(true);
@@ -21,6 +23,14 @@ export function MapView({ lat, lon, city, country }: MapViewProps) {
 
   useEffect(() => {
     if (!isClient || !mapContainerRef.current || mapRef.current) return;
+
+    // LeafletのCSSを動的に読み込む
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    link.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+    link.crossOrigin = "";
+    document.head.appendChild(link);
 
     // クライアントサイドでのみLeafletを動的インポート
     import("leaflet").then((L) => {
@@ -65,6 +75,13 @@ export function MapView({ lat, lon, city, country }: MapViewProps) {
         mapRef.current.remove();
         mapRef.current = null;
       }
+      // CSSリンクを削除
+      const existingLink = document.querySelector(
+        'link[href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"]'
+      );
+      if (existingLink) {
+        existingLink.remove();
+      }
     };
   }, [isClient, lat, lon, city, country]);
 
@@ -75,7 +92,7 @@ export function MapView({ lat, lon, city, country }: MapViewProps) {
         style={{ minHeight: "400px" }}
       >
         <span className="text-gray-500 dark:text-gray-400">
-          地図を読み込み中...
+          {t("loading.map") || "Loading map..."}
         </span>
       </div>
     );

@@ -20,15 +20,10 @@ const CATEGORY_ORDER: ServiceCategory[] = [
 export default function ServiceStatusPage() {
   const t = useTranslations("serviceStatus");
   const tCommon = useTranslations("common");
-  const tBreadcrumb = useTranslations("serviceStatus");
 
   const [statuses, setStatuses] = useState<ServiceStatusInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [refreshingServices, setRefreshingServices] = useState<Set<string>>(
-    new Set()
-  );
 
   const fetchStatuses = async () => {
     try {
@@ -56,7 +51,6 @@ export default function ServiceStatusPage() {
   };
 
   const handleRefreshService = async (serviceId: string) => {
-    setRefreshingServices((prev) => new Set(prev).add(serviceId));
     try {
       const response = await fetch(`/api/v1/service-status/${serviceId}`);
       if (!response.ok) {
@@ -70,12 +64,6 @@ export default function ServiceStatusPage() {
       }
     } catch (error) {
       console.error(`Error refreshing service ${serviceId}:`, error);
-    } finally {
-      setRefreshingServices((prev) => {
-        const next = new Set(prev);
-        next.delete(serviceId);
-        return next;
-      });
     }
   };
 
@@ -90,7 +78,7 @@ export default function ServiceStatusPage() {
 
   const breadcrumbItems = [
     { label: tCommon("home"), href: "/" },
-    { label: tBreadcrumb("breadcrumb"), href: "/service-status" },
+    { label: t("breadcrumb"), href: "/service-status" },
   ];
 
   return (

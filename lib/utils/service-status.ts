@@ -367,7 +367,11 @@ async function fetchStripeStatus(): Promise<ServiceStatus> {
     let title = "";
     if (typeof titleElement === "string") {
       title = titleElement.toLowerCase();
-    } else if (titleElement && typeof titleElement === "object" && "_" in titleElement) {
+    } else if (
+      titleElement &&
+      typeof titleElement === "object" &&
+      "_" in titleElement
+    ) {
       title = titleElement._?.toLowerCase() || "";
     }
 
@@ -377,7 +381,11 @@ async function fetchStripeStatus(): Promise<ServiceStatus> {
     let summary = "";
     if (typeof summaryElement === "string") {
       summary = summaryElement.toLowerCase();
-    } else if (summaryElement && typeof summaryElement === "object" && "_" in summaryElement) {
+    } else if (
+      summaryElement &&
+      typeof summaryElement === "object" &&
+      "_" in summaryElement
+    ) {
       summary = summaryElement._?.toLowerCase() || "";
     }
 

@@ -14,7 +14,7 @@ export async function GET() {
         error:
           error instanceof Error
             ? error.message
-            : "ステータスの取得に失敗しました",
+            : "Failed to fetch service status",
       },
       { status: 500 }
     );
