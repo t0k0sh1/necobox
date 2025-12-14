@@ -25,6 +25,7 @@
     "randomIntegerGenerator": "ランダム整数生成",
     "dummyTextGenerator": "ダミーテキスト生成",
     "showGlobalIP": "グローバルIP表示",
+    "ipInfo": "IP/ホスト名情報表示",
     "jwtDecoder": "JWTデコーダー",
     "timeZoneConverter": "タイムゾーン変換",
     "imageConverter": "画像フォーマット変換",
@@ -188,5 +189,77 @@
       "invalidFormat": "サポートされていないファイル形式です",
       "fileTooLarge": "ファイルサイズが大きすぎます"
     }
+  },
+  "ipInfo": {
+    "title": "IP/ホスト名情報表示",
+    "description": "IPアドレスやホスト名からwhois情報、GeoIP情報、DNS情報、SSL証明書情報などの公開情報を取得",
+    "breadcrumb": "IP/ホスト名情報表示",
+    "inputPlaceholder": "IPアドレスまたはホスト名を入力（例: 8.8.8.8 または google.com）",
+    "search": "検索",
+    "tabs": {
+      "basic": "基本情報",
+      "geoip": "GeoIP情報",
+      "whois": "whois情報",
+      "dns": "DNS情報",
+      "ssl": "SSL証明書"
+    },
+    "basicInfo": {
+      "ipAddress": "IPアドレス",
+      "hostname": "ホスト名",
+      "reverseDNS": "リバースDNS"
+    },
+    "geoipInfo": {
+      "country": "国",
+      "region": "地域",
+      "city": "都市",
+      "latitude": "緯度",
+      "longitude": "経度",
+      "timezone": "タイムゾーン",
+      "isp": "ISP",
+      "as": "AS番号",
+      "asname": "AS名",
+      "map": "地図"
+    },
+    "whoisInfo": {
+      "raw": "生のwhois情報",
+      "network": "ネットワーク範囲",
+      "asn": "AS番号",
+      "organization": "組織名",
+      "registered": "登録日時",
+      "updated": "更新日時"
+    },
+    "dnsInfo": {
+      "aRecords": "Aレコード（IPv4）",
+      "aaaaRecords": "AAAAレコード（IPv6）",
+      "mxRecords": "MXレコード",
+      "txtRecords": "TXTレコード",
+      "nsRecords": "NSレコード",
+      "cnameRecords": "CNAMEレコード",
+      "soaRecord": "SOAレコード",
+      "priority": "優先度",
+      "exchange": "メールサーバー"
+    },
+    "sslInfo": {
+      "issuer": "発行者",
+      "subject": "サブジェクト",
+      "validFrom": "有効期限開始",
+      "validTo": "有効期限終了",
+      "san": "SAN（Subject Alternative Names）"
+    },
+    "loading": {
+      "basic": "基本情報を取得中...",
+      "geoip": "GeoIP情報を取得中...",
+      "whois": "whois情報を取得中...",
+      "dns": "DNS情報を取得中...",
+      "ssl": "SSL証明書情報を取得中..."
+    },
+    "error": {
+      "emptyInput": "IPアドレスまたはホスト名を入力してください",
+      "invalidInput": "無効なIPアドレスまたはホスト名です",
+      "privateIP": "内部IPアドレスはサポートされていません",
+      "fetchFailed": "情報の取得に失敗しました",
+      "noData": "情報が取得できませんでした"
+    },
+    "noData": "データなし"
   }
 }

@@ -112,6 +112,15 @@ export default function Home() {
                 <span className="text-sm">{t("showGlobalIP")}</span>
               </Button>
             </Link>
+            <Link href="/ip-info" className="block">
+              <Button
+                variant="outline"
+                className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
+              >
+                <Search className="size-10" />
+                <span className="text-sm">{t("ipInfo")}</span>
+              </Button>
+            </Link>
           </div>
         </section>
       </div>
