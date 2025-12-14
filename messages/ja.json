@@ -27,6 +27,7 @@
     "showGlobalIP": "グローバルIP表示",
     "ipInfo": "IP/ホスト名情報表示",
     "jwtDecoder": "JWTデコーダー",
+    "serviceStatus": "サービスステータス",
     "timeZoneConverter": "タイムゾーン変換",
     "imageConverter": "画像フォーマット変換",
     "sectionGenerators": "生成ツール",
@@ -261,5 +262,27 @@
       "noData": "情報が取得できませんでした"
     },
     "noData": "データなし"
+  },
+  "serviceStatus": {
+    "title": "サービスステータス",
+    "description": "主要なクラウドベンダーとサービスの稼働状況を確認",
+    "breadcrumb": "サービスステータス",
+    "refreshAll": "すべて更新",
+    "refresh": "更新",
+    "viewStatusPage": "ステータスページを開く",
+    "status": {
+      "operational": "正常稼働",
+      "degraded": "障害発生中",
+      "down": "サービス停止中",
+      "unknown": "取得不可"
+    },
+    "categories": {
+      "cloud-vendor": "クラウドベンダー",
+      "file-storage": "ファイルストレージ",
+      "dev-tools": "開発ツール",
+      "communication": "コミュニケーション",
+      "hosting-cdn": "ホスティング/CDN",
+      "other": "その他"
+    }
   }
 }

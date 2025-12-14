@@ -27,6 +27,7 @@
     "showGlobalIP": "Show Global IP",
     "ipInfo": "IP/Hostname Info",
     "jwtDecoder": "JWT Decoder",
+    "serviceStatus": "Service Status",
     "timeZoneConverter": "Time Zone Converter",
     "imageConverter": "Image Format Converter",
     "sectionGenerators": "Generators",
@@ -261,5 +262,27 @@
       "noData": "No information available"
     },
     "noData": "No data"
+  },
+  "serviceStatus": {
+    "title": "Service Status",
+    "description": "Check operational status of major cloud vendors and services",
+    "breadcrumb": "Service Status",
+    "refreshAll": "Refresh All",
+    "refresh": "Refresh",
+    "viewStatusPage": "Open status page",
+    "status": {
+      "operational": "Operational",
+      "degraded": "Degraded",
+      "down": "Down",
+      "unknown": "Unknown"
+    },
+    "categories": {
+      "cloud-vendor": "Cloud Vendors",
+      "file-storage": "File Storage",
+      "dev-tools": "Development Tools",
+      "communication": "Communication",
+      "hosting-cdn": "Hosting/CDN",
+      "other": "Other"
+    }
   }
 }
