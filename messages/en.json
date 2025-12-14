@@ -284,6 +284,9 @@
       "communication": "Communication",
       "hosting-cdn": "Hosting/CDN",
       "other": "Other"
-    }
+    },
+    "scheduledMaintenance": "Scheduled Maintenance",
+    "maintenanceFrom": "From: {date}",
+    "maintenanceUntil": "Until: {date}"
   }
 }

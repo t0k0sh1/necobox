@@ -15,6 +15,12 @@ export type ServiceCategory =
   | "hosting-cdn"
   | "other";
 
+export interface ScheduledMaintenance {
+  name: string;
+  scheduled_for: string; // ISO 8601形式
+  scheduled_until?: string; // ISO 8601形式、オプショナル
+}
+
 export interface ServiceStatusInfo {
   id: string;
   name: string;
@@ -23,6 +29,7 @@ export interface ServiceStatusInfo {
   url: string;
   statusUrl: string;
   lastChecked?: Date;
+  scheduledMaintenances?: ScheduledMaintenance[];
 }
 
 interface ServiceConfig {
@@ -445,6 +452,59 @@ async function fetchStripeStatus(): Promise<ServiceStatus> {
   }
 }
 
+// Statuspage APIレスポンスからステータスを判定するヘルパー関数
+function determineStatuspageStatus(data: {
+  incidents?: Array<{ status?: string; impact?: string }>;
+  status?: { indicator?: string };
+}): ServiceStatus {
+  interface StatuspageIncident {
+    status?: string;
+    impact?: string;
+  }
+  const incidents = (data.incidents || []) as StatuspageIncident[];
+  const activeIncidents = incidents.filter(
+    (incident) => incident.status !== "resolved"
+  );
+
+  // アクティブなインシデントがない場合は、indicatorに関係なく正常として扱う
+  // （一部のサービスでは、過去のインシデントが`minor`として残ることがあるため）
+  if (activeIncidents.length === 0) {
+    // ただし、indicatorがmajor/criticalの場合は念のため確認
+    const indicator = data.status?.indicator || "none";
+    if (indicator === "major" || indicator === "critical") {
+      return "down";
+    }
+    return "operational";
+  }
+
+  // アクティブなインシデントがある場合は、影響度で判定
+  const indicator = data.status?.indicator || "none";
+
+  // 重大なインシデントがあるか確認
+  const criticalIncidents = activeIncidents.filter(
+    (incident) =>
+      incident.impact === "critical" ||
+      incident.impact === "major" ||
+      indicator === "critical" ||
+      indicator === "major"
+  );
+
+  if (
+    criticalIncidents.length > 0 ||
+    indicator === "critical" ||
+    indicator === "major"
+  ) {
+    return "down";
+  }
+
+  // 軽微なインシデント
+  if (indicator === "minor" || activeIncidents.length > 0) {
+    return "degraded";
+  }
+
+  return "operational";
+}
+
 // Statuspage.ioベースのサービス（Box, Dropbox, Vercel, Netlify, Cloudflare）
 async function fetchStatuspageStatus(url: string): Promise<ServiceStatus> {
   try {
@@ -474,56 +534,111 @@ async function fetchStatuspageStatus(url: string): Promise<ServiceStatus> {
       return "unknown";
     }
 
-    // アクティブなインシデントを確認
-    interface StatuspageIncident {
-      status?: string;
-      impact?: string;
-    }
-    const incidents = (data.incidents || []) as StatuspageIncident[];
-    const activeIncidents = incidents.filter(
-      (incident) => incident.status !== "resolved"
-    );
-
-    // アクティブなインシデントがない場合は、indicatorに関係なく正常として扱う
-    // （一部のサービスでは、過去のインシデントが`minor`として残ることがあるため）
-    if (activeIncidents.length === 0) {
-      // ただし、indicatorがmajor/criticalの場合は念のため確認
-      const indicator = data.status?.indicator || "none";
-      if (indicator === "major" || indicator === "critical") {
-        return "down";
-      }
-      return "operational";
-    }
-
-    // アクティブなインシデントがある場合は、影響度で判定
-    const indicator = data.status?.indicator || "none";
-
-    // 重大なインシデントがあるか確認
-    const criticalIncidents = activeIncidents.filter(
-      (incident) =>
-        incident.impact === "critical" ||
-        incident.impact === "major" ||
-        indicator === "critical" ||
-        indicator === "major"
-    );
-
-    if (
-      criticalIncidents.length > 0 ||
-      indicator === "critical" ||
-      indicator === "major"
-    ) {
-      return "down";
-    }
-
-    // 軽微なインシデント
-    if (indicator === "minor" || activeIncidents.length > 0) {
-      return "degraded";
-    }
-
-    return "operational";
+    return determineStatuspageStatus(data);
   } catch (error) {
     console.error("Statuspage status fetch error:", error);
     return "unknown";
+  }
+}
+
+// Statuspage.ioベースのサービスからステータスとメンテナンス情報を取得（Box、Dropbox用）
+async function fetchStatuspageStatusAndMaintenances(url: string): Promise<{
+  status: ServiceStatus;
+  scheduledMaintenances: ScheduledMaintenance[];
+}> {
+  try {
+    const response = await fetchWithTimeout(url);
+    if (!response.ok) {
+      return { status: "unknown", scheduledMaintenances: [] };
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      console.error(
+        `Statuspage status fetch error: Invalid content-type: ${contentType} for ${url}`
+      );
+      return { status: "unknown", scheduledMaintenances: [] };
+    }
+
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error(
+        `Statuspage status fetch error: Failed to parse JSON from ${url}`,
+        parseError
+      );
+      return { status: "unknown", scheduledMaintenances: [] };
+    }
+
+    // ステータス判定（ヘルパー関数を使用）
+    const status = determineStatuspageStatus(data);
+
+    // メンテナンス情報を取得（エラーが発生してもステータスは返す）
+    let futureMaintenances: ScheduledMaintenance[] = [];
+    try {
+      interface StatuspageMaintenance {
+        name?: string;
+        status?: string;
+        scheduled_for?: string;
+        scheduled_until?: string;
+      }
+
+      // scheduled_maintenancesが存在しない場合も正常に処理
+      const scheduledMaintenances = (data.scheduled_maintenances ||
+        []) as StatuspageMaintenance[];
+      const now = new Date();
+
+      // 未来日のメンテナンスのみをフィルタリング
+      futureMaintenances = scheduledMaintenances
+        .filter((maintenance) => {
+          try {
+            // statusが"scheduled"のもののみを対象
+            if (maintenance.status !== "scheduled") {
+              return false;
+            }
+
+            // scheduled_forが現在時刻より後のもののみ
+            if (!maintenance.scheduled_for) {
+              return false;
+            }
+
+            const scheduledFor = new Date(maintenance.scheduled_for);
+            // 無効な日付の場合は除外
+            if (isNaN(scheduledFor.getTime())) {
+              return false;
+            }
+
+            return scheduledFor > now;
+          } catch (filterError) {
+            // 個々のメンテナンスのフィルタリングでエラーが発生した場合は除外
+            console.error(
+              "Error filtering maintenance:",
+              maintenance,
+              filterError
+            );
+            return false;
+          }
+        })
+        .map((maintenance) => ({
+          name: maintenance.name || "Scheduled Maintenance",
+          scheduled_for: maintenance.scheduled_for!,
+          scheduled_until: maintenance.scheduled_until,
+        }));
+    } catch (maintenanceError) {
+      // メンテナンス情報の取得・処理でエラーが発生した場合もステータスは返す
+      console.error(
+        "Error processing maintenance information (status will still be returned):",
+        maintenanceError
+      );
+      futureMaintenances = [];
+    }
+
+    return { status, scheduledMaintenances: futureMaintenances };
+  } catch (error) {
+    console.error("Statuspage status fetch error:", error);
+    return { status: "unknown", scheduledMaintenances: [] };
   }
 }
 
@@ -634,16 +749,21 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
 export async function fetchAllServiceStatuses(): Promise<ServiceStatusInfo[]> {
   const promises = SERVICE_CONFIGS.map(async (config) => {
     try {
-      const status = await config.fetchFn();
-      return {
-        id: config.id,
-        name: config.name,
-        category: config.category,
-        status,
-        url: config.url,
-        statusUrl: config.statusUrl,
-        lastChecked: new Date(),
-      };
+      // BoxとDropboxの場合はメンテナンス情報も取得
+      if (config.id === "box" || config.id === "dropbox") {
+        return await fetchServiceStatusWithMaintenance(config);
+      } else {
+        const status = await config.fetchFn();
+        return {
+          id: config.id,
+          name: config.name,
+          category: config.category,
+          status,
+          url: config.url,
+          statusUrl: config.statusUrl,
+          lastChecked: new Date(),
+        };
+      }
     } catch (error) {
       console.error(`Error fetching status for ${config.id}:`, error);
       return {
@@ -661,6 +781,52 @@ export async function fetchAllServiceStatuses(): Promise<ServiceStatusInfo[]> {
   return Promise.all(promises);
 }
 
+// Box/Dropboxサービスのステータスとメンテナンス情報を取得するヘルパー関数
+async function fetchServiceStatusWithMaintenance(
+  config: ServiceConfig
+): Promise<ServiceStatusInfo> {
+  const url =
+    config.id === "box"
+      ? "https://status.box.com/api/v2/summary.json"
+      : "https://status.dropbox.com/api/v2/summary.json";
+  try {
+    const { status, scheduledMaintenances } =
+      await fetchStatuspageStatusAndMaintenances(url);
+    return {
+      id: config.id,
+      name: config.name,
+      category: config.category,
+      status,
+      url: config.url,
+      statusUrl: config.statusUrl,
+      lastChecked: new Date(),
+      scheduledMaintenances: scheduledMaintenances || [],
+    };
+  } catch (maintenanceError) {
+    // メンテナンス情報取得でエラーが発生した場合も、ステータス取得を試みる
+    console.error(
+      `Error fetching maintenance for ${config.id}, attempting status fetch:`,
+      maintenanceError
+    );
+    try {
+      const status = await config.fetchFn();
+      return {
+        id: config.id,
+        name: config.name,
+        category: config.category,
+        status,
+        url: config.url,
+        statusUrl: config.statusUrl,
+        lastChecked: new Date(),
+        scheduledMaintenances: [],
+      };
+    } catch (statusError) {
+      // ステータス取得も失敗した場合
+      throw statusError;
+    }
+  }
+}
+
 // 特定のサービスのステータスを取得
 export async function fetchServiceStatus(
   serviceId: string
@@ -671,16 +837,21 @@ export async function fetchServiceStatus(
   }
 
   try {
-    const status = await config.fetchFn();
-    return {
-      id: config.id,
-      name: config.name,
-      category: config.category,
-      status,
-      url: config.url,
-      statusUrl: config.statusUrl,
-      lastChecked: new Date(),
-    };
+    // BoxとDropboxの場合はメンテナンス情報も取得
+    if (config.id === "box" || config.id === "dropbox") {
+      return await fetchServiceStatusWithMaintenance(config);
+    } else {
+      const status = await config.fetchFn();
+      return {
+        id: config.id,
+        name: config.name,
+        category: config.category,
+        status,
+        url: config.url,
+        statusUrl: config.statusUrl,
+        lastChecked: new Date(),
+      };
+    }
   } catch (error) {
     console.error(`Error fetching status for ${serviceId}:`, error);
     return {
