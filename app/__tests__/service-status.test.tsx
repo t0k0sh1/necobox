@@ -42,13 +42,21 @@ jest.mock("next-intl", () => ({
         "categories.communication": "Communication",
         "categories.hosting-cdn": "Hosting/CDN",
         "categories.other": "Other",
+        scheduledMaintenance: "Scheduled Maintenance",
+        maintenanceFrom: "From: {date}",
+        maintenanceUntil: "Until: {date}",
       },
       common: {
         home: "Home",
       },
     };
+    // {date}のような変数を含む場合はそのまま返す
+    if (key.includes("{date}")) {
+      return translations[namespace]?.[key] || key;
+    }
     return translations[namespace]?.[key] || key;
   },
+  useLocale: () => "en",
 }));
 
 // Mock fetch

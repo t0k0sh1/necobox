@@ -284,6 +284,9 @@
       "communication": "コミュニケーション",
       "hosting-cdn": "ホスティング/CDN",
       "other": "その他"
-    }
+    },
+    "scheduledMaintenance": "定期メンテナンス予定",
+    "maintenanceFrom": "開始: {date}",
+    "maintenanceUntil": "終了: {date}"
   }
 }
