@@ -22,45 +22,46 @@ jest.mock("next/link", () => {
 
 // Mock next-intl
 jest.mock("next-intl", () => ({
-  useTranslations: (namespace: string) => (key: string, values?: Record<string, string>) => {
-    const translations: Record<string, Record<string, string>> = {
-      serviceStatus: {
-        title: "Service Status",
-        description:
-          "Check operational status of major cloud vendors and services",
-        breadcrumb: "Service Status",
-        refreshAll: "Refresh All",
-        refresh: "Refresh",
-        viewStatusPage: "Open status page",
-        "status.operational": "Operational",
-        "status.degraded": "Degraded",
-        "status.down": "Down",
-        "status.unknown": "Unknown",
-        "categories.cloud-vendor": "Cloud Vendors",
-        "categories.file-storage": "File Storage",
-        "categories.dev-tools": "Development Tools",
-        "categories.communication": "Communication",
-        "categories.hosting-cdn": "Hosting/CDN",
-        "categories.other": "Other",
-        scheduledMaintenance: "Scheduled Maintenance",
-        maintenanceFrom: "From: {date}",
-        maintenanceUntil: "Until: {date}",
-      },
-      common: {
-        home: "Home",
-      },
-    };
-    let translation = translations[namespace]?.[key] || key;
-    
-    // 変数置換を実行
-    if (values) {
-      Object.entries(values).forEach(([varKey, value]) => {
-        translation = translation.replace(`{${varKey}}`, value);
-      });
-    }
-    
-    return translation;
-  },
+  useTranslations:
+    (namespace: string) => (key: string, values?: Record<string, string>) => {
+      const translations: Record<string, Record<string, string>> = {
+        serviceStatus: {
+          title: "Service Status",
+          description:
+            "Check operational status of major cloud vendors and services",
+          breadcrumb: "Service Status",
+          refreshAll: "Refresh All",
+          refresh: "Refresh",
+          viewStatusPage: "Open status page",
+          "status.operational": "Operational",
+          "status.degraded": "Degraded",
+          "status.down": "Down",
+          "status.unknown": "Unknown",
+          "categories.cloud-vendor": "Cloud Vendors",
+          "categories.file-storage": "File Storage",
+          "categories.dev-tools": "Development Tools",
+          "categories.communication": "Communication",
+          "categories.hosting-cdn": "Hosting/CDN",
+          "categories.other": "Other",
+          scheduledMaintenance: "Scheduled Maintenance",
+          maintenanceFrom: "From: {date}",
+          maintenanceUntil: "Until: {date}",
+        },
+        common: {
+          home: "Home",
+        },
+      };
+      let translation = translations[namespace]?.[key] || key;
+
+      // 変数置換を実行
+      if (values) {
+        Object.entries(values).forEach(([varKey, value]) => {
+          translation = translation.replace(`{${varKey}}`, value);
+        });
+      }
+
+      return translation;
+    },
   useLocale: () => "en",
 }));
 
