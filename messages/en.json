@@ -27,7 +27,10 @@
     "showGlobalIP": "Show Global IP",
     "jwtDecoder": "JWT Decoder",
     "timeZoneConverter": "Time Zone Converter",
-    "imageConverter": "Image Format Converter"
+    "imageConverter": "Image Format Converter",
+    "sectionGenerators": "Generators",
+    "sectionConverters": "Converters",
+    "sectionAnalyzers": "Analyzers & Info"
   },
   "passwordGenerator": {
     "title": "Password Generator",
