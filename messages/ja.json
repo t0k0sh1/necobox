@@ -21,18 +21,21 @@
     "error": "エラー"
   },
   "home": {
-    "passwordGenerator": "パスワード生成器",
-    "randomIntegerGenerator": "ランダム整数生成器",
-    "dummyTextGenerator": "ダミーテキスト生成器",
+    "passwordGenerator": "パスワード生成",
+    "randomIntegerGenerator": "ランダム整数生成",
+    "dummyTextGenerator": "ダミーテキスト生成",
     "showGlobalIP": "グローバルIP表示",
     "jwtDecoder": "JWTデコーダー",
-    "timeZoneConverter": "タイムゾーン変換器",
-    "imageConverter": "画像フォーマット変換"
+    "timeZoneConverter": "タイムゾーン変換",
+    "imageConverter": "画像フォーマット変換",
+    "sectionGenerators": "生成ツール",
+    "sectionConverters": "変換ツール",
+    "sectionAnalyzers": "解析・情報ツール"
   },
   "passwordGenerator": {
-    "title": "パスワード生成器",
+    "title": "パスワード生成",
     "description": "強力で一意なパスワードを生成",
-    "breadcrumb": "パスワード生成器",
+    "breadcrumb": "パスワード生成",
     "passwordLength": "パスワードの長さ",
     "generatedPasswordPlaceholder": "生成されたパスワードがここに表示されます",
     "includeUppercase": "大文字を含める",
@@ -68,9 +71,9 @@
     }
   },
   "randomInteger": {
-    "title": "ランダム整数生成器",
+    "title": "ランダム整数生成",
     "description": "カスタムパラメータでランダム整数を生成",
-    "breadcrumb": "ランダム整数生成器",
+    "breadcrumb": "ランダム整数生成",
     "minimumValue": "最小値",
     "maximumValue": "最大値",
     "probabilityDistribution": "確率分布",
@@ -82,8 +85,8 @@
     "generatedValues": "生成された値"
   },
   "dummyText": {
-    "title": "ダミーテキスト生成器",
-    "breadcrumb": "ダミーテキスト生成器",
+    "title": "ダミーテキスト生成",
+    "breadcrumb": "ダミーテキスト生成",
     "characterType": "文字種",
     "alphanumericOnly": "英数字のみ",
     "japaneseFull": "全角ひらがな、カタカナ、漢字",
@@ -137,9 +140,9 @@
     }
   },
   "timeZoneConverter": {
-    "title": "タイムゾーン変換器",
+    "title": "タイムゾーン変換",
     "description": "異なるタイムゾーン間で日時を変換",
-    "breadcrumb": "タイムゾーン変換器",
+    "breadcrumb": "タイムゾーン変換",
     "date": "日付",
     "time": "時刻",
     "year": "年",
