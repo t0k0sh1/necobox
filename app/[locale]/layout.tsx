@@ -18,7 +18,7 @@ const roboto = Roboto({
 const notoSansJP = Noto_Sans_JP({
   variable: "--font-noto-sans-jp",
   weight: ["300", "400", "500", "700"],
-  subsets: ["latin"],
+  // Noto_Sans_JP includes Japanese characters by default, so subsets can be omitted
 });
 
 export const metadata: Metadata = {
