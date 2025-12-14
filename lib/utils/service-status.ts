@@ -1,7 +1,7 @@
 import { promisify } from "util";
 import { parseString } from "xml2js";
 
-const parseXML = promisify(parseString);
+const parseXML = promisify(parseString) as (xml: string) => Promise<unknown>;
 
 const REQUEST_TIMEOUT = 5000; // 5 seconds
 
@@ -69,10 +69,18 @@ async function fetchAWSStatus(): Promise<ServiceStatus> {
       return "unknown";
     }
     const xmlText = await response.text();
-    const result = await parseXML(xmlText);
+    const result = (await parseXML(xmlText)) as {
+      rss?: {
+        channel?: Array<{ item?: unknown[] }>;
+      };
+    };
 
     // RSSフィードのitem要素を確認
-    const items = result?.rss?.channel?.[0]?.item || [];
+    const items = (result?.rss?.channel?.[0]?.item || []) as Array<{
+      title?: Array<string>;
+      description?: Array<string>;
+      pubDate?: Array<string>;
+    }>;
 
     // itemが存在する場合は、最新のものを確認
     // AWS RSSフィードは問題がある場合のみitemが追加される
@@ -140,9 +148,17 @@ async function fetchAzureStatus(): Promise<ServiceStatus> {
       return "unknown";
     }
     const xmlText = await response.text();
-    const result = await parseXML(xmlText);
+    const result = (await parseXML(xmlText)) as {
+      rss?: {
+        channel?: Array<{ item?: unknown[] }>;
+      };
+    };
 
-    const items = result?.rss?.channel?.[0]?.item || [];
+    const items = (result?.rss?.channel?.[0]?.item || []) as Array<{
+      title?: Array<string>;
+      description?: Array<string>;
+      pubDate?: Array<string>;
+    }>;
 
     if (items.length === 0) {
       return "operational";
@@ -322,10 +338,15 @@ async function fetchStripeStatus(): Promise<ServiceStatus> {
       return "operational";
     }
 
-    const result = await parseXML(xmlText);
+    const result = (await parseXML(xmlText)) as {
+      feed?: {
+        entry?: unknown[] | unknown;
+      };
+    };
 
     // Atomフィードの構造: feed.entry (RSSとは異なる)
-    const entries = result?.feed?.entry || [];
+    const entriesRaw = result?.feed?.entry || [];
+    const entries = Array.isArray(entriesRaw) ? entriesRaw : [entriesRaw];
 
     // エントリがなければ正常と判断
     if (entries.length === 0) {
@@ -333,24 +354,32 @@ async function fetchStripeStatus(): Promise<ServiceStatus> {
     }
 
     // 最新のエントリを取得（通常は最初の要素が最新）
-    const latestEntry = Array.isArray(entries) ? entries[0] : entries;
+    const latestEntry = entries[0] as {
+      title?: Array<string | { _?: string }>;
+      summary?: Array<string | { _?: string }>;
+      content?: Array<string | { _?: string }>;
+      updated?: Array<string>;
+      published?: Array<string>;
+    };
 
     // Atomフィードのタイトル取得（構造が異なる可能性がある）
     const titleElement = latestEntry?.title?.[0];
-    const title =
-      typeof titleElement === "string"
-        ? titleElement.toLowerCase()
-        : titleElement?._?.toLowerCase() || titleElement?.toLowerCase() || "";
+    let title = "";
+    if (typeof titleElement === "string") {
+      title = titleElement.toLowerCase();
+    } else if (titleElement && typeof titleElement === "object" && "_" in titleElement) {
+      title = titleElement._?.toLowerCase() || "";
+    }
 
     // Atomフィードのsummary/content取得
     const summaryElement =
       latestEntry?.summary?.[0] || latestEntry?.content?.[0];
-    const summary =
-      typeof summaryElement === "string"
-        ? summaryElement.toLowerCase()
-        : summaryElement?._?.toLowerCase() ||
-          summaryElement?.toLowerCase() ||
-          "";
+    let summary = "";
+    if (typeof summaryElement === "string") {
+      summary = summaryElement.toLowerCase();
+    } else if (summaryElement && typeof summaryElement === "object" && "_" in summaryElement) {
+      summary = summaryElement._?.toLowerCase() || "";
+    }
 
     const updated =
       latestEntry?.updated?.[0] || latestEntry?.published?.[0] || "";
