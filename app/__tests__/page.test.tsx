@@ -22,6 +22,7 @@ describe("Home Page", () => {
     expect(screen.getByText("Show Global IP")).toBeInTheDocument();
     expect(screen.getByText("JWT Decoder")).toBeInTheDocument();
     expect(screen.getByText("Time Zone Converter")).toBeInTheDocument();
+    expect(screen.getByText("Image Format Converter")).toBeInTheDocument();
   });
 
   it("has correct links for each tool", () => {
@@ -47,11 +48,15 @@ describe("Home Page", () => {
       "href",
       "/time-zone-converter"
     );
+    expect(screen.getByText("Image Format Converter").closest("a")).toHaveAttribute(
+      "href",
+      "/image-converter"
+    );
   });
 
-  it("renders 6 tool buttons", () => {
+  it("renders 7 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(6);
+    expect(buttons).toHaveLength(7);
   });
 
   it("displays buttons with correct styling", () => {
