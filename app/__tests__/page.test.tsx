@@ -3,9 +3,13 @@ import Home from "../[locale]/page";
 
 // Mock next/link
 jest.mock("next/link", () => {
-  const MockLink = ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  );
+  const MockLink = ({
+    children,
+    href,
+  }: {
+    children: React.ReactNode;
+    href: string;
+  }) => <a href={href}>{children}</a>;
   MockLink.displayName = "MockLink";
   return MockLink;
 });
@@ -23,6 +27,7 @@ describe("Home Page", () => {
     expect(screen.getByText("JWT Decoder")).toBeInTheDocument();
     expect(screen.getByText("Time Zone Converter")).toBeInTheDocument();
     expect(screen.getByText("Image Format Converter")).toBeInTheDocument();
+    expect(screen.getByText("IP/Hostname Info")).toBeInTheDocument();
   });
 
   it("has correct links for each tool", () => {
@@ -44,19 +49,21 @@ describe("Home Page", () => {
       "href",
       "/jwt-decoder"
     );
-    expect(screen.getByText("Time Zone Converter").closest("a")).toHaveAttribute(
+    expect(
+      screen.getByText("Time Zone Converter").closest("a")
+    ).toHaveAttribute("href", "/time-zone-converter");
+    expect(
+      screen.getByText("Image Format Converter").closest("a")
+    ).toHaveAttribute("href", "/image-converter");
+    expect(screen.getByText("IP/Hostname Info").closest("a")).toHaveAttribute(
       "href",
-      "/time-zone-converter"
-    );
-    expect(screen.getByText("Image Format Converter").closest("a")).toHaveAttribute(
-      "href",
-      "/image-converter"
+      "/ip-info"
     );
   });
 
-  it("renders 7 tool buttons", () => {
+  it("renders 8 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(7);
+    expect(buttons).toHaveLength(8);
   });
 
   it("displays buttons with correct styling", () => {

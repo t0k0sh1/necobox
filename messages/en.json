@@ -25,6 +25,7 @@
     "randomIntegerGenerator": "Random Integer Generator",
     "dummyTextGenerator": "Dummy Text Generator",
     "showGlobalIP": "Show Global IP",
+    "ipInfo": "IP/Hostname Info",
     "jwtDecoder": "JWT Decoder",
     "timeZoneConverter": "Time Zone Converter",
     "imageConverter": "Image Format Converter",
@@ -188,5 +189,77 @@
       "invalidFormat": "Unsupported file format",
       "fileTooLarge": "File size is too large"
     }
+  },
+  "ipInfo": {
+    "title": "IP/Hostname Info",
+    "description": "Get public information such as whois, GeoIP, DNS, and SSL certificate information from IP addresses or hostnames",
+    "breadcrumb": "IP/Hostname Info",
+    "inputPlaceholder": "Enter IP address or hostname (e.g., 8.8.8.8 or google.com)",
+    "search": "Search",
+    "tabs": {
+      "basic": "Basic Info",
+      "geoip": "GeoIP Info",
+      "whois": "whois Info",
+      "dns": "DNS Info",
+      "ssl": "SSL Certificate"
+    },
+    "basicInfo": {
+      "ipAddress": "IP Address",
+      "hostname": "Hostname",
+      "reverseDNS": "Reverse DNS"
+    },
+    "geoipInfo": {
+      "country": "Country",
+      "region": "Region",
+      "city": "City",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "timezone": "Timezone",
+      "isp": "ISP",
+      "as": "AS Number",
+      "asname": "AS Name",
+      "map": "Map"
+    },
+    "whoisInfo": {
+      "raw": "Raw whois Information",
+      "network": "Network Range",
+      "asn": "AS Number",
+      "organization": "Organization",
+      "registered": "Registered",
+      "updated": "Updated"
+    },
+    "dnsInfo": {
+      "aRecords": "A Records (IPv4)",
+      "aaaaRecords": "AAAA Records (IPv6)",
+      "mxRecords": "MX Records",
+      "txtRecords": "TXT Records",
+      "nsRecords": "NS Records",
+      "cnameRecords": "CNAME Records",
+      "soaRecord": "SOA Record",
+      "priority": "Priority",
+      "exchange": "Mail Server"
+    },
+    "sslInfo": {
+      "issuer": "Issuer",
+      "subject": "Subject",
+      "validFrom": "Valid From",
+      "validTo": "Valid To",
+      "san": "SAN (Subject Alternative Names)"
+    },
+    "loading": {
+      "basic": "Fetching basic information...",
+      "geoip": "Fetching GeoIP information...",
+      "whois": "Fetching whois information...",
+      "dns": "Fetching DNS information...",
+      "ssl": "Fetching SSL certificate information..."
+    },
+    "error": {
+      "emptyInput": "Please enter an IP address or hostname",
+      "invalidInput": "Invalid IP address or hostname",
+      "privateIP": "Private IP addresses are not supported",
+      "fetchFailed": "Failed to fetch information",
+      "noData": "No information available"
+    },
+    "noData": "No data"
   }
 }
