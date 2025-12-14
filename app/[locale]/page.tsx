@@ -34,7 +34,7 @@ export default function Home() {
                 variant="outline"
                 className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
               >
-                <Lock className="!w-10 !h-10 size-10" />
+                <Lock className="size-10" />
                 <span className="text-sm">{t("passwordGenerator")}</span>
               </Button>
             </Link>
@@ -43,7 +43,7 @@ export default function Home() {
                 variant="outline"
                 className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
               >
-                <Dices className="!w-10 !h-10 size-10" />
+                <Dices className="size-10" />
                 <span className="text-sm">{t("randomIntegerGenerator")}</span>
               </Button>
             </Link>
@@ -52,7 +52,7 @@ export default function Home() {
                 variant="outline"
                 className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
               >
-                <Type className="!w-10 !h-10 size-10" />
+                <Type className="size-10" />
                 <span className="text-sm">{t("dummyTextGenerator")}</span>
               </Button>
             </Link>
@@ -71,7 +71,7 @@ export default function Home() {
                 variant="outline"
                 className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
               >
-                <Clock className="!w-10 !h-10 size-10" />
+                <Clock className="size-10" />
                 <span className="text-sm">{t("timeZoneConverter")}</span>
               </Button>
             </Link>
@@ -80,7 +80,7 @@ export default function Home() {
                 variant="outline"
                 className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
               >
-                <Image className="!w-10 !h-10 size-10" />
+                <Image className="size-10" />
                 <span className="text-sm">{t("imageConverter")}</span>
               </Button>
             </Link>
@@ -99,7 +99,7 @@ export default function Home() {
                 variant="outline"
                 className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
               >
-                <Key className="!w-10 !h-10 size-10" />
+                <Key className="size-10" />
                 <span className="text-sm">{t("jwtDecoder")}</span>
               </Button>
             </Link>
@@ -108,7 +108,7 @@ export default function Home() {
                 variant="outline"
                 className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
               >
-                <Globe className="!w-10 !h-10 size-10" />
+                <Globe className="size-10" />
                 <span className="text-sm">{t("showGlobalIP")}</span>
               </Button>
             </Link>
