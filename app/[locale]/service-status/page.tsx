@@ -3,6 +3,7 @@
 import { ServiceStatusGroup } from "@/components/ServiceStatusGroup";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ServiceCategory, ServiceStatusInfo } from "@/lib/utils/service-status";
 import { RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -82,51 +83,53 @@ export default function ServiceStatusPage() {
   ];
 
   return (
-    <div className="flex flex-1 items-start justify-center py-4 px-4">
-      <div className="w-full max-w-6xl space-y-6">
-        <Breadcrumbs items={breadcrumbItems} />
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {t("title")}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              {t("description")}
-            </p>
+    <TooltipProvider>
+      <div className="flex flex-1 items-start justify-center py-4 px-4">
+        <div className="w-full max-w-6xl space-y-6">
+          <Breadcrumbs items={breadcrumbItems} />
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {t("title")}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                {t("description")}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleRefreshAll}
+              disabled={refreshing || loading}
+            >
+              <RefreshCw
+                className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+              />
+              {t("refreshAll")}
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            onClick={handleRefreshAll}
-            disabled={refreshing || loading}
-          >
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
-            />
-            {t("refreshAll")}
-          </Button>
-        </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {CATEGORY_ORDER.map((category) => {
-              const services = groupedServices[category] || [];
-              if (services.length === 0) return null;
-              return (
-                <ServiceStatusGroup
-                  key={category}
-                  category={category}
-                  services={services}
-                  onRefresh={handleRefreshService}
-                />
-              );
-            })}
-          </div>
-        )}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="w-8 h-8 animate-spin text-gray-400" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {CATEGORY_ORDER.map((category) => {
+                const services = groupedServices[category] || [];
+                if (services.length === 0) return null;
+                return (
+                  <ServiceStatusGroup
+                    key={category}
+                    category={category}
+                    services={services}
+                    onRefresh={handleRefreshService}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

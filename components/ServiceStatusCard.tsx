@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ServiceStatusInfo } from "@/lib/utils/service-status";
@@ -71,22 +70,36 @@ export function ServiceStatusCard({
     }
 
     const now = new Date();
-    const futureMaintenances = service.scheduledMaintenances.filter((m) => {
-      const scheduledFor = new Date(m.scheduled_for);
-      return scheduledFor > now;
-    });
+    
+    // 各メンテナンスにパース済み日付を追加
+    const maintenancesWithDate = service.scheduledMaintenances
+      .map((m) => {
+        const scheduledFor = new Date(m.scheduled_for);
+        // 無効な日付の場合は除外
+        if (isNaN(scheduledFor.getTime())) {
+          console.warn(
+            `[ServiceStatusCard] Invalid scheduled_for date: "${m.scheduled_for}" in service "${service.id}". Entry will be ignored.`
+          );
+          return null;
+        }
+        return { maintenance: m, scheduledFor };
+      })
+      .filter((item): item is { maintenance: typeof service.scheduledMaintenances[0]; scheduledFor: Date } => item !== null);
+
+    // 未来日のメンテナンスのみをフィルタリング
+    const futureMaintenances = maintenancesWithDate.filter(
+      (m) => m.scheduledFor > now
+    );
 
     if (futureMaintenances.length === 0) {
       return null;
     }
 
     // 最も近い日時のメンテナンスを返す
-    return futureMaintenances.sort((a, b) => {
-      const dateA = new Date(a.scheduled_for);
-      const dateB = new Date(b.scheduled_for);
-      return dateA.getTime() - dateB.getTime();
-    })[0];
-  }, [service.scheduledMaintenances]);
+    return futureMaintenances
+      .sort((a, b) => a.scheduledFor.getTime() - b.scheduledFor.getTime())[0]
+      .maintenance;
+  }, [service]);
 
   // 日時フォーマット関数
   const formatDateTime = (dateString: string): string => {
@@ -107,8 +120,7 @@ export function ServiceStatusCard({
   };
 
   return (
-    <TooltipProvider>
-      <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
+    <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1">
             <div
@@ -125,7 +137,10 @@ export function ServiceStatusCard({
                 {upcomingMaintenance && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center">
+                      <div
+                        className="flex items-center"
+                        aria-label={t("scheduledMaintenance")}
+                      >
                         <Flag className="w-4 h-4 text-orange-500" />
                       </div>
                     </TooltipTrigger>
@@ -184,9 +199,8 @@ export function ServiceStatusCard({
             >
               <ExternalLink className="w-4 h-4" />
             </a>
-          </div>
         </div>
       </div>
-    </TooltipProvider>
+    </div>
   );
 }
