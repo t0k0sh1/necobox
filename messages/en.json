@@ -26,7 +26,8 @@
     "dummyTextGenerator": "Dummy Text Generator",
     "showGlobalIP": "Show Global IP",
     "jwtDecoder": "JWT Decoder",
-    "timeZoneConverter": "Time Zone Converter"
+    "timeZoneConverter": "Time Zone Converter",
+    "imageConverter": "Image Format Converter"
   },
   "passwordGenerator": {
     "title": "Password Generator",
@@ -155,6 +156,34 @@
       "convertFailed": "Failed to convert timezone",
       "processFailed": "Failed to process request"
     }
+  },
+  "imageConverter": {
+    "title": "Image Format Converter",
+    "description": "Convert images between PNG and JPEG formats",
+    "breadcrumb": "Image Format Converter",
+    "tabs": {
+      "pngToJpeg": "PNG → JPEG",
+      "jpegToPng": "JPEG → PNG"
+    },
+    "upload": {
+      "title": "Upload Images",
+      "description": "Select or drag and drop multiple image files",
+      "dragDrop": "Drag and drop images here",
+      "selectFiles": "Select Files"
+    },
+    "convert": "Convert",
+    "download": "Download",
+    "downloadAll": "Download All",
+    "downloadIndividual": "Download Individual",
+    "converted": "Converted",
+    "filesSelected": "{count} file(s) selected",
+    "noFilesSelected": "No files selected",
+    "error": {
+      "noFiles": "No files selected",
+      "conversionFailed": "Failed to convert images",
+      "downloadFailed": "Failed to download",
+      "invalidFormat": "Unsupported file format",
+      "fileTooLarge": "File size is too large"
+    }
   }
 }
-

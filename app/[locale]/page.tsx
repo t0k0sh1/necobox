@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
-import { Clock, Dices, Globe, Key, Lock, Type } from "lucide-react";
+import { Clock, Dices, Globe, Image, Key, Lock, Type } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export default function Home() {
@@ -64,6 +64,15 @@ export default function Home() {
             >
               <Clock className="w-10 h-10" />
               <span className="text-sm">{t("timeZoneConverter")}</span>
+            </Button>
+          </Link>
+          <Link href="/image-converter" className="block">
+            <Button
+              variant="outline"
+              className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
+            >
+              <Image className="w-10 h-10" />
+              <span className="text-sm">{t("imageConverter")}</span>
             </Button>
           </Link>
         </div>

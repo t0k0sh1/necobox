@@ -26,7 +26,8 @@
     "dummyTextGenerator": "ダミーテキスト生成器",
     "showGlobalIP": "グローバルIP表示",
     "jwtDecoder": "JWTデコーダー",
-    "timeZoneConverter": "タイムゾーン変換器"
+    "timeZoneConverter": "タイムゾーン変換器",
+    "imageConverter": "画像フォーマット変換"
   },
   "passwordGenerator": {
     "title": "パスワード生成器",
@@ -155,6 +156,34 @@
       "convertFailed": "タイムゾーンの変換に失敗しました",
       "processFailed": "リクエストの処理に失敗しました"
     }
+  },
+  "imageConverter": {
+    "title": "画像フォーマット変換",
+    "description": "PNGとJPEGの画像フォーマットを相互変換",
+    "breadcrumb": "画像フォーマット変換",
+    "tabs": {
+      "pngToJpeg": "PNG → JPEG",
+      "jpegToPng": "JPEG → PNG"
+    },
+    "upload": {
+      "title": "画像をアップロード",
+      "description": "複数の画像ファイルを選択またはドラッグ&ドロップ",
+      "dragDrop": "ここに画像をドラッグ&ドロップ",
+      "selectFiles": "ファイルを選択"
+    },
+    "convert": "変換",
+    "download": "ダウンロード",
+    "downloadAll": "すべてダウンロード",
+    "downloadIndividual": "個別ダウンロード",
+    "converted": "変換済み",
+    "filesSelected": "{count}個のファイルが選択されています",
+    "noFilesSelected": "ファイルが選択されていません",
+    "error": {
+      "noFiles": "ファイルが選択されていません",
+      "conversionFailed": "画像の変換に失敗しました",
+      "downloadFailed": "ダウンロードに失敗しました",
+      "invalidFormat": "サポートされていないファイル形式です",
+      "fileTooLarge": "ファイルサイズが大きすぎます"
+    }
   }
 }
-
