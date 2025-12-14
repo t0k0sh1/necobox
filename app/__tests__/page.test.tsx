@@ -28,6 +28,7 @@ describe("Home Page", () => {
     expect(screen.getByText("Time Zone Converter")).toBeInTheDocument();
     expect(screen.getByText("Image Format Converter")).toBeInTheDocument();
     expect(screen.getByText("IP/Hostname Info")).toBeInTheDocument();
+    expect(screen.getByText("Service Status")).toBeInTheDocument();
   });
 
   it("has correct links for each tool", () => {
@@ -59,11 +60,15 @@ describe("Home Page", () => {
       "href",
       "/ip-info"
     );
+    expect(screen.getByText("Service Status").closest("a")).toHaveAttribute(
+      "href",
+      "/service-status"
+    );
   });
 
-  it("renders 8 tool buttons", () => {
+  it("renders 9 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(8);
+    expect(buttons).toHaveLength(9);
   });
 
   it("displays buttons with correct styling", () => {
