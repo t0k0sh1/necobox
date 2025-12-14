@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import ServiceStatusPage from "../[locale]/service-status/page";
 
 // Mock next/link
@@ -20,7 +26,8 @@ jest.mock("next-intl", () => ({
     const translations: Record<string, Record<string, string>> = {
       serviceStatus: {
         title: "Service Status",
-        description: "Check operational status of major cloud vendors and services",
+        description:
+          "Check operational status of major cloud vendors and services",
         breadcrumb: "Service Status",
         refreshAll: "Refresh All",
         refresh: "Refresh",
@@ -116,7 +123,7 @@ describe("Service Status Page", () => {
     // ローディング中はリフレッシュボタンが無効化されることを確認
     const refreshButton = screen.getByText("Refresh All");
     expect(refreshButton).toBeDisabled();
-    
+
     // ローディング中はサービスが表示されないことを確認
     expect(screen.queryByText("AWS")).not.toBeInTheDocument();
   });
@@ -200,7 +207,8 @@ describe("Service Status Page", () => {
   it("handles API error gracefully", async () => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
-      json: () => Promise.resolve({ error: "Failed to fetch service statuses" }),
+      json: () =>
+        Promise.resolve({ error: "Failed to fetch service statuses" }),
     });
 
     render(<ServiceStatusPage />);
@@ -214,9 +222,7 @@ describe("Service Status Page", () => {
   });
 
   it("handles network error gracefully", async () => {
-    (global.fetch as jest.Mock).mockRejectedValue(
-      new Error("Network error")
-    );
+    (global.fetch as jest.Mock).mockRejectedValue(new Error("Network error"));
 
     render(<ServiceStatusPage />);
 

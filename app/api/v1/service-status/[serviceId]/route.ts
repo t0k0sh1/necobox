@@ -12,10 +12,7 @@ export async function GET(
     const status = await fetchServiceStatus(serviceId);
 
     if (!status) {
-      return NextResponse.json(
-        { error: "Service not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Service not found" }, { status: 404 });
     }
 
     return NextResponse.json({ status });
