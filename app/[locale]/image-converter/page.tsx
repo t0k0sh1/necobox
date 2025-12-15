@@ -177,6 +177,32 @@ export default function ImageConverterPage() {
     }
   };
 
+  const safeDownloadFile = (
+    url: string,
+    fileName: string,
+    onCleanup?: () => void
+  ) => {
+    const a = document.createElement("a");
+    a.setAttribute("href", url);
+    a.setAttribute("download", fileName);
+    a.setAttribute("style", "display: none");
+    a.setAttribute("aria-hidden", "true");
+    a.setAttribute("tabindex", "-1");
+    const body = document.body;
+    if (body) {
+      body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        if (body.contains(a)) {
+          body.removeChild(a);
+        }
+        if (onCleanup) {
+          onCleanup();
+        }
+      }, 100);
+    }
+  };
+
   const handleDownloadAll = async () => {
     if (convertedFiles.length === 0) {
       setError(t("error.noFiles"));
@@ -187,12 +213,8 @@ export default function ImageConverterPage() {
       if (convertedFiles.length === 1) {
         // Single file download
         const file = convertedFiles[0];
-        const a = document.createElement("a");
-        a.href = file.url;
-        a.download = sanitizeFileName(file.name);
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const sanitizedFileName = sanitizeFileName(file.name);
+        safeDownloadFile(file.url, sanitizedFileName);
       } else {
         // Multiple files - download as ZIP
         const formData = new FormData();
@@ -213,13 +235,9 @@ export default function ImageConverterPage() {
 
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "converted-images.zip";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+        safeDownloadFile(url, "converted-images.zip", () => {
+          window.URL.revokeObjectURL(url);
+        });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("error.downloadFailed"));
@@ -230,12 +248,8 @@ export default function ImageConverterPage() {
     const file = convertedFiles[index];
     if (!file) return;
 
-    const a = document.createElement("a");
-    a.href = file.url;
-    a.download = sanitizeFileName(file.name);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const sanitizedFileName = sanitizeFileName(file.name);
+    safeDownloadFile(file.url, sanitizedFileName);
   };
 
   const handleClear = () => {
