@@ -7,15 +7,36 @@ import {
 } from "@testing-library/react";
 import JWTDecoderPage from "../[locale]/jwt-decoder/page";
 
+function createTestJWTToken(): string {
+  const header = {
+    alg: "HS256",
+    typ: "JWT",
+  };
+  const payload = {
+    sub: "1234567890",
+    name: "John Doe",
+    iat: 1516239022,
+  };
+
+  const base64UrlEncode = (obj: Record<string, unknown>): string => {
+    const json = JSON.stringify(obj);
+    const base64 = Buffer.from(json).toString("base64");
+    return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  };
+
+  const encodedHeader = base64UrlEncode(header);
+  const encodedPayload = base64UrlEncode(payload);
+  const signature = "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+
+  return `${encodedHeader}.${encodedPayload}.${signature}`;
+}
+
 describe("JWT Decoder Page", () => {
   beforeEach(() => {
     (navigator.clipboard.writeText as jest.Mock).mockClear();
   });
 
-  // Test-only JWT token constant (not a real secret - used for testing JWT decoder functionality)
-  // This is a well-known example JWT from jwt.io used for testing purposes only
-  const TEST_JWT_TOKEN =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+  const TEST_JWT_TOKEN = createTestJWTToken();
 
   it("renders page title", () => {
     render(<JWTDecoderPage />);
