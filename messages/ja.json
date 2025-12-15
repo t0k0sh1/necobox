@@ -30,6 +30,7 @@
     "serviceStatus": "サービスステータス",
     "timeZoneConverter": "タイムゾーン変換",
     "imageConverter": "画像フォーマット変換",
+    "accessLogViewer": "アクセスログビューアー",
     "sectionGenerators": "生成ツール",
     "sectionConverters": "変換ツール",
     "sectionAnalyzers": "解析・情報ツール"
@@ -289,5 +290,51 @@
     "scheduledMaintenance": "定期メンテナンス予定",
     "maintenanceFrom": "開始: {date}",
     "maintenanceUntil": "終了: {date}"
+  },
+  "accessLogViewer": {
+    "title": "アクセスログビューアー",
+    "description": "アクセスログファイルをアップロードして表示、フィルタ、ソート",
+    "breadcrumb": "アクセスログビューアー",
+    "upload": {
+      "title": "ログファイルをアップロード",
+      "description": "複数のログファイル（.log, .txt, .gz）を選択またはドラッグ&ドロップ",
+      "selectFiles": "ファイルを選択",
+      "dragDrop": "ここにファイルをドラッグ&ドロップ",
+      "removeFile": "ファイル「{{fileName}}」を削除"
+    },
+    "uploadedFiles": "{count}個のファイルがアップロードされています",
+    "filters": {
+      "title": "フィルタ",
+      "startDate": "開始日時",
+      "endDate": "終了日時",
+      "statusCode": "HTTPステータスコード",
+      "statusCodeHint": "例: 404, 4xx, !2xx, 4xx,5xx",
+      "pathRegex": "リクエストパス（正規表現）",
+      "regexHint": "正規表現でパスをフィルタ",
+      "invalidStatus": "無効なステータスコードフィルタ",
+      "invalidRegex": "無効な正規表現",
+      "resultsCount": "{filtered}件 / 全{total}件"
+    },
+    "table": {
+      "title": "ログエントリ",
+      "timestamp": "日時",
+      "ip": "IPアドレス",
+      "method": "メソッド",
+      "path": "パス",
+      "status": "ステータス",
+      "size": "サイズ",
+      "noSize": "-",
+      "userAgent": "User-Agent",
+      "column": "カラム{number}"
+    },
+    "parseErrors": {
+      "title": "パースエラー",
+      "more": "件のエラーが他にあります"
+    },
+    "emptyState": "ログファイルをアップロードしてください",
+    "error": {
+      "fileProcessingFailed": "ファイルの処理に失敗しました",
+      "noValidEntries": "有効なログエントリが見つかりませんでした"
+    }
   }
 }

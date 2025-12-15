@@ -30,6 +30,7 @@
     "serviceStatus": "Service Status",
     "timeZoneConverter": "Time Zone Converter",
     "imageConverter": "Image Format Converter",
+    "accessLogViewer": "Access Log Viewer",
     "sectionGenerators": "Generators",
     "sectionConverters": "Converters",
     "sectionAnalyzers": "Analyzers & Info"
@@ -289,5 +290,51 @@
     "scheduledMaintenance": "Scheduled Maintenance",
     "maintenanceFrom": "From: {date}",
     "maintenanceUntil": "Until: {date}"
+  },
+  "accessLogViewer": {
+    "title": "Access Log Viewer",
+    "description": "Upload, view, filter, and sort access log files",
+    "breadcrumb": "Access Log Viewer",
+    "upload": {
+      "title": "Upload Log Files",
+      "description": "Select or drag and drop multiple log files (.log, .txt, .gz)",
+      "selectFiles": "Select Files",
+      "dragDrop": "Drag and drop files here",
+      "removeFile": "Remove file {{fileName}}"
+    },
+    "uploadedFiles": "{count} file(s) uploaded",
+    "filters": {
+      "title": "Filters",
+      "startDate": "Start Date/Time",
+      "endDate": "End Date/Time",
+      "statusCode": "HTTP Status Code",
+      "statusCodeHint": "e.g., 404, 4xx, !2xx, 4xx,5xx",
+      "pathRegex": "Request Path (Regex)",
+      "regexHint": "Filter path using regular expression",
+      "invalidStatus": "Invalid status code filter",
+      "invalidRegex": "Invalid regular expression",
+      "resultsCount": "{filtered} of {total} entries"
+    },
+    "table": {
+      "title": "Log Entries",
+      "timestamp": "Timestamp",
+      "ip": "IP Address",
+      "method": "Method",
+      "path": "Path",
+      "status": "Status",
+      "size": "Size",
+      "noSize": "-",
+      "userAgent": "User-Agent",
+      "column": "Column {number}"
+    },
+    "parseErrors": {
+      "title": "Parse Errors",
+      "more": "more errors"
+    },
+    "emptyState": "Please upload log files",
+    "error": {
+      "fileProcessingFailed": "Failed to process files",
+      "noValidEntries": "No valid log entries found"
+    }
   }
 }
