@@ -29,7 +29,6 @@ describe("Home Page", () => {
     expect(screen.getByText("Image Format Converter")).toBeInTheDocument();
     expect(screen.getByText("IP/Hostname Info")).toBeInTheDocument();
     expect(screen.getByText("Service Status")).toBeInTheDocument();
-    expect(screen.getByText("Access Log Viewer")).toBeInTheDocument();
   });
 
   it("has correct links for each tool", () => {
@@ -65,15 +64,11 @@ describe("Home Page", () => {
       "href",
       "/service-status"
     );
-    expect(screen.getByText("Access Log Viewer").closest("a")).toHaveAttribute(
-      "href",
-      "/access-log-viewer"
-    );
   });
 
-  it("renders 10 tool buttons", () => {
+  it("renders 9 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(10);
+    expect(buttons).toHaveLength(9);
   });
 
   it("displays buttons with correct styling", () => {
