@@ -28,9 +28,7 @@ describe("JWT Decoder Page", () => {
   it("renders JWT input textarea", () => {
     render(<JWTDecoderPage />);
 
-    expect(
-      screen.getByPlaceholderText(/Enter JWT token/)
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Enter JWT token/)).toBeInTheDocument();
   });
 
   it("renders decode and clear buttons", () => {
@@ -51,9 +49,7 @@ describe("JWT Decoder Page", () => {
   it("shows error for invalid JWT format", () => {
     render(<JWTDecoderPage />);
 
-    const textarea = screen.getByPlaceholderText(
-      /Enter JWT token/
-    );
+    const textarea = screen.getByPlaceholderText(/Enter JWT token/);
     fireEvent.change(textarea, { target: { value: "invalid.jwt" } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
@@ -67,9 +63,7 @@ describe("JWT Decoder Page", () => {
   it("decodes valid JWT and displays results", async () => {
     render(<JWTDecoderPage />);
 
-    const textarea = screen.getByPlaceholderText(
-      /Enter JWT token/
-    );
+    const textarea = screen.getByPlaceholderText(/Enter JWT token/);
     fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
@@ -84,9 +78,7 @@ describe("JWT Decoder Page", () => {
   it("displays decoded header content", async () => {
     render(<JWTDecoderPage />);
 
-    const textarea = screen.getByPlaceholderText(
-      /Enter JWT token/
-    );
+    const textarea = screen.getByPlaceholderText(/Enter JWT token/);
     fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
@@ -99,9 +91,7 @@ describe("JWT Decoder Page", () => {
   it("displays decoded payload content", async () => {
     render(<JWTDecoderPage />);
 
-    const textarea = screen.getByPlaceholderText(
-      /Enter JWT token/
-    );
+    const textarea = screen.getByPlaceholderText(/Enter JWT token/);
     fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
@@ -114,9 +104,7 @@ describe("JWT Decoder Page", () => {
   it("clears input and results when clear button is clicked", async () => {
     render(<JWTDecoderPage />);
 
-    const textarea = screen.getByPlaceholderText(
-      /Enter JWT token/
-    );
+    const textarea = screen.getByPlaceholderText(/Enter JWT token/);
     fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
@@ -133,9 +121,7 @@ describe("JWT Decoder Page", () => {
   it("displays warning about signature verification", async () => {
     render(<JWTDecoderPage />);
 
-    const textarea = screen.getByPlaceholderText(
-      /Enter JWT token/
-    );
+    const textarea = screen.getByPlaceholderText(/Enter JWT token/);
     fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
@@ -149,9 +135,7 @@ describe("JWT Decoder Page", () => {
   it("allows copying individual sections", async () => {
     render(<JWTDecoderPage />);
 
-    const textarea = screen.getByPlaceholderText(
-      /Enter JWT token/
-    );
+    const textarea = screen.getByPlaceholderText(/Enter JWT token/);
     fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
