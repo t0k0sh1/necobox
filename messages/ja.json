@@ -119,6 +119,7 @@
     "description": "署名検証なしでJWTトークンをデコード",
     "breadcrumb": "JWTデコーダー",
     "jwtToken": "JWTトークン",
+    "jwtTokenPlaceholder": "JWTトークンを入力してください (例: header.payload.signature)",
     "decode": "デコード",
     "decodedData": "デコードされたデータ",
     "header": "ヘッダー",

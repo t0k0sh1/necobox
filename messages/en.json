@@ -119,6 +119,7 @@
     "description": "Decode JWT tokens without signature verification",
     "breadcrumb": "JWT Decoder",
     "jwtToken": "JWT Token",
+    "jwtTokenPlaceholder": "Enter JWT token (e.g., header.payload.signature)",
     "decode": "Decode",
     "decodedData": "Decoded Data",
     "header": "Header",

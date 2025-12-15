@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import JWTDecoderPage from "../[locale]/jwt-decoder/page";
 
 describe("JWT Decoder Page", () => {
@@ -6,14 +12,17 @@ describe("JWT Decoder Page", () => {
     (navigator.clipboard.writeText as jest.Mock).mockClear();
   });
 
-  // Sample valid JWT for testing
-  const validJWT =
+  // Test-only JWT token constant (not a real secret - used for testing JWT decoder functionality)
+  // This is a well-known example JWT from jwt.io used for testing purposes only
+  const TEST_JWT_TOKEN =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
 
   it("renders page title", () => {
     render(<JWTDecoderPage />);
 
-    expect(screen.getByRole("heading", { name: "JWT Decoder" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "JWT Decoder" })
+    ).toBeInTheDocument();
   });
 
   it("renders JWT input textarea", () => {
@@ -61,7 +70,7 @@ describe("JWT Decoder Page", () => {
     const textarea = screen.getByPlaceholderText(
       /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9/
     );
-    fireEvent.change(textarea, { target: { value: validJWT } });
+    fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
     await waitFor(() => {
@@ -78,7 +87,7 @@ describe("JWT Decoder Page", () => {
     const textarea = screen.getByPlaceholderText(
       /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9/
     );
-    fireEvent.change(textarea, { target: { value: validJWT } });
+    fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
     await waitFor(() => {
@@ -93,7 +102,7 @@ describe("JWT Decoder Page", () => {
     const textarea = screen.getByPlaceholderText(
       /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9/
     );
-    fireEvent.change(textarea, { target: { value: validJWT } });
+    fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
     await waitFor(() => {
@@ -108,7 +117,7 @@ describe("JWT Decoder Page", () => {
     const textarea = screen.getByPlaceholderText(
       /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9/
     );
-    fireEvent.change(textarea, { target: { value: validJWT } });
+    fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
     await waitFor(() => {
@@ -127,7 +136,7 @@ describe("JWT Decoder Page", () => {
     const textarea = screen.getByPlaceholderText(
       /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9/
     );
-    fireEvent.change(textarea, { target: { value: validJWT } });
+    fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
     await waitFor(() => {
@@ -143,7 +152,7 @@ describe("JWT Decoder Page", () => {
     const textarea = screen.getByPlaceholderText(
       /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9/
     );
-    fireEvent.change(textarea, { target: { value: validJWT } });
+    fireEvent.change(textarea, { target: { value: TEST_JWT_TOKEN } });
     fireEvent.click(screen.getByRole("button", { name: "Decode" }));
 
     await waitFor(() => {
