@@ -32,6 +32,18 @@ export default function ImageConverterPage() {
   const acceptedTypes =
     activeTab === "pngToJpeg" ? "image/png" : "image/jpeg,image/jpg";
 
+  // Sanitize file name to prevent DOM XSS attacks
+  const sanitizeFileName = (fileName: string): string => {
+    // Remove dangerous characters
+    let sanitized = fileName.replace(/[<>:"/\\|?*\x00-\x1f]/g, "");
+    // Remove consecutive dots
+    sanitized = sanitized.replace(/\.{2,}/g, "");
+    // Remove leading/trailing dots and spaces
+    sanitized = sanitized.trim().replace(/^\.+|\.+$/g, "");
+    // Use default name if empty
+    return sanitized || "download";
+  };
+
   const handleFileSelect = useCallback(
     (selectedFiles: FileList | null) => {
       if (!selectedFiles) return;
@@ -177,7 +189,7 @@ export default function ImageConverterPage() {
         const file = convertedFiles[0];
         const a = document.createElement("a");
         a.href = file.url;
-        a.download = file.name;
+        a.download = sanitizeFileName(file.name);
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -220,7 +232,7 @@ export default function ImageConverterPage() {
 
     const a = document.createElement("a");
     a.href = file.url;
-    a.download = file.name;
+    a.download = sanitizeFileName(file.name);
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -324,12 +336,14 @@ export default function ImageConverterPage() {
                         >
                           <div className="aspect-square flex items-center justify-center mb-2 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
                             {convertedFile?.url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={convertedFile.url}
                                 alt={convertedFile.name}
                                 className="w-full h-full object-cover"
                               />
                             ) : previewUrls[index] ? (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={previewUrls[index]}
                                 alt={file.name}

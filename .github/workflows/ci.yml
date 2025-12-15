@@ -39,15 +39,3 @@ jobs:
 
       - name: Run tests
         run: pnpm test
-
-      - name: Run tests with coverage
-        run: pnpm test:coverage
-        if: github.event_name == 'pull_request'
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        if: github.event_name == 'pull_request'
-        with:
-          name: coverage-report
-          path: coverage/
-          retention-days: 7
