@@ -143,7 +143,7 @@ export function validateRegex(pattern: string): {
   regex?: RegExp;
 } {
   if (!pattern.trim()) {
-    return { isValid: true };
+    return { isValid: true, error: undefined };
   }
 
   try {

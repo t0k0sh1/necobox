@@ -51,14 +51,14 @@ export default function AccessLogViewerPage() {
   // Validate filters
   const statusCodeValidation = useMemo(() => {
     if (!statusCodeFilter.trim()) {
-      return { isValid: true };
+      return { isValid: true, error: undefined };
     }
     return parseStatusCodeFilter(statusCodeFilter);
   }, [statusCodeFilter]);
 
   const pathRegexValidation = useMemo(() => {
     if (!pathRegexFilter.trim()) {
-      return { isValid: true };
+      return { isValid: true, error: undefined };
     }
     return validateRegex(pathRegexFilter);
   }, [pathRegexFilter]);
