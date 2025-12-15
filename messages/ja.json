@@ -299,7 +299,8 @@
       "title": "ログファイルをアップロード",
       "description": "複数のログファイル（.log, .txt, .gz）を選択またはドラッグ&ドロップ",
       "selectFiles": "ファイルを選択",
-      "dragDrop": "ここにファイルをドラッグ&ドロップ"
+      "dragDrop": "ここにファイルをドラッグ&ドロップ",
+      "removeFile": "ファイル「{{fileName}}」を削除"
     },
     "uploadedFiles": "{count}個のファイルがアップロードされています",
     "filters": {

@@ -299,7 +299,8 @@
       "title": "Upload Log Files",
       "description": "Select or drag and drop multiple log files (.log, .txt, .gz)",
       "selectFiles": "Select Files",
-      "dragDrop": "Drag and drop files here"
+      "dragDrop": "Drag and drop files here",
+      "removeFile": "Remove file {{fileName}}"
     },
     "uploadedFiles": "{count} file(s) uploaded",
     "filters": {

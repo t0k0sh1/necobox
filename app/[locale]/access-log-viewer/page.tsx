@@ -63,8 +63,19 @@ export default function AccessLogViewerPage() {
     return validateRegex(pathRegexFilter);
   }, [pathRegexFilter]);
 
+  // Memoize extracted columns per entry to avoid recomputation
+  const extractedColumnsCache = useMemo(() => {
+    const cache = new Map<string, string[]>();
+    return cache;
+  }, [entries]);
+
   // Extract additional columns from raw field
   const extractAdditionalColumns = useCallback((entry: AccessLogEntry): string[] => {
+    // Use raw as cache key since it's unique per entry
+    const cacheKey = entry.raw;
+    if (extractedColumnsCache.has(cacheKey)) {
+      return extractedColumnsCache.get(cacheKey)!;
+    }
     const raw = entry.raw.trim();
     if (!raw) return [];
 
@@ -87,8 +98,11 @@ export default function AccessLogViewerPage() {
         quoteChar = "";
         current += char;
       } else if (char === "[" && !inQuotes) {
-        inBrackets = true;
-        bracketDepth = 1;
+        if (!inBrackets) {
+          inBrackets = true;
+          bracketDepth = 0;
+        }
+        bracketDepth++;
         current += char;
       } else if (char === "]" && !inQuotes && inBrackets) {
         bracketDepth--;
@@ -177,8 +191,10 @@ export default function AccessLogViewerPage() {
       return true;
     });
 
+    // Cache the result
+    extractedColumnsCache.set(cacheKey, filteredTokens);
     return filteredTokens;
-  }, []);
+  }, [extractedColumnsCache]);
 
   // Calculate maximum number of additional columns across all entries
   const maxAdditionalColumns = useMemo(() => {
@@ -416,6 +432,7 @@ export default function AccessLogViewerPage() {
                 accept=".log,.txt,.gz,text/plain"
                 onChange={handleFileInputChange}
                 className="hidden"
+                aria-label={t("upload.selectFiles")}
               />
               <p className="text-xs text-gray-500 dark:text-gray-500">
                 {t("upload.dragDrop")}
@@ -451,6 +468,7 @@ export default function AccessLogViewerPage() {
                       size="sm"
                       onClick={() => removeFile(file.id)}
                       className="ml-2"
+                      aria-label={t("upload.removeFile", { fileName: file.name })}
                     >
                       <X className="w-4 h-4" />
                     </Button>

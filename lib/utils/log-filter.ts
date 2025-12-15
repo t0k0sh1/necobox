@@ -76,11 +76,11 @@ export function parseStatusCodeFilter(filter: string): {
       } else if (part.match(/^\d+$/)) {
         // Exact number
         const num = parseInt(part, 10);
-        if (isNaN(num) || num < 0 || num > 599) {
+        if (isNaN(num) || num < 0) {
           return {
             matches: () => false,
             isValid: false,
-            error: `Invalid status code: ${part}. Must be between 0 and 599`,
+            error: `Invalid status code: ${part}. Must be a non-negative integer`,
           };
         }
         includeExact.push(num);

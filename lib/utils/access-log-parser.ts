@@ -77,9 +77,10 @@ function parseLogDate(dateStr: string): Date | null {
         )
       );
       // Adjust for timezone offset
+      // Convert from log's timezone to UTC
       const tzOffset = parseInt(tz.slice(1, 3), 10) * 60 + parseInt(tz.slice(3, 5), 10);
-      const tzSign = tz[0] === "+" ? -1 : 1;
-      date.setMinutes(date.getMinutes() + tzSign * tzOffset);
+      const tzSign = tz[0] === "+" ? 1 : -1;
+      date.setMinutes(date.getMinutes() - tzSign * tzOffset);
       return date;
     }
     // Fallback to standard Date parsing
@@ -309,13 +310,19 @@ export function parseAccessLog(content: string): ParseResult {
       entries.push(entry);
 
       // Only add to errors if we couldn't extract any meaningful information
-      if (
+      // Check if this is a fallback entry (no meaningful data extracted)
+      const isFallbackEntry =
         !entry.ip &&
         !entry.method &&
         !entry.path &&
-        entry.status === 0 &&
-        entry.timestamp.getTime() === new Date().getTime()
-      ) {
+        entry.status === 0;
+      
+      // Check if timestamp is the default (epoch or current time)
+      // We use a small threshold to account for timing differences
+      const timestampDiff = Math.abs(entry.timestamp.getTime() - new Date(0).getTime());
+      const isDefaultTimestamp = timestampDiff < 1000; // Within 1 second of epoch
+      
+      if (isFallbackEntry && isDefaultTimestamp) {
         // This is a fallback entry with no extracted information
         // Don't add to errors, just log it as a warning
       }
