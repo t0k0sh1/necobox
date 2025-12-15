@@ -81,7 +81,7 @@ export default function Home() {
                 variant="outline"
                 className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
               >
-                <Image className="size-10" />
+                <Image className="size-10" aria-label={t("imageConverter")} />
                 <span className="text-sm">{t("imageConverter")}</span>
               </Button>
             </Link>

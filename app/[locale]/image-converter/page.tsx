@@ -336,12 +336,14 @@ export default function ImageConverterPage() {
                         >
                           <div className="aspect-square flex items-center justify-center mb-2 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
                             {convertedFile?.url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={convertedFile.url}
                                 alt={convertedFile.name}
                                 className="w-full h-full object-cover"
                               />
                             ) : previewUrls[index] ? (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={previewUrls[index]}
                                 alt={file.name}
