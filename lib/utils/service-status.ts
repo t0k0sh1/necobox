@@ -703,6 +703,15 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     fetchFn: fetchSlackStatus,
   },
   {
+    id: "zoom",
+    name: "Zoom",
+    category: "communication",
+    url: "https://zoom.us",
+    statusUrl: "https://status.zoom.us",
+    fetchFn: () =>
+      fetchStatuspageStatus("https://status.zoom.us/api/v2/summary.json"),
+  },
+  {
     id: "vercel",
     name: "Vercel",
     category: "hosting-cdn",
