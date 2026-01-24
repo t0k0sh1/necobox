@@ -33,8 +33,17 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
     const filesToExtract: { path: string; entry: JSZip.JSZipObject }[] = [];
 
     zip.forEach((relativePath, zipEntry) => {
-      // ディレクトリや隠しファイル（__MACOSX等）をスキップ
-      if (zipEntry.dir || relativePath.startsWith("__MACOSX") || relativePath.startsWith(".")) {
+      // ディレクトリをスキップ
+      if (zipEntry.dir) {
+        return;
+      }
+
+      // 隠しファイル・フォルダをスキップ（パスのいずれかのセグメントが.で始まる場合）
+      const pathSegments = relativePath.split("/");
+      const hasHiddenSegment = pathSegments.some(
+        (segment) => segment.startsWith(".") || segment.startsWith("__MACOSX")
+      );
+      if (hasHiddenSegment) {
         return;
       }
 
