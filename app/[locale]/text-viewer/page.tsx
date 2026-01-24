@@ -6,14 +6,34 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  getColumnFilterPattern,
+  getHighlightColumns,
+  highlightColumnsWithSearch,
+  isColumnFilterMode,
+  matchesColumnFilters,
+  parseColumnFilter,
+  splitLineToColumns,
+} from "@/lib/utils/column-filter";
 import { decompressGz, isGzipFile } from "@/lib/utils/gz-decompressor";
 import { validateRegex } from "@/lib/utils/log-filter";
 import { hasNonEmptyMatch, highlightMatches } from "@/lib/utils/text-highlight";
 import { decompressZip, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
 import { FileText, HelpCircle, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+// 区切り文字の選択肢
+type DelimiterType = "none" | "space" | "tab" | "comma" | "custom";
 
 interface UploadedFile {
   id: string;
@@ -22,6 +42,8 @@ interface UploadedFile {
   lines: string[];
   searchText: string;
   isRegex: boolean;
+  delimiterType: DelimiterType;
+  customDelimiter: string;
 }
 
 export default function TextViewerPage() {
@@ -124,6 +146,40 @@ export default function TextViewerPage() {
     );
   }, []);
 
+  // ファイルごとの区切り文字タイプを更新
+  const updateDelimiterType = useCallback((fileId: string, newType: DelimiterType) => {
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === fileId ? { ...f, delimiterType: newType } : f
+      )
+    );
+  }, []);
+
+  // ファイルごとのカスタム区切り文字を更新
+  const updateCustomDelimiter = useCallback((fileId: string, newDelimiter: string) => {
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === fileId ? { ...f, customDelimiter: newDelimiter } : f
+      )
+    );
+  }, []);
+
+  // 区切り文字を取得
+  const getDelimiter = useCallback((file: UploadedFile): string => {
+    switch (file.delimiterType) {
+      case "space":
+        return " ";
+      case "tab":
+        return "\t";
+      case "comma":
+        return ",";
+      case "custom":
+        return file.customDelimiter;
+      default:
+        return "";
+    }
+  }, []);
+
   // フィルタされた行
   const filteredLines = useMemo(() => {
     if (!searchText.trim()) {
@@ -135,11 +191,27 @@ export default function TextViewerPage() {
       return lines.map((line, index) => ({ line, originalIndex: index }));
     }
 
+    // 列フィルタの解析
+    const parsedFilter = parseColumnFilter(searchText);
+    const delimiter = activeFile ? getDelimiter(activeFile) : "";
+
+    // 列フィルタモードの場合
+    if (isColumnFilterMode(parsedFilter) && delimiter) {
+      return lines
+        .map((line, index) => ({ line, originalIndex: index }))
+        .filter(({ line }) => {
+          const columns = splitLineToColumns(line, delimiter);
+          return matchesColumnFilters(columns, parsedFilter.columnFilters, isRegex);
+        });
+    }
+
+    // 通常の全文検索
+    const pattern = parsedFilter.generalPattern || searchText;
     // hasNonEmptyMatch を使用して空文字列マッチを除外
     return lines
       .map((line, index) => ({ line, originalIndex: index }))
-      .filter(({ line }) => hasNonEmptyMatch(line, searchText, isRegex));
-  }, [lines, searchText, isRegex, regexValidation.isValid]);
+      .filter(({ line }) => hasNonEmptyMatch(line, pattern, isRegex));
+  }, [lines, searchText, isRegex, regexValidation.isValid, activeFile, getDelimiter]);
 
   const handleFileSelect = useCallback(
     async (selectedFiles: FileList | null) => {
@@ -165,6 +237,8 @@ export default function TextViewerPage() {
                   lines: fileLines,
                   searchText: "",
                   isRegex: false,
+                  delimiterType: "none" as DelimiterType,
+                  customDelimiter: "",
                 };
               });
             }
@@ -183,6 +257,8 @@ export default function TextViewerPage() {
                 lines: fileLines,
                 searchText: "",
                 isRegex: false,
+                delimiterType: "none" as DelimiterType,
+                customDelimiter: "",
               }];
             }
 
@@ -197,6 +273,8 @@ export default function TextViewerPage() {
               lines: fileLines,
               searchText: "",
               isRegex: false,
+              delimiterType: "none" as DelimiterType,
+              customDelimiter: "",
             }];
           } catch (fileError) {
             const errorMessage =
@@ -400,6 +478,41 @@ export default function TextViewerPage() {
 
                     {/* フィルタと表示オプション */}
                     <div className="space-y-4 border-t pt-4">
+                      {/* 区切り文字選択 */}
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-sm whitespace-nowrap">
+                            {t("delimiter.label")}:
+                          </Label>
+                          <Select
+                            value={file.delimiterType}
+                            onValueChange={(value: DelimiterType) =>
+                              updateDelimiterType(file.id, value)
+                            }
+                          >
+                            <SelectTrigger className="w-[140px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">{t("delimiter.none")}</SelectItem>
+                              <SelectItem value="space">{t("delimiter.space")}</SelectItem>
+                              <SelectItem value="tab">{t("delimiter.tab")}</SelectItem>
+                              <SelectItem value="comma">{t("delimiter.comma")}</SelectItem>
+                              <SelectItem value="custom">{t("delimiter.custom")}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {file.delimiterType === "custom" && (
+                          <Input
+                            type="text"
+                            placeholder={t("delimiter.customPlaceholder")}
+                            value={file.customDelimiter}
+                            onChange={(e) => updateCustomDelimiter(file.id, e.target.value)}
+                            className="w-32"
+                          />
+                        )}
+                      </div>
+
                       <div className="flex flex-col md:flex-row gap-4">
                         {/* 検索入力 */}
                         <div className="flex-1 space-y-2">
@@ -407,7 +520,13 @@ export default function TextViewerPage() {
                             <div className="flex-1">
                               <Input
                                 type="text"
-                                placeholder={file.isRegex ? t("filter.regexPlaceholder") : t("filter.placeholder")}
+                                placeholder={
+                                  file.delimiterType !== "none"
+                                    ? t("filter.columnPlaceholder")
+                                    : file.isRegex
+                                      ? t("filter.regexPlaceholder")
+                                      : t("filter.placeholder")
+                                }
                                 value={file.searchText}
                                 onChange={(e) => updateSearchText(file.id, e.target.value)}
                                 className={file.isRegex && !regexValidation.isValid && file.searchText ? "border-red-500" : ""}
@@ -491,36 +610,67 @@ export default function TextViewerPage() {
                       }`}
                     >
                       <div className="p-4 font-mono text-sm">
-                        {filteredLines.map(({ line, originalIndex }) => (
-                          <div
-                            key={originalIndex}
-                            className={`group flex ${
-                              wrapLines ? "" : "whitespace-nowrap"
-                            } hover:bg-gray-100 dark:hover:bg-gray-800`}
-                          >
-                            {showLineNumbers && (
-                              <span className="select-none text-gray-400 dark:text-gray-600 pr-4 text-right min-w-[4rem]">
-                                {originalIndex + 1}
-                              </span>
-                            )}
-                            <span
-                              className={`flex-1 ${
-                                wrapLines ? "break-all" : ""
-                              }`}
+                        {filteredLines.map(({ line, originalIndex }) => {
+                          // 行の内容をレンダリングする関数
+                          const renderLineContent = (): ReactNode => {
+                            if (!searchText.trim()) {
+                              return line || "\u00A0";
+                            }
+
+                            if (!regexValidation.isValid) {
+                              return line || "\u00A0";
+                            }
+
+                            const delimiter = getDelimiter(file);
+                            const parsedFilter = parseColumnFilter(searchText);
+
+                            // 列フィルタモードで区切り文字がある場合
+                            if (isColumnFilterMode(parsedFilter) && delimiter) {
+                              const highlightCols = getHighlightColumns(parsedFilter.columnFilters);
+                              const pattern = getColumnFilterPattern(parsedFilter.columnFilters);
+                              return highlightColumnsWithSearch(
+                                line,
+                                delimiter,
+                                highlightCols,
+                                pattern,
+                                file.isRegex,
+                                highlightMatches
+                              );
+                            }
+
+                            // 通常のハイライト
+                            return highlightMatches(line, searchText, file.isRegex);
+                          };
+
+                          return (
+                            <div
+                              key={originalIndex}
+                              className={`group flex ${
+                                wrapLines ? "" : "whitespace-nowrap"
+                              } hover:bg-gray-100 dark:hover:bg-gray-800`}
                             >
-                              {searchText.trim() && regexValidation.isValid
-                                ? highlightMatches(line, searchText, file.isRegex)
-                                : line || "\u00A0"}
-                            </span>
-                            {/* コピーボタン（ホバー時のみ表示） */}
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0">
-                              <CopyButton
-                                text={line}
-                                className="h-6 w-6 p-0"
-                              />
-                            </span>
-                          </div>
-                        ))}
+                              {showLineNumbers && (
+                                <span className="select-none text-gray-400 dark:text-gray-600 pr-4 text-right min-w-[4rem]">
+                                  {originalIndex + 1}
+                                </span>
+                              )}
+                              <span
+                                className={`flex-1 ${
+                                  wrapLines ? "break-all" : ""
+                                }`}
+                              >
+                                {renderLineContent()}
+                              </span>
+                              {/* コピーボタン（ホバー時のみ表示） */}
+                              <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0">
+                                <CopyButton
+                                  text={line}
+                                  className="h-6 w-6 p-0"
+                                />
+                              </span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </TabsContent>
@@ -567,6 +717,16 @@ export default function TextViewerPage() {
 
           {/* コンテンツ */}
           <div className="p-3">
+            {/* 列フィルタヘルプ */}
+            <div className="font-semibold mb-1">{t("filter.columnHelp.title")}</div>
+            <div className="space-y-1 font-mono text-[11px] mb-3">
+              <div>{t("filter.columnHelp.example1")}</div>
+              <div>{t("filter.columnHelp.example2")}</div>
+              <div>{t("filter.columnHelp.example3")}</div>
+            </div>
+
+            {/* 正規表現パターン */}
+            <div className="font-semibold mb-1">{t("filter.regexHelp.title")}</div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono">
               <div>{t("filter.regexHelp.dot")}</div>
               <div>{t("filter.regexHelp.asterisk")}</div>
