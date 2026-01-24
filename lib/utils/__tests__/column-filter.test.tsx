@@ -1,6 +1,7 @@
 import {
   parseColumnFilter,
   splitLineToColumns,
+  splitLineToColumnsWithPositions,
   matchesColumnFilters,
   getHighlightColumns,
   isColumnFilterMode,
@@ -130,6 +131,88 @@ describe("column-filter", () => {
     it("先頭・末尾の空列を保持（カンマ）", () => {
       const result = splitLineToColumns(",value,", ",");
       expect(result).toEqual(["", "value", ""]);
+    });
+  });
+
+  describe("splitLineToColumnsWithPositions", () => {
+    it("空の区切り文字で分割しない", () => {
+      const result = splitLineToColumnsWithPositions("hello world", "");
+      expect(result).toEqual([{ text: "hello world", start: 0, end: 11 }]);
+    });
+
+    it("スペースで分割して位置を保持", () => {
+      const result = splitLineToColumnsWithPositions("GET /api 200", " ");
+      expect(result).toEqual([
+        { text: "GET", start: 0, end: 3 },
+        { text: "/api", start: 4, end: 8 },
+        { text: "200", start: 9, end: 12 },
+      ]);
+    });
+
+    it("連続スペースの位置を正確に保持", () => {
+      const line = "GET    /api    200";
+      const result = splitLineToColumnsWithPositions(line, " ");
+      expect(result).toEqual([
+        { text: "GET", start: 0, end: 3 },
+        { text: "/api", start: 7, end: 11 },
+        { text: "200", start: 15, end: 18 },
+      ]);
+      // 元の行から正しくスライスできることを確認
+      expect(line.slice(result[0].start, result[0].end)).toBe("GET");
+      expect(line.slice(result[1].start, result[1].end)).toBe("/api");
+      expect(line.slice(result[2].start, result[2].end)).toBe("200");
+      // 区切り部分も確認
+      expect(line.slice(result[0].end, result[1].start)).toBe("    ");
+    });
+
+    it("タブで分割して位置を保持", () => {
+      const result = splitLineToColumnsWithPositions("col1\tcol2\tcol3", "\t");
+      expect(result).toEqual([
+        { text: "col1", start: 0, end: 4 },
+        { text: "col2", start: 5, end: 9 },
+        { text: "col3", start: 10, end: 14 },
+      ]);
+    });
+
+    it("カンマで分割して位置を保持", () => {
+      const result = splitLineToColumnsWithPositions("a,b,c", ",");
+      expect(result).toEqual([
+        { text: "a", start: 0, end: 1 },
+        { text: "b", start: 2, end: 3 },
+        { text: "c", start: 4, end: 5 },
+      ]);
+    });
+
+    it("先頭のスペースを含む行を処理", () => {
+      const line = "  GET /api";
+      const result = splitLineToColumnsWithPositions(line, " ");
+      expect(result).toEqual([
+        { text: "GET", start: 2, end: 5 },
+        { text: "/api", start: 6, end: 10 },
+      ]);
+      // 先頭のスペースが保持されていることを確認
+      expect(line.slice(0, result[0].start)).toBe("  ");
+    });
+
+    it("末尾のスペースを含む行を処理", () => {
+      const line = "GET /api  ";
+      const result = splitLineToColumnsWithPositions(line, " ");
+      expect(result).toEqual([
+        { text: "GET", start: 0, end: 3 },
+        { text: "/api", start: 4, end: 8 },
+      ]);
+      // 末尾のスペースが保持されていることを確認（最後の列の end から行末まで）
+      expect(line.slice(result[result.length - 1].end)).toBe("  ");
+    });
+
+    it("空の行を処理", () => {
+      const result = splitLineToColumnsWithPositions("", " ");
+      expect(result).toEqual([]);
+    });
+
+    it("スペースのみの行を処理", () => {
+      const result = splitLineToColumnsWithPositions("   ", " ");
+      expect(result).toEqual([]);
     });
   });
 

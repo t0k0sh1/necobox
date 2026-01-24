@@ -65,6 +65,15 @@ export function parseColumnFilter(searchText: string): ParsedFilter {
 }
 
 /**
+ * 列の位置情報
+ */
+export interface ColumnSpan {
+  text: string;
+  start: number;
+  end: number;
+}
+
+/**
  * 行を区切り文字で列に分割する
  */
 export function splitLineToColumns(line: string, delimiter: string): string[] {
@@ -78,6 +87,47 @@ export function splitLineToColumns(line: string, delimiter: string): string[] {
   }
 
   return line.split(delimiter);
+}
+
+/**
+ * 行を区切り文字で列に分割し、各列の位置情報も返す
+ * 元の行構造を保持してレンダリングするために使用
+ */
+export function splitLineToColumnsWithPositions(line: string, delimiter: string): ColumnSpan[] {
+  if (!delimiter) {
+    return [{ text: line, start: 0, end: line.length }];
+  }
+
+  const columns: ColumnSpan[] = [];
+
+  // スペースの場合は連続空白を1つの区切りとして扱う
+  if (delimiter === " ") {
+    const regex = /\S+/g;
+    let match;
+    while ((match = regex.exec(line)) !== null) {
+      columns.push({
+        text: match[0],
+        start: match.index,
+        end: match.index + match[0].length,
+      });
+    }
+    return columns;
+  }
+
+  // その他の区切り文字
+  let currentPos = 0;
+  const parts = line.split(delimiter);
+  for (let i = 0; i < parts.length; i++) {
+    const text = parts[i];
+    columns.push({
+      text,
+      start: currentPos,
+      end: currentPos + text.length,
+    });
+    currentPos += text.length + delimiter.length;
+  }
+
+  return columns;
 }
 
 /**
@@ -145,6 +195,7 @@ export function getHighlightColumns(filters: ColumnFilter[]): Set<number> {
 
 /**
  * 列ハイライトと検索ハイライトを適用した要素を生成する
+ * 元の行構造（スペーシング）を保持する
  */
 export function highlightColumnsWithSearch(
   line: string,
@@ -159,19 +210,32 @@ export function highlightColumnsWithSearch(
     return [highlightMatchFn(line, pattern, isRegex)];
   }
 
-  const columns = splitLineToColumns(line, delimiter);
+  // 位置情報付きで列を分割
+  const columnSpans = splitLineToColumnsWithPositions(line, delimiter);
   const result: ReactNode[] = [];
 
-  for (let i = 0; i < columns.length; i++) {
+  let lastEnd = 0;
+
+  for (let i = 0; i < columnSpans.length; i++) {
+    const span = columnSpans[i];
     const columnNumber = i + 1; // 1始まり
     const isTargetColumn = targetColumns.size === 0 || targetColumns.has(columnNumber);
-    const columnText = columns[i];
+    const nextColumnIsTarget = i + 1 < columnSpans.length &&
+      (targetColumns.size === 0 || targetColumns.has(columnNumber + 1));
 
-    // 区切り文字を追加（最初の列以外）
-    if (i > 0) {
+    // 前の列の終わりから現在の列の始まりまでの区切り部分（スペースや区切り文字）
+    if (span.start > lastEnd) {
+      const separatorText = line.slice(lastEnd, span.start);
+      // 区切り部分のスタイルは、前後の列のハイライト状態に基づく
+      // 両方の隣接列が対象でない場合はグレー、そうでなければ通常表示
+      const separatorIsGray = !isTargetColumn && !nextColumnIsTarget &&
+        (i > 0 ? !targetColumns.has(columnNumber - 1) : true);
       result.push(
-        <span key={`sep-${i}`} className={isTargetColumn ? "" : "text-gray-400"}>
-          {delimiter === " " ? " " : delimiter}
+        <span
+          key={`sep-${i}`}
+          className={separatorIsGray ? "text-gray-400" : ""}
+        >
+          {separatorText}
         </span>
       );
     }
@@ -181,24 +245,36 @@ export function highlightColumnsWithSearch(
       // 対象列で検索パターンがある場合はハイライト
       result.push(
         <span key={`col-${i}`}>
-          {highlightMatchFn(columnText, pattern, isRegex)}
+          {highlightMatchFn(span.text, pattern, isRegex)}
         </span>
       );
     } else if (isTargetColumn) {
       // 対象列でパターンがない場合はそのまま表示
       result.push(
         <span key={`col-${i}`}>
-          {columnText}
+          {span.text}
         </span>
       );
     } else {
       // 非対象列はグレー表示
       result.push(
         <span key={`col-${i}`} className="text-gray-400">
-          {columnText}
+          {span.text}
         </span>
       );
     }
+
+    lastEnd = span.end;
+  }
+
+  // 行末に残っている部分（末尾のスペースなど）
+  if (lastEnd < line.length) {
+    const trailingText = line.slice(lastEnd);
+    result.push(
+      <span key="trailing" className="text-gray-400">
+        {trailingText}
+      </span>
+    );
   }
 
   return result;
