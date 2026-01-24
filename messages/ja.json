@@ -304,7 +304,30 @@
     },
     "filter": {
       "placeholder": "テキストで検索...",
-      "resultsCount": "{filtered}行 / 全{total}行"
+      "regexPlaceholder": "正規表現を入力...",
+      "useRegex": "正規表現を使用",
+      "invalidRegex": "無効な正規表現です",
+      "resultsCount": "{filtered}行 / 全{total}行",
+      "regexHelp": {
+        "title": "正規表現パターン",
+        "dot": ". - 任意の1文字",
+        "asterisk": "* - 0回以上の繰り返し",
+        "plus": "+ - 1回以上の繰り返し",
+        "question": "? - 0回または1回",
+        "caret": "^ - 行頭",
+        "dollar": "$ - 行末",
+        "charClass": "[abc] - 文字クラス",
+        "negCharClass": "[^abc] - 否定文字クラス",
+        "digit": "\\d - 数字 (0-9)",
+        "word": "\\w - 単語文字",
+        "space": "\\s - 空白文字",
+        "or": "| - OR演算子",
+        "group": "() - グループ化",
+        "examples": "使用例",
+        "exampleError": "error|warn - 'error'または'warn'にマッチ",
+        "exampleIp": "\\d+\\.\\d+\\.\\d+\\.\\d+ - IPアドレス",
+        "exampleTime": "\\d'{'2'}:'\\d'{'2'}:'\\d'{'2'}' - 時刻 (HH:MM:SS)"
+      }
     },
     "options": {
       "wrapLines": "行折り返し",

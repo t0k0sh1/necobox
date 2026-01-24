@@ -304,7 +304,30 @@
     },
     "filter": {
       "placeholder": "Search text...",
-      "resultsCount": "{filtered} of {total} lines"
+      "regexPlaceholder": "Enter regular expression...",
+      "useRegex": "Use Regex",
+      "invalidRegex": "Invalid regular expression",
+      "resultsCount": "{filtered} of {total} lines",
+      "regexHelp": {
+        "title": "Regular Expression Patterns",
+        "dot": ". - Any character",
+        "asterisk": "* - 0 or more times",
+        "plus": "+ - 1 or more times",
+        "question": "? - 0 or 1 time",
+        "caret": "^ - Start of line",
+        "dollar": "$ - End of line",
+        "charClass": "[abc] - Character class",
+        "negCharClass": "[^abc] - Negated class",
+        "digit": "\\d - Digit (0-9)",
+        "word": "\\w - Word character",
+        "space": "\\s - Whitespace",
+        "or": "| - OR operator",
+        "group": "() - Grouping",
+        "examples": "Examples",
+        "exampleError": "error|warn - Match 'error' or 'warn'",
+        "exampleIp": "\\d+\\.\\d+\\.\\d+\\.\\d+ - IP address",
+        "exampleTime": "\\d'{'2'}:'\\d'{'2'}:'\\d'{'2'}' - Time (HH:MM:SS)"
+      }
     },
     "options": {
       "wrapLines": "Wrap Lines",

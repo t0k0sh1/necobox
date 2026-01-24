@@ -1,5 +1,6 @@
 "use client";
 
+import { CopyButton } from "@/app/components/CopyButton";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { decompressGz, isGzipFile } from "@/lib/utils/gz-decompressor";
+import { validateRegex } from "@/lib/utils/log-filter";
+import { hasNonEmptyMatch, highlightMatches } from "@/lib/utils/text-highlight";
 import { decompressZip, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
-import { FileText, Upload, X } from "lucide-react";
+import { FileText, HelpCircle, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 interface UploadedFile {
   id: string;
@@ -18,6 +21,7 @@ interface UploadedFile {
   size: number;
   lines: string[];
   searchText: string;
+  isRegex: boolean;
 }
 
 export default function TextViewerPage() {
@@ -36,6 +40,48 @@ export default function TextViewerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // 正規表現ヘルプボックスの状態
+  const [showRegexHelp, setShowRegexHelp] = useState(false);
+  const [helpBoxPosition, setHelpBoxPosition] = useState({ x: 100, y: 100 });
+  const [isDraggingHelp, setIsDraggingHelp] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const helpBoxRef = useRef<HTMLDivElement>(null);
+
+  // ドラッグ処理
+  useEffect(() => {
+    if (!isDraggingHelp) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      setHelpBoxPosition({
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsDraggingHelp(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDraggingHelp, dragOffset]);
+
+  const handleHelpBoxMouseDown = (e: React.MouseEvent) => {
+    if (helpBoxRef.current) {
+      const rect = helpBoxRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+      setIsDraggingHelp(true);
+    }
+  };
+
   // 選択中のファイル
   const activeFile = useMemo(() => {
     return files.find((f) => f.id === activeFileId) || null;
@@ -49,6 +95,17 @@ export default function TextViewerPage() {
   // 選択中のファイルの検索テキスト
   const searchText = activeFile?.searchText || "";
 
+  // 選択中のファイルの正規表現フラグ
+  const isRegex = activeFile?.isRegex || false;
+
+  // 正規表現のバリデーション結果
+  const regexValidation = useMemo(() => {
+    if (!isRegex || !searchText.trim()) {
+      return { isValid: true, error: undefined };
+    }
+    return validateRegex(searchText);
+  }, [isRegex, searchText]);
+
   // ファイルごとの検索テキストを更新
   const updateSearchText = useCallback((fileId: string, newSearchText: string) => {
     setFiles((prev) =>
@@ -58,16 +115,31 @@ export default function TextViewerPage() {
     );
   }, []);
 
+  // ファイルごとの正規表現フラグを更新
+  const updateIsRegex = useCallback((fileId: string, newIsRegex: boolean) => {
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === fileId ? { ...f, isRegex: newIsRegex } : f
+      )
+    );
+  }, []);
+
   // フィルタされた行
   const filteredLines = useMemo(() => {
     if (!searchText.trim()) {
       return lines.map((line, index) => ({ line, originalIndex: index }));
     }
-    const searchLower = searchText.toLowerCase();
+
+    // 正規表現モードで無効な正規表現の場合は全行を返す
+    if (isRegex && !regexValidation.isValid) {
+      return lines.map((line, index) => ({ line, originalIndex: index }));
+    }
+
+    // hasNonEmptyMatch を使用して空文字列マッチを除外
     return lines
       .map((line, index) => ({ line, originalIndex: index }))
-      .filter(({ line }) => line.toLowerCase().includes(searchLower));
-  }, [lines, searchText]);
+      .filter(({ line }) => hasNonEmptyMatch(line, searchText, isRegex));
+  }, [lines, searchText, isRegex, regexValidation.isValid]);
 
   const handleFileSelect = useCallback(
     async (selectedFiles: FileList | null) => {
@@ -92,6 +164,7 @@ export default function TextViewerPage() {
                   size: new Blob([extracted.content]).size,
                   lines: fileLines,
                   searchText: "",
+                  isRegex: false,
                 };
               });
             }
@@ -109,6 +182,7 @@ export default function TextViewerPage() {
                 size: new Blob([content]).size,
                 lines: fileLines,
                 searchText: "",
+                isRegex: false,
               }];
             }
 
@@ -122,6 +196,7 @@ export default function TextViewerPage() {
               size: file.size,
               lines: fileLines,
               searchText: "",
+              isRegex: false,
             }];
           } catch (fileError) {
             const errorMessage =
@@ -327,13 +402,45 @@ export default function TextViewerPage() {
                     <div className="space-y-4 border-t pt-4">
                       <div className="flex flex-col md:flex-row gap-4">
                         {/* 検索入力 */}
-                        <div className="flex-1">
-                          <Input
-                            type="text"
-                            placeholder={t("filter.placeholder")}
-                            value={file.searchText}
-                            onChange={(e) => updateSearchText(file.id, e.target.value)}
-                          />
+                        <div className="flex-1 space-y-2">
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <div className="flex-1">
+                              <Input
+                                type="text"
+                                placeholder={file.isRegex ? t("filter.regexPlaceholder") : t("filter.placeholder")}
+                                value={file.searchText}
+                                onChange={(e) => updateSearchText(file.id, e.target.value)}
+                                className={file.isRegex && !regexValidation.isValid && file.searchText ? "border-red-500" : ""}
+                              />
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`useRegex-${file.id}`}
+                                checked={file.isRegex}
+                                onCheckedChange={(checked) =>
+                                  updateIsRegex(file.id, checked === true)
+                                }
+                              />
+                              <Label htmlFor={`useRegex-${file.id}`} className="text-sm cursor-pointer whitespace-nowrap">
+                                {t("filter.useRegex")}
+                              </Label>
+                              {/* 正規表現ヘルプボタン */}
+                              <button
+                                type="button"
+                                onClick={() => setShowRegexHelp(!showRegexHelp)}
+                                className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                aria-label={t("filter.regexHelp.title")}
+                              >
+                                <HelpCircle className={`w-4 h-4 ${showRegexHelp ? "text-primary" : "text-gray-400"}`} />
+                              </button>
+                            </div>
+                          </div>
+                          {/* 正規表現エラーメッセージ */}
+                          {file.isRegex && !regexValidation.isValid && file.searchText && (
+                            <p className="text-sm text-red-600 dark:text-red-400">
+                              {t("filter.invalidRegex")}
+                            </p>
+                          )}
                         </div>
 
                         {/* 表示オプション */}
@@ -387,7 +494,7 @@ export default function TextViewerPage() {
                         {filteredLines.map(({ line, originalIndex }) => (
                           <div
                             key={originalIndex}
-                            className={`flex ${
+                            className={`group flex ${
                               wrapLines ? "" : "whitespace-nowrap"
                             } hover:bg-gray-100 dark:hover:bg-gray-800`}
                           >
@@ -401,7 +508,16 @@ export default function TextViewerPage() {
                                 wrapLines ? "break-all" : ""
                               }`}
                             >
-                              {line || "\u00A0"}
+                              {searchText.trim() && regexValidation.isValid
+                                ? highlightMatches(line, searchText, file.isRegex)
+                                : line || "\u00A0"}
+                            </span>
+                            {/* コピーボタン（ホバー時のみ表示） */}
+                            <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0">
+                              <CopyButton
+                                text={line}
+                                className="h-6 w-6 p-0"
+                              />
                             </span>
                           </div>
                         ))}
@@ -422,6 +538,59 @@ export default function TextViewerPage() {
           )}
         </div>
       </div>
+
+      {/* 正規表現ヘルプフローティングボックス */}
+      {showRegexHelp && (
+        <div
+          ref={helpBoxRef}
+          style={{
+            left: helpBoxPosition.x,
+            top: helpBoxPosition.y,
+          }}
+          className="fixed w-80 bg-gray-900 text-white text-xs rounded-lg shadow-2xl z-50 select-none"
+        >
+          {/* ヘッダー（ドラッグハンドル） */}
+          <div
+            onMouseDown={handleHelpBoxMouseDown}
+            className="flex items-center justify-between p-2 bg-gray-800 rounded-t-lg cursor-move border-b border-gray-700"
+          >
+            <span className="font-semibold">{t("filter.regexHelp.title")}</span>
+            <button
+              type="button"
+              onClick={() => setShowRegexHelp(false)}
+              className="p-1 rounded hover:bg-gray-700 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* コンテンツ */}
+          <div className="p-3">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono">
+              <div>{t("filter.regexHelp.dot")}</div>
+              <div>{t("filter.regexHelp.asterisk")}</div>
+              <div>{t("filter.regexHelp.plus")}</div>
+              <div>{t("filter.regexHelp.question")}</div>
+              <div>{t("filter.regexHelp.caret")}</div>
+              <div>{t("filter.regexHelp.dollar")}</div>
+              <div>{t("filter.regexHelp.charClass")}</div>
+              <div>{t("filter.regexHelp.negCharClass")}</div>
+              <div>{t("filter.regexHelp.digit")}</div>
+              <div>{t("filter.regexHelp.word")}</div>
+              <div>{t("filter.regexHelp.space")}</div>
+              <div>{t("filter.regexHelp.or")}</div>
+              <div>{t("filter.regexHelp.group")}</div>
+            </div>
+            <div className="font-semibold mt-3 mb-1">{t("filter.regexHelp.examples")}</div>
+            <div className="space-y-1 font-mono text-[11px]">
+              <div>{t("filter.regexHelp.exampleError")}</div>
+              <div>{t("filter.regexHelp.exampleIp")}</div>
+              <div>{t("filter.regexHelp.exampleTime")}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
