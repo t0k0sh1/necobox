@@ -559,7 +559,7 @@ export default function TextViewerPage() {
               type="button"
               onClick={() => setShowRegexHelp(false)}
               className="p-1 rounded hover:bg-gray-700 transition-colors"
-              aria-label="Close"
+              aria-label={t("filter.regexHelp.close")}
             >
               <X className="w-4 h-4" />
             </button>

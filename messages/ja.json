@@ -310,6 +310,7 @@
       "resultsCount": "{filtered}行 / 全{total}行",
       "regexHelp": {
         "title": "正規表現パターン",
+        "close": "閉じる",
         "dot": ". - 任意の1文字",
         "asterisk": "* - 0回以上の繰り返し",
         "plus": "+ - 1回以上の繰り返し",

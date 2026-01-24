@@ -310,6 +310,7 @@
       "resultsCount": "{filtered} of {total} lines",
       "regexHelp": {
         "title": "Regular Expression Patterns",
+        "close": "Close",
         "dot": ". - Any character",
         "asterisk": "* - 0 or more times",
         "plus": "+ - 1 or more times",
