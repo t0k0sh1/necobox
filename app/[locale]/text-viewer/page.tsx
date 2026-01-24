@@ -44,7 +44,7 @@ import { Check, ChevronDown, Copy, FileText, HelpCircle, Search, StickyNote, Upl
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
+import { Virtuoso } from "react-virtuoso";
 
 // 区切り文字の選択肢
 type DelimiterType = "none" | "space" | "tab" | "comma" | "custom";
@@ -235,12 +235,13 @@ export default function TextViewerPage() {
   const [isDragging, setIsDragging] = useState(false);
 
   // スクロール位置管理（タブ切り替え時の位置保持用）
+  // スクロール位置はrefで管理し、頻繁な再レンダリングを防ぐ
+  // タブ切り替え時のみstateに同期して復元に使用
   // Virtuoso用スクロール位置（fileId -> startIndex）
+  const scrollPositionsRef = useRef<Map<string, number>>(new Map());
   const [scrollPositions, setScrollPositions] = useState<Map<string, number>>(new Map());
   // 通常スクロール用位置（fileId -> scrollTop）
-  const [scrollTops, setScrollTops] = useState<Map<string, number>>(new Map());
-  // Virtuosoのref（fileIdごとに管理）
-  const virtuosoRefs = useRef<Map<string, VirtuosoHandle>>(new Map());
+  const scrollTopsRef = useRef<Map<string, number>>(new Map());
   // 通常スクロールコンテナのref（fileIdごとに管理）
   const scrollContainerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
@@ -800,17 +801,13 @@ export default function TextViewerPage() {
     });
 
     // スクロール位置をクリーンアップ
+    scrollPositionsRef.current.delete(fileId);
     setScrollPositions((prev) => {
       const newMap = new Map(prev);
       newMap.delete(fileId);
       return newMap;
     });
-    setScrollTops((prev) => {
-      const newMap = new Map(prev);
-      newMap.delete(fileId);
-      return newMap;
-    });
-    virtuosoRefs.current.delete(fileId);
+    scrollTopsRef.current.delete(fileId);
     scrollContainerRefs.current.delete(fileId);
   };
 
@@ -820,9 +817,9 @@ export default function TextViewerPage() {
     setError(null);
     clearSelection();
     // 全スクロール位置をクリア
+    scrollPositionsRef.current.clear();
     setScrollPositions(new Map());
-    setScrollTops(new Map());
-    virtuosoRefs.current.clear();
+    scrollTopsRef.current.clear();
     scrollContainerRefs.current.clear();
   };
 
@@ -830,12 +827,18 @@ export default function TextViewerPage() {
   const handleTabChange = useCallback((newFileId: string) => {
     // 現在のタブのスクロール位置を保存
     if (activeFileId) {
-      // 通常スクロールコンテナの位置を保存
+      // 通常スクロールコンテナの位置を保存（refから最新の値を取得して保存）
       const scrollContainer = scrollContainerRefs.current.get(activeFileId);
       if (scrollContainer) {
-        setScrollTops((prev) => {
+        scrollTopsRef.current.set(activeFileId, scrollContainer.scrollTop);
+      }
+
+      // Virtuosoのスクロール位置をstateに同期（復元用）
+      const virtuosoPosition = scrollPositionsRef.current.get(activeFileId);
+      if (virtuosoPosition !== undefined) {
+        setScrollPositions((prev) => {
           const newMap = new Map(prev);
-          newMap.set(activeFileId, scrollContainer.scrollTop);
+          newMap.set(activeFileId, virtuosoPosition);
           return newMap;
         });
       }
@@ -848,14 +851,14 @@ export default function TextViewerPage() {
     setTimeout(() => {
       // 通常スクロールコンテナの位置を復元
       const scrollContainer = scrollContainerRefs.current.get(newFileId);
-      const savedScrollTop = scrollTops.get(newFileId);
+      const savedScrollTop = scrollTopsRef.current.get(newFileId);
       if (scrollContainer && savedScrollTop !== undefined) {
         scrollContainer.scrollTop = savedScrollTop;
       }
 
       // Virtuosoの位置は initialTopMostItemIndex で復元されるため、ここでは処理不要
     }, 0);
-  }, [activeFileId, scrollTops]);
+  }, [activeFileId]);
 
   // 「このテキストを検索する」機能
   const handleSearchInFile = useCallback((targetFileId: string, searchText: string) => {
@@ -865,15 +868,15 @@ export default function TextViewerPage() {
     // 2. フィルタテキストを選択範囲に設定
     updateSearchText(targetFileId, searchText);
 
-    // 3. タブを切り替え
+    // 3. タブを切り替え（スクロール位置の保存・復元を含む）
     if (targetFileId !== activeFileId) {
-      setActiveFileId(targetFileId);
+      handleTabChange(targetFileId);
     }
 
     // 4. テキスト選択をクリア
     setTextSelection(null);
     window.getSelection()?.removeAllRanges();
-  }, [activeFileId, updateIsRegex, updateSearchText]);
+  }, [activeFileId, updateIsRegex, updateSearchText, handleTabChange]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -1262,28 +1265,19 @@ export default function TextViewerPage() {
                           // 仮想スクロール対応（表示行数より多い場合、かつ行折り返し無効時のみ）
                           // 行折り返し有効時は行の高さが可変になるため、仮想スクロールを使用せず max-height でスクロール
                           if (filteredLines.length > visibleLines && !wrapLines) {
-                            // 保存されたスクロール位置を取得
+                            // 保存されたスクロール位置を取得（stateから復元用の値を取得）
                             const savedScrollPosition = scrollPositions.get(file.id);
 
                             return (
                               <Virtuoso
                                 key={`${file.id}-${file.searchText}-${file.isRegex}`}
-                                ref={(ref) => {
-                                  if (ref) {
-                                    virtuosoRefs.current.set(file.id, ref);
-                                  }
-                                }}
                                 style={{ height: `${viewportHeight}px` }}
                                 totalCount={filteredLines.length}
                                 overscan={20}
                                 initialTopMostItemIndex={savedScrollPosition ?? 0}
                                 rangeChanged={({ startIndex }) => {
-                                  // スクロール位置を保存
-                                  setScrollPositions((prev) => {
-                                    const newMap = new Map(prev);
-                                    newMap.set(file.id, startIndex);
-                                    return newMap;
-                                  });
+                                  // スクロール位置をrefに保存（頻繁な再レンダリングを防ぐ）
+                                  scrollPositionsRef.current.set(file.id, startIndex);
                                 }}
                                 itemContent={(index) => {
                                   const { line, originalIndex } = filteredLines[index];
@@ -1322,13 +1316,9 @@ export default function TextViewerPage() {
                               }}
                               style={containerStyle}
                               onScroll={(e) => {
-                                // 通常スクロールの位置を保存
+                                // 通常スクロールの位置をrefに保存（頻繁な再レンダリングを防ぐ）
                                 const target = e.target as HTMLDivElement;
-                                setScrollTops((prev) => {
-                                  const newMap = new Map(prev);
-                                  newMap.set(file.id, target.scrollTop);
-                                  return newMap;
-                                });
+                                scrollTopsRef.current.set(file.id, target.scrollTop);
                               }}
                             >
                               {filteredLines.map(({ line, originalIndex }) => (
