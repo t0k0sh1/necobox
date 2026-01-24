@@ -9,10 +9,19 @@ export interface ExtractedFile {
 const MAX_ZIP_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB per file
 const MAX_FILES_TO_EXTRACT = 50; // 最大抽出ファイル数
+const MAX_TOTAL_EXTRACTED_SIZE = 200 * 1024 * 1024; // 200MB total
+const MAX_COMPRESSION_RATIO = 100; // 圧縮率の上限（ZIPボム検出用）
 
 /**
  * ZIPファイルを解凍してテキストファイルの内容を取得
  * 複数のテキストファイルが含まれている場合はそれぞれ別のファイルとして返す
+ *
+ * セキュリティ対策:
+ * - ZIPファイルサイズ制限
+ * - 個別ファイルサイズ制限
+ * - 抽出ファイル数制限
+ * - 抽出コンテンツ合計サイズ制限
+ * - 圧縮率チェック（ZIPボム検出）
  */
 export async function decompressZip(file: File): Promise<ExtractedFile[]> {
   // ZIPファイルサイズのチェック
@@ -25,6 +34,7 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
   try {
     const zip = await JSZip.loadAsync(file);
     const extractedFiles: ExtractedFile[] = [];
+    let totalExtractedSize = 0;
 
     // テキストファイルの拡張子パターン
     const textExtensions = /\.(txt|log|md|json|csv|xml|yaml|yml|conf|cfg|ini|properties|html|htm|css|js|ts|jsx|tsx|py|rb|java|c|cpp|h|hpp|go|rs|sh|bash|zsh|sql|graphql|toml)$/i;
@@ -70,11 +80,32 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
     // ファイルを1つずつ順番に処理（メモリ使用量を抑制）
     for (const { path, entry } of filesToExtract) {
       // 圧縮前のサイズをチェック（利用可能な場合）
-      // JSZipでは_data.uncompressedSizeで取得できる場合がある
       const uncompressedSize = (entry as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize;
       if (uncompressedSize && uncompressedSize > MAX_FILE_SIZE) {
         console.warn(`Skipping ${path}: file too large (${formatSize(uncompressedSize)})`);
         continue;
+      }
+
+      // 圧縮サイズを取得（利用可能な場合）
+      const compressedSize = (entry as unknown as { _data?: { compressedSize?: number } })._data?.compressedSize;
+
+      // ZIPボム検出: 圧縮率が異常に高い場合はスキップ
+      if (compressedSize && uncompressedSize && compressedSize > 0) {
+        const compressionRatio = uncompressedSize / compressedSize;
+        if (compressionRatio > MAX_COMPRESSION_RATIO) {
+          console.warn(
+            `Skipping ${path}: suspicious compression ratio (${compressionRatio.toFixed(1)}x)`
+          );
+          continue;
+        }
+      }
+
+      // 合計サイズの事前チェック（推定値が利用可能な場合）
+      if (uncompressedSize && totalExtractedSize + uncompressedSize > MAX_TOTAL_EXTRACTED_SIZE) {
+        console.warn(
+          `Stopping extraction: total size limit would be exceeded (${formatSize(totalExtractedSize + uncompressedSize)})`
+        );
+        break;
       }
 
       try {
@@ -87,6 +118,26 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
           continue;
         }
 
+        // ZIPボム検出: 実際の圧縮率チェック
+        if (compressedSize && compressedSize > 0) {
+          const actualRatio = contentSize / compressedSize;
+          if (actualRatio > MAX_COMPRESSION_RATIO) {
+            console.warn(
+              `Skipping ${path}: suspicious compression ratio detected (${actualRatio.toFixed(1)}x)`
+            );
+            continue;
+          }
+        }
+
+        // 合計サイズチェック
+        if (totalExtractedSize + contentSize > MAX_TOTAL_EXTRACTED_SIZE) {
+          console.warn(
+            `Stopping extraction: total size limit exceeded (${formatSize(totalExtractedSize + contentSize)})`
+          );
+          break;
+        }
+
+        totalExtractedSize += contentSize;
         extractedFiles.push({
           name: path,
           content,
@@ -103,7 +154,7 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
 
     return extractedFiles;
   } catch (error) {
-    if (error instanceof Error && error.message.includes("ZIP")) {
+    if (error instanceof Error && (error.message.includes("ZIP") || error.message.includes("file"))) {
       throw error;
     }
     throw new Error(
