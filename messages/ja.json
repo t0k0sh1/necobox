@@ -355,7 +355,9 @@
       "copy": "選択範囲をコピー",
       "clear": "選択解除",
       "helpTooltip": "行番号をドラッグで範囲選択",
-      "copyText": "コピー"
+      "copyText": "コピー",
+      "searchThis": "このテキストで検索",
+      "selectFile": "検索するファイル"
     },
     "emptyState": "ファイルをアップロードしてください",
     "memo": {

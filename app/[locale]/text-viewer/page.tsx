@@ -16,6 +16,12 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -34,7 +40,7 @@ import { decompressGz, isGzipFile } from "@/lib/utils/gz-decompressor";
 import { validateRegex } from "@/lib/utils/log-filter";
 import { hasNonEmptyMatch, highlightMatches } from "@/lib/utils/text-highlight";
 import { decompressZip, isBinaryContent, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
-import { Check, Copy, FileText, HelpCircle, StickyNote, Upload, X } from "lucide-react";
+import { Check, ChevronDown, Copy, FileText, HelpCircle, Search, StickyNote, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -227,6 +233,17 @@ export default function TextViewerPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  // スクロール位置管理（タブ切り替え時の位置保持用）
+  // スクロール位置はrefで管理し、頻繁な再レンダリングを防ぐ
+  // タブ切り替え時のみstateに同期して復元に使用
+  // Virtuoso用スクロール位置（fileId -> startIndex）
+  const scrollPositionsRef = useRef<Map<string, number>>(new Map());
+  const [scrollPositions, setScrollPositions] = useState<Map<string, number>>(new Map());
+  // 通常スクロール用位置（fileId -> scrollTop）
+  const scrollTopsRef = useRef<Map<string, number>>(new Map());
+  // 通常スクロールコンテナのref（fileIdごとに管理）
+  const scrollContainerRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   // 正規表現ヘルプボックスの状態
   const [showRegexHelp, setShowRegexHelp] = useState(false);
@@ -782,6 +799,16 @@ export default function TextViewerPage() {
 
       return newFiles;
     });
+
+    // スクロール位置をクリーンアップ
+    scrollPositionsRef.current.delete(fileId);
+    setScrollPositions((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(fileId);
+      return newMap;
+    });
+    scrollTopsRef.current.delete(fileId);
+    scrollContainerRefs.current.delete(fileId);
   };
 
   const handleClear = () => {
@@ -789,7 +816,67 @@ export default function TextViewerPage() {
     setActiveFileId(null);
     setError(null);
     clearSelection();
+    // 全スクロール位置をクリア
+    scrollPositionsRef.current.clear();
+    setScrollPositions(new Map());
+    scrollTopsRef.current.clear();
+    scrollContainerRefs.current.clear();
   };
+
+  // タブ切り替え処理（スクロール位置の保存・復元）
+  const handleTabChange = useCallback((newFileId: string) => {
+    // 現在のタブのスクロール位置を保存
+    if (activeFileId) {
+      // 通常スクロールコンテナの位置を保存（refから最新の値を取得して保存）
+      const scrollContainer = scrollContainerRefs.current.get(activeFileId);
+      if (scrollContainer) {
+        scrollTopsRef.current.set(activeFileId, scrollContainer.scrollTop);
+      }
+
+      // Virtuosoのスクロール位置をstateに同期（復元用）
+      const virtuosoPosition = scrollPositionsRef.current.get(activeFileId);
+      if (virtuosoPosition !== undefined) {
+        setScrollPositions((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(activeFileId, virtuosoPosition);
+          return newMap;
+        });
+      }
+    }
+
+    // タブを切り替え
+    setActiveFileId(newFileId);
+
+    // 新しいタブのスクロール位置を復元（次のレンダリング後に実行）
+    setTimeout(() => {
+      // 通常スクロールコンテナの位置を復元
+      const scrollContainer = scrollContainerRefs.current.get(newFileId);
+      const savedScrollTop = scrollTopsRef.current.get(newFileId);
+      if (scrollContainer && savedScrollTop !== undefined) {
+        scrollContainer.scrollTop = savedScrollTop;
+      }
+
+      // Virtuosoの位置は initialTopMostItemIndex で復元されるため、ここでは処理不要
+    }, 0);
+  }, [activeFileId]);
+
+  // 「このテキストを検索する」機能
+  const handleSearchInFile = useCallback((targetFileId: string, searchText: string) => {
+    // 1. 対象ファイルの正規表現をオフ
+    updateIsRegex(targetFileId, false);
+
+    // 2. フィルタテキストを選択範囲に設定
+    updateSearchText(targetFileId, searchText);
+
+    // 3. タブを切り替え（スクロール位置の保存・復元を含む）
+    if (targetFileId !== activeFileId) {
+      handleTabChange(targetFileId);
+    }
+
+    // 4. テキスト選択をクリア
+    setTextSelection(null);
+    window.getSelection()?.removeAllRanges();
+  }, [activeFileId, updateIsRegex, updateSearchText, handleTabChange]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -893,7 +980,7 @@ export default function TextViewerPage() {
 
               <Tabs
                 value={activeFileId || undefined}
-                onValueChange={(value) => setActiveFileId(value)}
+                onValueChange={handleTabChange}
               >
                 {/* タブリスト */}
                 <TabsList className="w-full justify-start flex-wrap h-auto gap-1 bg-gray-100 dark:bg-gray-900 p-1">
@@ -1178,12 +1265,20 @@ export default function TextViewerPage() {
                           // 仮想スクロール対応（表示行数より多い場合、かつ行折り返し無効時のみ）
                           // 行折り返し有効時は行の高さが可変になるため、仮想スクロールを使用せず max-height でスクロール
                           if (filteredLines.length > visibleLines && !wrapLines) {
+                            // 保存されたスクロール位置を取得（stateから復元用の値を取得）
+                            const savedScrollPosition = scrollPositions.get(file.id);
+
                             return (
                               <Virtuoso
                                 key={`${file.id}-${file.searchText}-${file.isRegex}`}
                                 style={{ height: `${viewportHeight}px` }}
                                 totalCount={filteredLines.length}
                                 overscan={20}
+                                initialTopMostItemIndex={savedScrollPosition ?? 0}
+                                rangeChanged={({ startIndex }) => {
+                                  // スクロール位置をrefに保存（頻繁な再レンダリングを防ぐ）
+                                  scrollPositionsRef.current.set(file.id, startIndex);
+                                }}
                                 itemContent={(index) => {
                                   const { line, originalIndex } = filteredLines[index];
                                   return (
@@ -1213,7 +1308,19 @@ export default function TextViewerPage() {
                             : undefined;
 
                           return (
-                            <div style={containerStyle}>
+                            <div
+                              ref={(ref) => {
+                                if (ref) {
+                                  scrollContainerRefs.current.set(file.id, ref);
+                                }
+                              }}
+                              style={containerStyle}
+                              onScroll={(e) => {
+                                // 通常スクロールの位置をrefに保存（頻繁な再レンダリングを防ぐ）
+                                const target = e.target as HTMLDivElement;
+                                scrollTopsRef.current.set(file.id, target.scrollTop);
+                              }}
+                            >
                               {filteredLines.map(({ line, originalIndex }) => (
                                 <LineRow
                                   key={originalIndex}
@@ -1323,8 +1430,9 @@ export default function TextViewerPage() {
             top: textSelection.position.y,
             transform: 'translate(-50%, -100%)',
           }}
-          className="z-50"
+          className="z-50 flex gap-1"
         >
+          {/* コピーボタン */}
           <Button
             variant={textSelectionCopied ? "outline" : "default"}
             size="sm"
@@ -1343,6 +1451,48 @@ export default function TextViewerPage() {
             )}
             {textSelectionCopied ? tCommon("copied") : t("selection.copyText")}
           </Button>
+
+          {/* 検索ボタン（ファイルが1つの場合は直接検索、複数の場合はドロップダウン） */}
+          {files.length === 1 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (activeFileId) {
+                  handleSearchInFile(activeFileId, textSelection.text);
+                }
+              }}
+              className="h-7 text-xs shadow-lg"
+            >
+              <Search className="w-3.5 h-3.5 mr-1" />
+              {t("selection.searchThis")}
+            </Button>
+          ) : files.length > 1 ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs shadow-lg"
+                >
+                  <Search className="w-3.5 h-3.5 mr-1" />
+                  {t("selection.searchThis")}
+                  <ChevronDown className="w-3 h-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center">
+                {files.map((file) => (
+                  <DropdownMenuItem
+                    key={file.id}
+                    onClick={() => handleSearchInFile(file.id, textSelection.text)}
+                    className="text-xs"
+                  >
+                    <span className="truncate max-w-[200px]">{file.name}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
         </div>
       )}
 
