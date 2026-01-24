@@ -350,7 +350,17 @@
       "wrapLines": "Wrap Lines",
       "showLineNumbers": "Show Line Numbers"
     },
-    "emptyState": "Please upload a file"
+    "emptyState": "Please upload a file",
+    "memo": {
+      "title": "Memo",
+      "placeholder": "Enter notes...",
+      "clear": "Clear",
+      "clearConfirm": "Clear the memo?",
+      "copy": "Copy",
+      "copied": "Copied",
+      "show": "Show Memo",
+      "hide": "Hide Memo"
+    }
   },
   "accessLogViewer": {
     "title": "Access Log Viewer",

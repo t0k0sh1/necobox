@@ -1,6 +1,7 @@
 "use client";
 
 import { CopyButton } from "@/app/components/CopyButton";
+import { FloatingMemo } from "@/app/components/FloatingMemo";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,7 +28,7 @@ import { decompressGz, isGzipFile } from "@/lib/utils/gz-decompressor";
 import { validateRegex } from "@/lib/utils/log-filter";
 import { hasNonEmptyMatch, highlightMatches } from "@/lib/utils/text-highlight";
 import { decompressZip, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
-import { FileText, HelpCircle, Upload, X } from "lucide-react";
+import { FileText, HelpCircle, StickyNote, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -64,6 +65,9 @@ export default function TextViewerPage() {
 
   // 正規表現ヘルプボックスの状態
   const [showRegexHelp, setShowRegexHelp] = useState(false);
+
+  // フローティングメモの状態
+  const [showMemo, setShowMemo] = useState(false);
   const [helpBoxPosition, setHelpBoxPosition] = useState({ x: 100, y: 100 });
   const [isDraggingHelp, setIsDraggingHelp] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -594,12 +598,23 @@ export default function TextViewerPage() {
                         </div>
                       </div>
 
-                      {/* フィルタ結果カウント */}
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {t("filter.resultsCount", {
-                          filtered: filteredLines.length,
-                          total: lines.length,
-                        })}
+                      {/* フィルタ結果カウントとメモボタン */}
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {t("filter.resultsCount", {
+                            filtered: filteredLines.length,
+                            total: lines.length,
+                          })}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowMemo(!showMemo)}
+                          className="h-7 text-xs"
+                        >
+                          <StickyNote className="w-3.5 h-3.5 mr-1" />
+                          {showMemo ? t("memo.hide") : t("memo.show")}
+                        </Button>
                       </div>
                     </div>
 
@@ -753,6 +768,21 @@ export default function TextViewerPage() {
           </div>
         </div>
       )}
+
+      {/* フローティングメモ */}
+      <FloatingMemo
+        storageKey="necobox:floating-memo:text-viewer"
+        isOpen={showMemo}
+        onClose={() => setShowMemo(false)}
+        translations={{
+          title: t("memo.title"),
+          placeholder: t("memo.placeholder"),
+          clear: t("memo.clear"),
+          clearConfirm: t("memo.clearConfirm"),
+          copy: t("memo.copy"),
+          copied: t("memo.copied"),
+        }}
+      />
     </div>
   );
 }
