@@ -348,7 +348,14 @@
     },
     "options": {
       "wrapLines": "行折り返し",
-      "showLineNumbers": "行番号表示"
+      "visibleLines": "表示行数"
+    },
+    "selection": {
+      "count": "{count}行を選択中",
+      "copy": "選択範囲をコピー",
+      "clear": "選択解除",
+      "helpTooltip": "行番号をドラッグで範囲選択",
+      "copyText": "コピー"
     },
     "emptyState": "ファイルをアップロードしてください",
     "memo": {
