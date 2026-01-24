@@ -18,6 +18,7 @@ interface FloatingMemoProps {
     copy: string;
     copied: string;
     close: string;
+    resize: string;
   };
 }
 
@@ -338,7 +339,8 @@ export function FloatingMemo({
       {/* リサイズハンドル（右下コーナー） */}
       <div
         role="group"
-        aria-label="Resize memo, use Shift+arrow keys to resize"
+        title={translations.resize}
+        aria-label={translations.resize}
         aria-roledescription="resize handle"
         tabIndex={0}
         onMouseDown={handleResizeMouseDown}

@@ -782,6 +782,7 @@ export default function TextViewerPage() {
           copy: t("memo.copy"),
           copied: t("memo.copied"),
           close: t("memo.close"),
+          resize: t("memo.resize"),
         }}
       />
     </div>

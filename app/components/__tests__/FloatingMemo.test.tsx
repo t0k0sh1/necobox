@@ -43,6 +43,7 @@ const defaultTranslations = {
   copy: "Copy",
   copied: "Copied",
   close: "Close",
+  resize: "Resize",
 };
 
 describe("FloatingMemo", () => {
@@ -474,7 +475,7 @@ describe("FloatingMemo", () => {
 
   // キーボードアクセシビリティのテスト
   describe("keyboard accessibility", () => {
-    it("all buttons have title and aria-label attributes", () => {
+    it("all interactive elements have title and aria-label attributes", () => {
       render(
         <FloatingMemo
           storageKey="test-memo"
@@ -495,6 +496,11 @@ describe("FloatingMemo", () => {
       // 閉じるボタン
       const closeButton = screen.getByTitle("Close");
       expect(closeButton).toHaveAttribute("aria-label", "Close");
+
+      // リサイズハンドル
+      const resizeHandle = screen.getByTitle("Resize");
+      expect(resizeHandle).toHaveAttribute("aria-label", "Resize");
+      expect(resizeHandle).toHaveAttribute("tabindex", "0");
     });
 
     it("has proper ARIA attributes", () => {
@@ -515,7 +521,7 @@ describe("FloatingMemo", () => {
       expect(header).toHaveAttribute("tabindex", "0");
       expect(header).toHaveAttribute("aria-roledescription", "draggable region");
 
-      const resizeHandle = screen.getByRole("group", { name: /resize memo/i });
+      const resizeHandle = screen.getByRole("group", { name: "Resize" });
       expect(resizeHandle).toBeInTheDocument();
       expect(resizeHandle).toHaveAttribute("tabindex", "0");
       expect(resizeHandle).toHaveAttribute("aria-roledescription", "resize handle");
@@ -681,7 +687,7 @@ describe("FloatingMemo", () => {
         />
       );
 
-      const resizeHandle = screen.getByRole("group", { name: /resize memo/i });
+      const resizeHandle = screen.getByRole("group", { name: "Resize" });
 
       // Shift+ArrowDown でリサイズ
       fireEvent.keyDown(resizeHandle, { key: "ArrowDown", shiftKey: true });

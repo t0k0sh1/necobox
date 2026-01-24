@@ -359,6 +359,7 @@
       "copy": "Copy",
       "copied": "Copied",
       "close": "Close",
+      "resize": "Resize",
       "show": "Show Memo",
       "hide": "Hide Memo"
     }
