@@ -302,12 +302,28 @@
       "selectFiles": "ファイルを選択",
       "dragDrop": "ここにドラッグ&ドロップ"
     },
+    "delimiter": {
+      "label": "区切り文字",
+      "none": "なし",
+      "space": "スペース",
+      "tab": "タブ",
+      "comma": "カンマ",
+      "custom": "カスタム",
+      "customPlaceholder": "区切り文字を入力..."
+    },
     "filter": {
       "placeholder": "テキストで検索...",
       "regexPlaceholder": "正規表現を入力...",
+      "columnPlaceholder": "例: 3: または 2:GET, 4:200",
       "useRegex": "正規表現を使用",
       "invalidRegex": "無効な正規表現です",
       "resultsCount": "{filtered}行 / 全{total}行",
+      "columnHelp": {
+        "title": "列フィルタ",
+        "example1": "3: → 3列目をハイライト",
+        "example2": "3:for → 3列目に'for'を含む行",
+        "example3": "2:GET, 3:200 → 複数条件(AND)"
+      },
       "regexHelp": {
         "title": "正規表現パターン",
         "close": "閉じる",
