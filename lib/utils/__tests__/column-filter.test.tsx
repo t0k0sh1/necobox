@@ -1,9 +1,11 @@
+import { renderToStaticMarkup } from "react-dom/server";
 import {
   parseColumnFilter,
   splitLineToColumns,
   splitLineToColumnsWithPositions,
   matchesColumnFilters,
   getHighlightColumns,
+  highlightColumnsWithSearch,
   isColumnFilterMode,
   getColumnFilterPattern,
   type ColumnFilter,
@@ -362,6 +364,228 @@ describe("column-filter", () => {
         { column: 2, pattern: "value" },
       ];
       expect(getColumnFilterPattern(filters)).toBe("value");
+    });
+  });
+
+  describe("highlightColumnsWithSearch", () => {
+    // モックのハイライト関数（パターンにマッチした部分を<mark>で囲む）
+    const mockHighlightFn = (text: string, pattern: string, isRegex: boolean) => {
+      if (!pattern) return text;
+      try {
+        const regex = isRegex ? new RegExp(`(${pattern})`, "gi") : new RegExp(`(${pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+        const parts = text.split(regex);
+        if (parts.length === 1) return text;
+        return parts.map((part, i) =>
+          regex.test(part) ? <mark key={i}>{part}</mark> : part
+        );
+      } catch {
+        return text;
+      }
+    };
+
+    // ReactNodeを文字列に変換するヘルパー
+    const renderResult = (nodes: React.ReactNode[]) => {
+      return renderToStaticMarkup(<>{nodes}</>);
+    };
+
+    it("区切り文字がない場合は通常のハイライトを返す", () => {
+      const result = highlightColumnsWithSearch(
+        "hello world",
+        "",
+        new Set<number>(),
+        "world",
+        false,
+        mockHighlightFn
+      );
+      expect(renderResult(result)).toContain("<mark>world</mark>");
+    });
+
+    it("スペース区切りで列をハイライト（単一列）", () => {
+      const result = highlightColumnsWithSearch(
+        "GET /api 200",
+        " ",
+        new Set([2]),
+        "",
+        false,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      // 2列目（/api）は通常表示、他はグレー
+      expect(html).toContain('class="text-gray-400"');
+      expect(html).toContain("/api");
+    });
+
+    it("スペース区切りで検索パターン付きハイライト", () => {
+      const result = highlightColumnsWithSearch(
+        "GET /api/users 200",
+        " ",
+        new Set([2]),
+        "api",
+        false,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      // 2列目の'api'がハイライトされる
+      expect(html).toContain("<mark>api</mark>");
+    });
+
+    it("連続スペースを保持する", () => {
+      const line = "GET    /api    200";
+      const result = highlightColumnsWithSearch(
+        line,
+        " ",
+        new Set([1, 2, 3]),
+        "",
+        false,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      // 元の連続スペースが保持されている
+      expect(html).toContain("    ");
+    });
+
+    it("先頭のスペースを保持する", () => {
+      const line = "  GET /api";
+      const result = highlightColumnsWithSearch(
+        line,
+        " ",
+        new Set([1]),
+        "",
+        false,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      // 先頭のスペースが保持されている
+      expect(html).toContain(">  <");
+    });
+
+    it("末尾のスペースを保持する", () => {
+      const line = "GET /api  ";
+      const result = highlightColumnsWithSearch(
+        line,
+        " ",
+        new Set([1]),
+        "",
+        false,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      // 末尾のスペースが保持されている
+      expect(html).toContain(">  </span>");
+    });
+
+    it("カンマ区切りで動作する", () => {
+      const result = highlightColumnsWithSearch(
+        "name,age,city",
+        ",",
+        new Set([2]),
+        "",
+        false,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      // 2列目（age）以外はグレー
+      expect(html).toContain(">name<");
+      expect(html).toContain(">age<");
+      expect(html).toContain(">city<");
+    });
+
+    it("タブ区切りで動作する", () => {
+      const result = highlightColumnsWithSearch(
+        "col1\tcol2\tcol3",
+        "\t",
+        new Set([2]),
+        "col2",
+        false,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      expect(html).toContain("<mark>col2</mark>");
+    });
+
+    it("すべての列がターゲットでない場合は全体がグレー", () => {
+      const result = highlightColumnsWithSearch(
+        "GET /api 200",
+        " ",
+        new Set([5]), // 存在しない列
+        "",
+        false,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      // すべてグレー表示
+      expect(html.match(/text-gray-400/g)?.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it("ターゲット列が空のSetの場合はすべての列を表示", () => {
+      const result = highlightColumnsWithSearch(
+        "GET /api 200",
+        " ",
+        new Set<number>(), // 空 = 全列対象
+        "api",
+        false,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      // すべての列が表示され、パターンがハイライト
+      expect(html).toContain("<mark>api</mark>");
+      expect(html).toContain("GET");
+      expect(html).toContain("200");
+    });
+
+    it("正規表現パターンで動作する", () => {
+      const result = highlightColumnsWithSearch(
+        "GET /api/users/123 200",
+        " ",
+        new Set([2]),
+        "\\d+",
+        true,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      // 数字がハイライトされる
+      expect(html).toContain("<mark>123</mark>");
+    });
+
+    it("空の行を処理できる", () => {
+      const result = highlightColumnsWithSearch(
+        "",
+        " ",
+        new Set([1]),
+        "",
+        false,
+        mockHighlightFn
+      );
+      expect(result).toEqual([]);
+    });
+
+    it("スペースのみの行を処理できる", () => {
+      const result = highlightColumnsWithSearch(
+        "   ",
+        " ",
+        new Set([1]),
+        "",
+        false,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      // 末尾処理として空白が含まれる
+      expect(html).toContain("   ");
+    });
+
+    it("複数列をターゲットにできる", () => {
+      const result = highlightColumnsWithSearch(
+        "GET /api 200 100ms",
+        " ",
+        new Set([1, 3]),
+        "",
+        false,
+        mockHighlightFn
+      );
+      const html = renderResult(result);
+      // 1列目と3列目は通常、2列目と4列目はグレー
+      const grayMatches = html.match(/text-gray-400/g);
+      expect(grayMatches).toBeTruthy();
     });
   });
 });
