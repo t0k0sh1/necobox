@@ -610,29 +610,31 @@ export default function TextViewerPage() {
                       }`}
                     >
                       <div className="p-4 font-mono text-sm">
-                        {filteredLines.map(({ line, originalIndex }) => {
+                        {(() => {
+                          // 事前計算: mapの外で一度だけ計算（パフォーマンス最適化）
+                          const delimiter = getDelimiter(file);
+                          const parsedFilter = parseColumnFilter(searchText);
+                          const useColumnFilter = isColumnFilterMode(parsedFilter) && delimiter;
+                          const highlightCols = useColumnFilter
+                            ? getHighlightColumns(parsedFilter.columnFilters)
+                            : new Set<number>();
+                          const columnPattern = useColumnFilter
+                            ? getColumnFilterPattern(parsedFilter.columnFilters)
+                            : "";
+
                           // 行の内容をレンダリングする関数
-                          const renderLineContent = (): ReactNode => {
-                            if (!searchText.trim()) {
+                          const renderLineContent = (line: string): ReactNode => {
+                            if (!searchText.trim() || !regexValidation.isValid) {
                               return line || "\u00A0";
                             }
-
-                            if (!regexValidation.isValid) {
-                              return line || "\u00A0";
-                            }
-
-                            const delimiter = getDelimiter(file);
-                            const parsedFilter = parseColumnFilter(searchText);
 
                             // 列フィルタモードで区切り文字がある場合
-                            if (isColumnFilterMode(parsedFilter) && delimiter) {
-                              const highlightCols = getHighlightColumns(parsedFilter.columnFilters);
-                              const pattern = getColumnFilterPattern(parsedFilter.columnFilters);
+                            if (useColumnFilter) {
                               return highlightColumnsWithSearch(
                                 line,
                                 delimiter,
                                 highlightCols,
-                                pattern,
+                                columnPattern,
                                 file.isRegex,
                                 highlightMatches
                               );
@@ -642,7 +644,7 @@ export default function TextViewerPage() {
                             return highlightMatches(line, searchText, file.isRegex);
                           };
 
-                          return (
+                          return filteredLines.map(({ line, originalIndex }) => (
                             <div
                               key={originalIndex}
                               className={`group flex ${
@@ -659,7 +661,7 @@ export default function TextViewerPage() {
                                   wrapLines ? "break-all" : ""
                                 }`}
                               >
-                                {renderLineContent()}
+                                {renderLineContent(line)}
                               </span>
                               {/* コピーボタン（ホバー時のみ表示） */}
                               <span className="opacity-0 group-hover:opacity-100 transition-opacity ml-2 flex-shrink-0">
@@ -669,8 +671,8 @@ export default function TextViewerPage() {
                                 />
                               </span>
                             </div>
-                          );
-                        })}
+                          ));
+                        })()}
                       </div>
                     </div>
                   </TabsContent>
