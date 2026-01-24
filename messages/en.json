@@ -355,7 +355,9 @@
       "copy": "Copy selection",
       "clear": "Clear selection",
       "helpTooltip": "Drag line numbers to select range",
-      "copyText": "Copy"
+      "copyText": "Copy",
+      "searchThis": "Search this text",
+      "selectFile": "Search in file"
     },
     "emptyState": "Please upload a file",
     "memo": {
