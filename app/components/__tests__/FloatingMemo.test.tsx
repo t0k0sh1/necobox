@@ -799,4 +799,198 @@ describe("FloatingMemo", () => {
       expect(calls.length).toBeLessThanOrEqual(1);
     });
   });
+
+  // ウィンドウリサイズ時の位置制約テスト
+  describe("window resize constraints", () => {
+    it("constrains position when window becomes smaller", () => {
+      // メモを画面右端近くに配置
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 700, y: 500 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      // 初期ウィンドウサイズを設定
+      Object.defineProperty(window, "innerWidth", { value: 1024, writable: true });
+      Object.defineProperty(window, "innerHeight", { value: 768, writable: true });
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      localStorageMock.setItem.mockClear();
+
+      // ウィンドウを小さくする（メモがはみ出すサイズ）
+      Object.defineProperty(window, "innerWidth", { value: 800, writable: true });
+      Object.defineProperty(window, "innerHeight", { value: 600, writable: true });
+
+      // リサイズイベントを発火
+      act(() => {
+        window.dispatchEvent(new Event("resize"));
+      });
+
+      // デバウンスを待つ
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      // 位置が調整されて localStorage に保存されることを確認
+      expect(localStorageMock.setItem).toHaveBeenCalled();
+      const lastCall = localStorageMock.setItem.mock.calls[localStorageMock.setItem.mock.calls.length - 1];
+      const savedData = JSON.parse(lastCall[1]);
+
+      // x は 800 - 320 = 480 以下に制約される
+      expect(savedData.position.x).toBeLessThanOrEqual(480);
+      // y は 600 - 240 = 360 以下に制約される
+      expect(savedData.position.y).toBeLessThanOrEqual(360);
+    });
+
+    it("does not adjust position when window is large enough", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      Object.defineProperty(window, "innerWidth", { value: 1024, writable: true });
+      Object.defineProperty(window, "innerHeight", { value: 768, writable: true });
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      // 初期状態の保存を待つ
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      localStorageMock.setItem.mockClear();
+
+      // ウィンドウサイズを変更するが、メモは範囲内
+      // maxX = 900 - 320 = 580 > 100, maxY = 700 - 240 = 460 > 100
+      Object.defineProperty(window, "innerWidth", { value: 900, writable: true });
+      Object.defineProperty(window, "innerHeight", { value: 700, writable: true });
+
+      act(() => {
+        window.dispatchEvent(new Event("resize"));
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      // 位置が変わらないので updatePosition は呼ばれず、localStorage への保存も発生しない
+      // （または保存されても位置は同じ）
+      if (localStorageMock.setItem.mock.calls.length > 0) {
+        const lastCall = localStorageMock.setItem.mock.calls[localStorageMock.setItem.mock.calls.length - 1];
+        const savedData = JSON.parse(lastCall[1]);
+        // 位置が変わっていないことを確認
+        expect(savedData.position).toEqual({ x: 100, y: 100 });
+      }
+    });
+
+    it("handles window smaller than memo size", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      Object.defineProperty(window, "innerWidth", { value: 1024, writable: true });
+      Object.defineProperty(window, "innerHeight", { value: 768, writable: true });
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      localStorageMock.setItem.mockClear();
+
+      // ウィンドウをメモより小さくする
+      Object.defineProperty(window, "innerWidth", { value: 200, writable: true });
+      Object.defineProperty(window, "innerHeight", { value: 150, writable: true });
+
+      act(() => {
+        window.dispatchEvent(new Event("resize"));
+      });
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      expect(localStorageMock.setItem).toHaveBeenCalled();
+      const lastCall = localStorageMock.setItem.mock.calls[localStorageMock.setItem.mock.calls.length - 1];
+      const savedData = JSON.parse(lastCall[1]);
+
+      // maxX = max(0, 200-320) = 0, maxY = max(0, 150-240) = 0
+      expect(savedData.position.x).toBe(0);
+      expect(savedData.position.y).toBe(0);
+    });
+
+    it("removes resize listener when component unmounts", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      Object.defineProperty(window, "innerWidth", { value: 1024, writable: true });
+      Object.defineProperty(window, "innerHeight", { value: 768, writable: true });
+
+      const removeEventListenerSpy = jest.spyOn(window, "removeEventListener");
+
+      const { unmount } = render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      unmount();
+
+      expect(removeEventListenerSpy).toHaveBeenCalledWith("resize", expect.any(Function));
+      removeEventListenerSpy.mockRestore();
+    });
+
+    it("does not register resize listener when memo is closed", () => {
+      const addEventListenerSpy = jest.spyOn(window, "addEventListener");
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={false}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      // resize イベントリスナーが登録されないことを確認
+      const resizeCalls = addEventListenerSpy.mock.calls.filter(
+        call => call[0] === "resize"
+      );
+      expect(resizeCalls.length).toBe(0);
+
+      addEventListenerSpy.mockRestore();
+    });
+  });
 });

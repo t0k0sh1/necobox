@@ -69,6 +69,30 @@ export function FloatingMemo({
     }
   }, [isInitialized, isOpen, position.x, position.y, size.width, size.height, updatePosition]);
 
+  // ウィンドウリサイズ時の位置制約
+  useEffect(() => {
+    if (!isInitialized || !isOpen) return;
+
+    const handleWindowResize = () => {
+      // 現在の位置がビューポート外にある場合は調整
+      const maxX = Math.max(0, window.innerWidth - size.width);
+      const maxY = Math.max(0, window.innerHeight - size.height);
+
+      if (position.x > maxX || position.y > maxY) {
+        updatePosition({
+          x: Math.min(position.x, maxX),
+          y: Math.min(position.y, maxY),
+        });
+      }
+    };
+
+    window.addEventListener("resize", handleWindowResize);
+
+    return () => {
+      window.removeEventListener("resize", handleWindowResize);
+    };
+  }, [isInitialized, isOpen, position.x, position.y, size.width, size.height, updatePosition]);
+
   // ドラッグ処理
   useEffect(() => {
     if (!isDragging) return;
