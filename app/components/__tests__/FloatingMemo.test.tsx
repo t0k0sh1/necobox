@@ -470,4 +470,333 @@ describe("FloatingMemo", () => {
 
     expect(screen.getByText("Memo")).toBeInTheDocument();
   });
+
+  // キーボードアクセシビリティのテスト
+  describe("keyboard accessibility", () => {
+    it("has proper ARIA attributes", () => {
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      const dialog = screen.getByRole("dialog");
+      expect(dialog).toHaveAttribute("aria-labelledby", "floating-memo-title");
+
+      const header = screen.getByRole("group", { name: /drag to move memo/i });
+      expect(header).toBeInTheDocument();
+      expect(header).toHaveAttribute("tabindex", "0");
+      expect(header).toHaveAttribute("aria-roledescription", "draggable region");
+
+      const resizeHandle = screen.getByRole("group", { name: /resize memo/i });
+      expect(resizeHandle).toBeInTheDocument();
+      expect(resizeHandle).toHaveAttribute("tabindex", "0");
+      expect(resizeHandle).toHaveAttribute("aria-roledescription", "resize handle");
+    });
+
+    it("moves memo with arrow keys", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      const header = screen.getByRole("group", { name: /drag to move memo/i });
+
+      // 上矢印キーで上に移動
+      fireEvent.keyDown(header, { key: "ArrowUp" });
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      // localStorage に保存されることを確認
+      expect(localStorageMock.setItem).toHaveBeenCalled();
+    });
+
+    it("moves memo down with ArrowDown key", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      const header = screen.getByRole("group", { name: /drag to move memo/i });
+
+      fireEvent.keyDown(header, { key: "ArrowDown" });
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      expect(localStorageMock.setItem).toHaveBeenCalled();
+    });
+
+    it("moves memo left with ArrowLeft key", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      const header = screen.getByRole("group", { name: /drag to move memo/i });
+
+      fireEvent.keyDown(header, { key: "ArrowLeft" });
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      expect(localStorageMock.setItem).toHaveBeenCalled();
+    });
+
+    it("moves memo right with ArrowRight key", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      const header = screen.getByRole("group", { name: /drag to move memo/i });
+
+      fireEvent.keyDown(header, { key: "ArrowRight" });
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      expect(localStorageMock.setItem).toHaveBeenCalled();
+    });
+
+    it("resizes memo with Shift+arrow keys from header", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      const header = screen.getByRole("group", { name: /drag to move memo/i });
+
+      // Shift+ArrowRight でリサイズ
+      fireEvent.keyDown(header, { key: "ArrowRight", shiftKey: true });
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      expect(localStorageMock.setItem).toHaveBeenCalled();
+    });
+
+    it("resizes memo with Shift+arrow keys from resize handle", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      const resizeHandle = screen.getByRole("group", { name: /resize memo/i });
+
+      // Shift+ArrowDown でリサイズ
+      fireEvent.keyDown(resizeHandle, { key: "ArrowDown", shiftKey: true });
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      expect(localStorageMock.setItem).toHaveBeenCalled();
+    });
+
+    it("does not move when Shift is pressed (reserved for resize)", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      const header = screen.getByRole("group", { name: /drag to move memo/i });
+
+      // 位置は変わらずサイズが変わることを確認
+      fireEvent.keyDown(header, { key: "ArrowUp", shiftKey: true });
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      // localStorage に保存されたデータを確認
+      const lastCall = localStorageMock.setItem.mock.calls[localStorageMock.setItem.mock.calls.length - 1];
+      if (lastCall) {
+        const savedData = JSON.parse(lastCall[1]);
+        // 位置は変わらず、サイズが変わる
+        expect(savedData.position).toEqual({ x: 100, y: 100 });
+        expect(savedData.size.height).toBeLessThan(240); // 高さが減る
+      }
+    });
+
+    it("respects minimum size when resizing with keyboard", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 200, height: 150 }, // 最小サイズ
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      const memoBox = screen.getByRole("dialog") as HTMLElement;
+      const header = screen.getByRole("group", { name: /drag to move memo/i });
+
+      // さらに小さくしようとする
+      fireEvent.keyDown(header, { key: "ArrowUp", shiftKey: true });
+
+      // 最小サイズを下回らないことを確認
+      const style = memoBox.style;
+      const height = parseInt(style.height);
+      expect(height).toBeGreaterThanOrEqual(150);
+    });
+
+    it("respects maximum size when resizing with keyboard", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 600, height: 500 }, // 最大サイズ
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      const memoBox = screen.getByRole("dialog") as HTMLElement;
+      const header = screen.getByRole("group", { name: /drag to move memo/i });
+
+      // さらに大きくしようとする
+      fireEvent.keyDown(header, { key: "ArrowDown", shiftKey: true });
+
+      // 最大サイズを超えないことを確認
+      const style = memoBox.style;
+      const height = parseInt(style.height);
+      expect(height).toBeLessThanOrEqual(500);
+    });
+
+    it("ignores non-arrow keys", () => {
+      const storedData = JSON.stringify({
+        content: "",
+        position: { x: 100, y: 100 },
+        size: { width: 320, height: 240 },
+      });
+      localStorageMock.getItem.mockReturnValue(storedData);
+
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      const header = screen.getByRole("group", { name: /drag to move memo/i });
+
+      // 非矢印キーを押す
+      fireEvent.keyDown(header, { key: "a" });
+      fireEvent.keyDown(header, { key: "Enter" });
+      fireEvent.keyDown(header, { key: "Space" });
+
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      // localStorage への保存が発生しないことを確認（初期化時のみ）
+      const calls = localStorageMock.setItem.mock.calls.filter(
+        (call: [string, string]) => call[0] === "test-memo"
+      );
+      // 初期化時の保存のみ
+      expect(calls.length).toBeLessThanOrEqual(1);
+    });
+  });
 });

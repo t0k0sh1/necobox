@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useFloatingMemo } from "@/lib/hooks/useFloatingMemo";
 import { Check, Copy, GripHorizontal, Trash2, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface FloatingMemoProps {
   storageKey: string;
@@ -24,6 +24,8 @@ const MIN_WIDTH = 200;
 const MIN_HEIGHT = 150;
 const MAX_WIDTH = 600;
 const MAX_HEIGHT = 500;
+const KEYBOARD_MOVE_STEP = 10;
+const KEYBOARD_RESIZE_STEP = 10;
 
 export function FloatingMemo({
   storageKey,
@@ -43,6 +45,7 @@ export function FloatingMemo({
   } = useFloatingMemo({ storageKey });
 
   const boxRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
   // ドラッグ状態
   const [isDragging, setIsDragging] = useState(false);
@@ -138,6 +141,71 @@ export function FloatingMemo({
     setIsResizing(true);
   };
 
+  // キーボードによる移動
+  const handleMoveKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.shiftKey) return; // Shift キーはリサイズ用
+
+    let newX = position.x;
+    let newY = position.y;
+
+    switch (e.key) {
+      case "ArrowUp":
+        newY = Math.max(0, position.y - KEYBOARD_MOVE_STEP);
+        break;
+      case "ArrowDown":
+        newY = Math.min(window.innerHeight - size.height, position.y + KEYBOARD_MOVE_STEP);
+        break;
+      case "ArrowLeft":
+        newX = Math.max(0, position.x - KEYBOARD_MOVE_STEP);
+        break;
+      case "ArrowRight":
+        newX = Math.min(window.innerWidth - size.width, position.x + KEYBOARD_MOVE_STEP);
+        break;
+      default:
+        return;
+    }
+
+    e.preventDefault();
+    updatePosition({ x: newX, y: newY });
+  }, [position.x, position.y, size.width, size.height, updatePosition]);
+
+  // キーボードによるリサイズ
+  const handleResizeKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!e.shiftKey) return; // Shift キーが必要
+
+    let newWidth = size.width;
+    let newHeight = size.height;
+
+    switch (e.key) {
+      case "ArrowUp":
+        newHeight = Math.max(MIN_HEIGHT, size.height - KEYBOARD_RESIZE_STEP);
+        break;
+      case "ArrowDown":
+        newHeight = Math.min(MAX_HEIGHT, size.height + KEYBOARD_RESIZE_STEP);
+        break;
+      case "ArrowLeft":
+        newWidth = Math.max(MIN_WIDTH, size.width - KEYBOARD_RESIZE_STEP);
+        break;
+      case "ArrowRight":
+        newWidth = Math.min(MAX_WIDTH, size.width + KEYBOARD_RESIZE_STEP);
+        break;
+      default:
+        return;
+    }
+
+    e.preventDefault();
+    updateSize({ width: newWidth, height: newHeight });
+  }, [size.width, size.height, updateSize]);
+
+  // ヘッダーのキーボードハンドラ（移動とリサイズの両方）
+  const handleHeaderKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.shiftKey) {
+      handleResizeKeyDown(e);
+    } else {
+      handleMoveKeyDown(e);
+    }
+  }, [handleMoveKeyDown, handleResizeKeyDown]);
+
   const handleClear = () => {
     if (window.confirm(translations.clearConfirm)) {
       clear();
@@ -160,6 +228,9 @@ export function FloatingMemo({
   return (
     <div
       ref={boxRef}
+      role="dialog"
+      aria-labelledby="floating-memo-title"
+      aria-modal="false"
       style={{
         left: position.x >= 0 ? position.x : undefined,
         top: position.y >= 0 ? position.y : undefined,
@@ -170,12 +241,18 @@ export function FloatingMemo({
     >
       {/* ヘッダー（ドラッグハンドル） */}
       <div
+        ref={headerRef}
+        role="group"
+        aria-label="Drag to move memo, use arrow keys to move, Shift+arrow keys to resize"
+        aria-roledescription="draggable region"
+        tabIndex={0}
         onMouseDown={handleHeaderMouseDown}
-        className="flex items-center justify-between px-3 py-2 bg-gray-800 rounded-t-lg cursor-move border-b border-gray-700 shrink-0"
+        onKeyDown={handleHeaderKeyDown}
+        className="flex items-center justify-between px-3 py-2 bg-gray-800 rounded-t-lg cursor-move border-b border-gray-700 shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
       >
         <div className="flex items-center gap-2">
-          <GripHorizontal className="w-4 h-4 text-gray-400" />
-          <span className="font-semibold text-sm">{translations.title}</span>
+          <GripHorizontal className="w-4 h-4 text-gray-400" aria-hidden="true" />
+          <span id="floating-memo-title" className="font-semibold text-sm">{translations.title}</span>
         </div>
         <div className="flex items-center gap-1">
           <Button
@@ -185,11 +262,12 @@ export function FloatingMemo({
             disabled={!content}
             className="h-6 w-6 p-0 hover:bg-gray-700 text-gray-400 hover:text-white disabled:opacity-30"
             title={isCopied ? translations.copied : translations.copy}
+            aria-label={isCopied ? translations.copied : translations.copy}
           >
             {isCopied ? (
-              <Check className="w-3.5 h-3.5 text-green-400" />
+              <Check className="w-3.5 h-3.5 text-green-400" aria-hidden="true" />
             ) : (
-              <Copy className="w-3.5 h-3.5" />
+              <Copy className="w-3.5 h-3.5" aria-hidden="true" />
             )}
           </Button>
           <Button
@@ -198,16 +276,18 @@ export function FloatingMemo({
             onClick={handleClear}
             className="h-6 w-6 p-0 hover:bg-gray-700 text-gray-400 hover:text-white"
             title={translations.clear}
+            aria-label={translations.clear}
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
             className="h-6 w-6 p-0 hover:bg-gray-700 text-gray-400 hover:text-white"
+            aria-label="Close memo"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -218,19 +298,26 @@ export function FloatingMemo({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder={translations.placeholder}
+          aria-label={translations.title}
           className="h-full w-full bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 resize-none text-sm"
         />
       </div>
 
       {/* リサイズハンドル（右下コーナー） */}
       <div
+        role="group"
+        aria-label="Resize memo, use Shift+arrow keys to resize"
+        aria-roledescription="resize handle"
+        tabIndex={0}
         onMouseDown={handleResizeMouseDown}
-        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize group"
+        onKeyDown={handleResizeKeyDown}
+        className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize group focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <svg
-          className="w-3 h-3 absolute bottom-0.5 right-0.5 text-gray-500 group-hover:text-gray-300"
+          className="w-3 h-3 absolute bottom-0.5 right-0.5 text-gray-500 group-hover:text-gray-300 group-focus:text-blue-400"
           fill="currentColor"
           viewBox="0 0 10 10"
+          aria-hidden="true"
         >
           <path d="M9 1v8H1L9 1z" />
         </svg>
