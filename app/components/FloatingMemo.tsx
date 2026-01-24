@@ -60,17 +60,21 @@ export function FloatingMemo({
   // コピー状態
   const [isCopied, setIsCopied] = useState(false);
 
-  // 初期位置の設定（画面右下付近）
+  // 初期位置設定済みフラグ
+  const [hasSetInitialPosition, setHasSetInitialPosition] = useState(false);
+
+  // 初期位置の設定（画面右下付近）- 一度だけ実行
   useEffect(() => {
-    if (!isInitialized || !isOpen) return;
+    if (!isInitialized || !isOpen || hasSetInitialPosition) return;
     if (position.x < 0 || position.y < 0) {
       // 初期位置を計算（画面右下から少し内側）
       const x = Math.max(50, window.innerWidth - size.width - 50);
       const y = Math.max(50, window.innerHeight - size.height - 100);
       updatePosition({ x, y });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- updatePosition is stable (empty deps useCallback)
-  }, [isInitialized, isOpen, position.x, position.y, size.width, size.height]);
+    setHasSetInitialPosition(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- updatePosition is stable, size is only needed for initial calc
+  }, [isInitialized, isOpen, hasSetInitialPosition]);
 
   // ウィンドウリサイズ時の位置制約
   useEffect(() => {
@@ -269,7 +273,7 @@ export function FloatingMemo({
         width: size.width,
         height: size.height,
       }}
-      className="fixed bg-gray-900 text-white rounded-lg shadow-2xl z-50 flex flex-col select-none"
+      className="fixed bg-gray-900 text-white rounded-lg shadow-2xl z-[60] flex flex-col select-none"
     >
       {/* ヘッダー（ドラッグハンドル） */}
       <div
