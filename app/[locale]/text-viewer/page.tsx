@@ -17,6 +17,7 @@ interface UploadedFile {
   name: string;
   size: number;
   lines: string[];
+  searchText: string;
 }
 
 export default function TextViewerPage() {
@@ -28,8 +29,7 @@ export default function TextViewerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // フィルタと表示オプション
-  const [searchText, setSearchText] = useState("");
+  // 表示オプション
   const [wrapLines, setWrapLines] = useState(true);
   const [showLineNumbers, setShowLineNumbers] = useState(true);
 
@@ -45,6 +45,18 @@ export default function TextViewerPage() {
   const lines = useMemo(() => {
     return activeFile?.lines || [];
   }, [activeFile]);
+
+  // 選択中のファイルの検索テキスト
+  const searchText = activeFile?.searchText || "";
+
+  // ファイルごとの検索テキストを更新
+  const updateSearchText = useCallback((fileId: string, newSearchText: string) => {
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === fileId ? { ...f, searchText: newSearchText } : f
+      )
+    );
+  }, []);
 
   // フィルタされた行
   const filteredLines = useMemo(() => {
@@ -79,6 +91,7 @@ export default function TextViewerPage() {
                   name: `${file.name}/${extracted.name}`,
                   size: new Blob([extracted.content]).size,
                   lines: fileLines,
+                  searchText: "",
                 };
               });
             }
@@ -95,6 +108,7 @@ export default function TextViewerPage() {
                 name: displayName,
                 size: new Blob([content]).size,
                 lines: fileLines,
+                searchText: "",
               }];
             }
 
@@ -107,6 +121,7 @@ export default function TextViewerPage() {
               name: file.name,
               size: file.size,
               lines: fileLines,
+              searchText: "",
             }];
           } catch (fileError) {
             const errorMessage =
@@ -162,7 +177,6 @@ export default function TextViewerPage() {
     setFiles([]);
     setActiveFileId(null);
     setError(null);
-    setSearchText("");
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -317,8 +331,8 @@ export default function TextViewerPage() {
                           <Input
                             type="text"
                             placeholder={t("filter.placeholder")}
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
+                            value={file.searchText}
+                            onChange={(e) => updateSearchText(file.id, e.target.value)}
                           />
                         </div>
 
