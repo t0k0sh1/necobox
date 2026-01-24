@@ -350,7 +350,19 @@
       "wrapLines": "行折り返し",
       "showLineNumbers": "行番号表示"
     },
-    "emptyState": "ファイルをアップロードしてください"
+    "emptyState": "ファイルをアップロードしてください",
+    "memo": {
+      "title": "メモ",
+      "placeholder": "メモを入力...",
+      "clear": "消去",
+      "clearConfirm": "メモを消去しますか？",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "close": "閉じる",
+      "resize": "リサイズ",
+      "show": "メモを表示",
+      "hide": "メモを非表示"
+    }
   },
   "accessLogViewer": {
     "title": "アクセスログビューアー",
