@@ -42,6 +42,7 @@ const defaultTranslations = {
   clearConfirm: "Clear the memo?",
   copy: "Copy",
   copied: "Copied",
+  close: "Close",
 };
 
 describe("FloatingMemo", () => {
@@ -473,6 +474,29 @@ describe("FloatingMemo", () => {
 
   // キーボードアクセシビリティのテスト
   describe("keyboard accessibility", () => {
+    it("all buttons have title and aria-label attributes", () => {
+      render(
+        <FloatingMemo
+          storageKey="test-memo"
+          isOpen={true}
+          onClose={jest.fn()}
+          translations={defaultTranslations}
+        />
+      );
+
+      // コピーボタン
+      const copyButton = screen.getByTitle("Copy");
+      expect(copyButton).toHaveAttribute("aria-label", "Copy");
+
+      // クリアボタン
+      const clearButton = screen.getByTitle("Clear");
+      expect(clearButton).toHaveAttribute("aria-label", "Clear");
+
+      // 閉じるボタン
+      const closeButton = screen.getByTitle("Close");
+      expect(closeButton).toHaveAttribute("aria-label", "Close");
+    });
+
     it("has proper ARIA attributes", () => {
       render(
         <FloatingMemo

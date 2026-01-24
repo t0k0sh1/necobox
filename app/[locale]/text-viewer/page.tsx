@@ -781,6 +781,7 @@ export default function TextViewerPage() {
           clearConfirm: t("memo.clearConfirm"),
           copy: t("memo.copy"),
           copied: t("memo.copied"),
+          close: t("memo.close"),
         }}
       />
     </div>

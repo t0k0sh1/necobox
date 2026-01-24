@@ -17,6 +17,7 @@ interface FloatingMemoProps {
     clearConfirm: string;
     copy: string;
     copied: string;
+    close: string;
   };
 }
 
@@ -309,7 +310,8 @@ export function FloatingMemo({
             size="sm"
             onClick={onClose}
             className="h-6 w-6 p-0 hover:bg-gray-700 text-gray-400 hover:text-white"
-            aria-label="Close memo"
+            title={translations.close}
+            aria-label={translations.close}
           >
             <X className="w-4 h-4" aria-hidden="true" />
           </Button>
