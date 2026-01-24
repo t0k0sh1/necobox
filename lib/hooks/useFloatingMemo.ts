@@ -49,6 +49,12 @@ export function useFloatingMemo({
   defaultPosition = DEFAULT_POSITION,
   defaultSize = DEFAULT_SIZE,
 }: UseFloatingMemoOptions) {
+  // プリミティブ値に分解して依存配列の安定性を確保
+  const defaultX = defaultPosition.x;
+  const defaultY = defaultPosition.y;
+  const defaultWidth = defaultSize.width;
+  const defaultHeight = defaultSize.height;
+
   // useRef で初期値をキャッシュして、ハイドレーション後に設定
   const initialStateRef = useRef<{
     content: string;
@@ -57,8 +63,8 @@ export function useFloatingMemo({
   } | null>(null);
 
   const [content, setContent] = useState("");
-  const [position, setPosition] = useState(defaultPosition);
-  const [size, setSize] = useState(defaultSize);
+  const [position, setPosition] = useState({ x: defaultX, y: defaultY });
+  const [size, setSize] = useState({ width: defaultWidth, height: defaultHeight });
   const [isInitialized, setIsInitialized] = useState(false);
 
   // クライアントサイドでのみ初期化を実行
@@ -66,7 +72,11 @@ export function useFloatingMemo({
   useEffect(() => {
     if (initialStateRef.current !== null) return;
 
-    const initial = getInitialState(storageKey, defaultPosition, defaultSize);
+    const initial = getInitialState(
+      storageKey,
+      { x: defaultX, y: defaultY },
+      { width: defaultWidth, height: defaultHeight }
+    );
     initialStateRef.current = initial;
 
     // 初期値と異なる場合のみ更新
@@ -74,15 +84,15 @@ export function useFloatingMemo({
     if (initial.content !== "") {
       setContent(initial.content);
     }
-    if (initial.position.x !== defaultPosition.x || initial.position.y !== defaultPosition.y) {
+    if (initial.position.x !== defaultX || initial.position.y !== defaultY) {
       setPosition(initial.position);
     }
-    if (initial.size.width !== defaultSize.width || initial.size.height !== defaultSize.height) {
+    if (initial.size.width !== defaultWidth || initial.size.height !== defaultHeight) {
       setSize(initial.size);
     }
     setIsInitialized(true);
     /* eslint-enable react-hooks/set-state-in-effect */
-  }, [storageKey, defaultPosition, defaultSize]);
+  }, [storageKey, defaultX, defaultY, defaultWidth, defaultHeight]);
 
   // デバウンスしてローカルストレージに保存
   useEffect(() => {
