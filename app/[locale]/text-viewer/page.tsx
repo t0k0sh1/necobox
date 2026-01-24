@@ -72,7 +72,7 @@ export default function TextViewerPage() {
             if (isZipFile(file)) {
               const extractedFiles: ExtractedFile[] = await decompressZip(file);
               return extractedFiles.map((extracted) => {
-                const fileId = `${Date.now()}-${Math.random()}-${extracted.name}`;
+                const fileId = crypto.randomUUID();
                 const fileLines = extracted.content.split(/\r?\n/);
                 return {
                   id: fileId,
@@ -86,7 +86,7 @@ export default function TextViewerPage() {
             // GZファイルの場合は解凍して1ファイルとして返す
             if (isGzipFile(file)) {
               const content = await decompressGz(file);
-              const fileId = `${Date.now()}-${Math.random()}-${file.name}`;
+              const fileId = crypto.randomUUID();
               const fileLines = content.split(/\r?\n/);
               // .gz を除いた名前を使用
               const displayName = file.name.replace(/\.gz$/i, "");
@@ -100,7 +100,7 @@ export default function TextViewerPage() {
 
             // 通常のテキストファイル
             const content = await file.text();
-            const fileId = `${Date.now()}-${Math.random()}-${file.name}`;
+            const fileId = crypto.randomUUID();
             const fileLines = content.split(/\r?\n/);
             return [{
               id: fileId,
