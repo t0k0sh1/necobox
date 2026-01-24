@@ -1,5 +1,5 @@
 import JSZip from "jszip";
-import { decompressZip, isZipFile } from "../zip-decompressor";
+import { decompressZip, isBinaryContent, isZipFile } from "../zip-decompressor";
 
 // ヘルパー関数: ZIPファイルを作成
 async function createZipFile(
@@ -265,6 +265,104 @@ describe("zip-decompressor", () => {
 
         expect(result[0].content).toBe("日本語テキスト 🎉 émoji");
       });
+    });
+
+    describe("extensionless files", () => {
+      it("extracts files without extension from ZIP", async () => {
+        const zipFile = await createZipFile([
+          { name: "Makefile", content: "all:\n\techo hello" },
+          { name: "Dockerfile", content: "FROM node:18" },
+          { name: "LICENSE", content: "MIT License" },
+        ]);
+
+        const result = await decompressZip(zipFile);
+
+        expect(result).toHaveLength(3);
+        expect(result.map((f) => f.name)).toContain("Dockerfile");
+        expect(result.map((f) => f.name)).toContain("Makefile");
+        expect(result.map((f) => f.name)).toContain("LICENSE");
+      });
+
+      it("extracts extensionless files from subdirectories", async () => {
+        const zipFile = await createZipFile([
+          { name: "project/Makefile", content: "build:" },
+          { name: "project/src/config", content: "key=value" },
+        ]);
+
+        const result = await decompressZip(zipFile);
+
+        expect(result).toHaveLength(2);
+        expect(result.map((f) => f.name)).toContain("project/Makefile");
+        expect(result.map((f) => f.name)).toContain("project/src/config");
+      });
+
+      it("skips binary content even without extension", async () => {
+        // バイナリデータ（NULLバイトを含む）
+        const binaryContent = "text\x00with\x00nulls";
+        const zipFile = await createZipFile([
+          { name: "binary_file", content: binaryContent },
+          { name: "text_file", content: "plain text" },
+        ]);
+
+        const result = await decompressZip(zipFile);
+
+        expect(result).toHaveLength(1);
+        expect(result[0].name).toBe("text_file");
+      });
+    });
+
+    describe("binary extension filtering", () => {
+      it("skips files with known binary extensions", async () => {
+        const zipFile = await createZipFile([
+          { name: "image.png", content: "fake png" },
+          { name: "document.pdf", content: "fake pdf" },
+          { name: "data.bin", content: "binary data" },
+          { name: "readme.txt", content: "text content" },
+        ]);
+
+        const result = await decompressZip(zipFile);
+
+        expect(result).toHaveLength(1);
+        expect(result[0].name).toBe("readme.txt");
+      });
+    });
+  });
+
+  describe("isBinaryContent", () => {
+    it("returns false for normal text", () => {
+      expect(isBinaryContent("Hello, World!")).toBe(false);
+    });
+
+    it("returns false for text with newlines and tabs", () => {
+      expect(isBinaryContent("line1\nline2\ttab")).toBe(false);
+    });
+
+    it("returns false for unicode text", () => {
+      expect(isBinaryContent("日本語テキスト 🎉")).toBe(false);
+    });
+
+    it("returns true for content with NULL bytes", () => {
+      expect(isBinaryContent("text\x00with\x00nulls")).toBe(true);
+    });
+
+    it("returns true for content with many control characters", () => {
+      // 10%以上の制御文字を含むコンテンツ
+      const controlChars = "\x01\x02\x03\x04\x05\x06\x07\x08";
+      const content = controlChars + "text".repeat(10);
+      expect(isBinaryContent(content)).toBe(true);
+    });
+
+    it("returns false for empty string", () => {
+      expect(isBinaryContent("")).toBe(false);
+    });
+
+    it("returns false for typical code content", () => {
+      const code = `
+function hello() {
+  console.log("Hello, World!");
+}
+`;
+      expect(isBinaryContent(code)).toBe(false);
     });
   });
 });

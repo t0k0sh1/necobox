@@ -33,7 +33,7 @@ import {
 import { decompressGz, isGzipFile } from "@/lib/utils/gz-decompressor";
 import { validateRegex } from "@/lib/utils/log-filter";
 import { hasNonEmptyMatch, highlightMatches } from "@/lib/utils/text-highlight";
-import { decompressZip, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
+import { decompressZip, isBinaryContent, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
 import { Check, Copy, FileText, HelpCircle, StickyNote, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -716,6 +716,12 @@ export default function TextViewerPage() {
 
             // 通常のテキストファイル
             const content = await file.text();
+
+            // バイナリファイルチェック
+            if (isBinaryContent(content)) {
+              throw new Error("バイナリファイルは対応していません");
+            }
+
             const fileId = crypto.randomUUID();
             const fileLines = content.split(/\r?\n/);
             return [{
@@ -849,7 +855,6 @@ export default function TextViewerPage() {
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept=".txt,.log,.md,.json,.csv,.xml,.yaml,.yml,.gz,.zip,text/plain,application/json,text/csv,text/xml,application/yaml,text/yaml,application/gzip,application/x-gzip,application/zip"
                 onChange={handleFileInputChange}
                 className="hidden"
                 aria-label={t("upload.selectFiles")}

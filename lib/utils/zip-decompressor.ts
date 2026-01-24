@@ -5,6 +5,33 @@ export interface ExtractedFile {
   content: string;
 }
 
+/**
+ * コンテンツがバイナリデータかどうかを判定
+ * NULLバイトの存在や制御文字の割合で判定
+ */
+export function isBinaryContent(content: string): boolean {
+  const sampleSize = Math.min(content.length, 8192);
+  const sample = content.slice(0, sampleSize);
+
+  // NULLバイトが含まれていればバイナリ
+  if (sample.includes("\0")) return true;
+
+  // 制御文字の割合をチェック（タブ、改行、復帰以外）
+  let controlCharCount = 0;
+  for (let i = 0; i < sample.length; i++) {
+    const charCode = sample.charCodeAt(i);
+    // 0x00-0x08: NUL, SOH, STX, ETX, EOT, ENQ, ACK, BEL, BS
+    // 0x0E-0x1F: SO, SI, DLE, DC1-DC4, NAK, SYN, ETB, CAN, EM, SUB, ESC, FS, GS, RS, US
+    // タブ(0x09), 改行(0x0A), 復帰(0x0D)は許可
+    if ((charCode >= 0x00 && charCode <= 0x08) || (charCode >= 0x0E && charCode <= 0x1F)) {
+      controlCharCount++;
+    }
+  }
+
+  // 制御文字が5%以上ならバイナリ
+  return sample.length > 0 && controlCharCount / sample.length > 0.05;
+}
+
 // 制限値の定義
 const MAX_ZIP_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB per file
@@ -39,6 +66,9 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
     // テキストファイルの拡張子パターン
     const textExtensions = /\.(txt|log|md|json|csv|xml|yaml|yml|conf|cfg|ini|properties|html|htm|css|js|ts|jsx|tsx|py|rb|java|c|cpp|h|hpp|go|rs|sh|bash|zsh|sql|graphql|toml)$/i;
 
+    // バイナリファイルの拡張子パターン（これらは常に除外）
+    const binaryExtensions = /\.(png|jpg|jpeg|gif|bmp|ico|webp|pdf|doc|docx|xls|xlsx|exe|dll|so|dylib|class|jar|wasm|ttf|otf|woff|woff2|mp3|mp4|avi|mov|wav|zip|tar|rar|7z|dmg|iso|bin|dat|db|sqlite)$/i;
+
     // 抽出対象のファイルを収集
     const filesToExtract: { path: string; entry: JSZip.JSZipObject }[] = [];
 
@@ -57,8 +87,17 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
         return;
       }
 
-      // テキストファイルのみを処理
-      if (textExtensions.test(relativePath)) {
+      // バイナリ拡張子は常に除外
+      if (binaryExtensions.test(relativePath)) {
+        return;
+      }
+
+      // 拡張子なしファイルかどうかを判定
+      const fileName = relativePath.split("/").pop() || "";
+      const hasExtension = fileName.includes(".") && !fileName.startsWith(".");
+
+      // テキストファイル、または拡張子なしファイルを抽出対象に含める
+      if (textExtensions.test(relativePath) || !hasExtension) {
         filesToExtract.push({ path: relativePath, entry: zipEntry });
       }
     });
@@ -115,6 +154,12 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
         const contentSize = new Blob([content]).size;
         if (contentSize > MAX_FILE_SIZE) {
           console.warn(`Skipping ${path}: extracted content too large (${formatSize(contentSize)})`);
+          continue;
+        }
+
+        // バイナリ内容チェック（拡張子なしファイルの場合に特に重要）
+        if (isBinaryContent(content)) {
+          console.warn(`Skipping ${path}: binary content detected`);
           continue;
         }
 
