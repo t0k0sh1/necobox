@@ -228,7 +228,7 @@ export default function TextViewerPage() {
                 ref={fileInputRef}
                 type="file"
                 multiple
-                accept=".txt,.log,.md,.json,.csv,.xml,.yaml,.yml,.gz,.zip,text/plain,application/json,text/csv,text/xml,application/x-yaml,application/zip"
+                accept=".txt,.log,.md,.json,.csv,.xml,.yaml,.yml,.gz,.zip,text/plain,application/json,text/csv,text/xml,application/yaml,text/yaml,application/gzip,application/x-gzip,application/zip"
                 onChange={handleFileInputChange}
                 className="hidden"
                 aria-label={t("upload.selectFiles")}
