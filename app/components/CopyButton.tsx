@@ -5,8 +5,11 @@ import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 
 interface CopyButtonProps {
+  /** コピー対象のテキスト */
   text: string;
+  /** コピー成功時に呼ばれるコールバック */
   onCopy?: () => void;
+  /** クリックイベントハンドラ（コピー処理の前に呼ばれる、stopPropagation等に使用） */
   onClick?: (e: React.MouseEvent) => void;
   className?: string;
   label?: string;
@@ -24,10 +27,12 @@ export function CopyButton({
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async (e: React.MouseEvent) => {
+    // onClick はコピー前に呼び出し（イベント伝播制御等に使用）
     onClick?.(e);
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
+      // onCopy はコピー成功後に呼び出し
       onCopy?.();
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {

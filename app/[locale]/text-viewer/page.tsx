@@ -34,7 +34,7 @@ import { decompressGz, isGzipFile } from "@/lib/utils/gz-decompressor";
 import { validateRegex } from "@/lib/utils/log-filter";
 import { hasNonEmptyMatch, highlightMatches } from "@/lib/utils/text-highlight";
 import { decompressZip, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
-import { Copy, FileText, HelpCircle, StickyNote, Upload, X } from "lucide-react";
+import { Check, Copy, FileText, HelpCircle, StickyNote, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -48,6 +48,8 @@ const VISIBLE_LINES_OPTIONS = [10, 20, 30, 50] as const;
 type VisibleLinesOption = (typeof VISIBLE_LINES_OPTIONS)[number];
 
 // 1行あたりの高さ（px）
+// 注意: この値は行折り返しが無効の場合のみ正確。折り返し有効時は行の高さが可変になるため、
+// 仮想スクロールを無効にして max-height によるスクロールを使用する
 const LINE_HEIGHT = 24;
 
 interface UploadedFile {
@@ -82,6 +84,7 @@ interface LineRowProps {
   hasSelection: boolean;
   onLineNumberMouseDown: (originalIndex: number, shiftKey: boolean) => void;
   onLineNumberMouseEnter: (originalIndex: number) => void;
+  onLineNumberKeyDown: (originalIndex: number, e: React.KeyboardEvent) => void;
   isDraggingLineSelection: boolean;
   renderLineContent: (line: string) => ReactNode;
 }
@@ -95,6 +98,7 @@ const LineRow = React.memo(function LineRow({
   hasSelection,
   onLineNumberMouseDown,
   onLineNumberMouseEnter,
+  onLineNumberKeyDown,
   isDraggingLineSelection,
   renderLineContent,
 }: LineRowProps) {
@@ -112,6 +116,13 @@ const LineRow = React.memo(function LineRow({
     }
   }, [originalIndex, onLineNumberMouseEnter, isDraggingLineSelection]);
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      onLineNumberKeyDown(originalIndex, e);
+    },
+    [originalIndex, onLineNumberKeyDown]
+  );
+
   return (
     <div
       className={`group flex ${
@@ -121,6 +132,7 @@ const LineRow = React.memo(function LineRow({
           ? "bg-blue-100 dark:bg-blue-900/30"
           : ""
       }`}
+      role="row"
       aria-selected={isSelected}
     >
       {/* コピーボタン - 行選択中は非表示（エリアは維持） */}
@@ -136,13 +148,17 @@ const LineRow = React.memo(function LineRow({
       <span className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 w-4 text-gray-400 dark:text-gray-500 select-none text-center">
         &gt;
       </span>
-      {/* 行番号（クリック・ドラッグで行選択） */}
+      {/* 行番号（クリック・ドラッグ・キーボードで行選択） */}
       <span
-        className={`select-none text-gray-400 dark:text-gray-600 pr-4 text-right min-w-[4rem] cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${
+        role="gridcell"
+        tabIndex={0}
+        aria-label={`Line ${originalIndex + 1}`}
+        className={`select-none text-gray-400 dark:text-gray-600 pr-4 text-right min-w-[4rem] cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset ${
           isSelected ? "bg-blue-200 dark:bg-blue-800/50" : ""
         }`}
         onMouseDown={handleLineNumberMouseDown}
         onMouseEnter={handleLineNumberMouseEnter}
+        onKeyDown={handleKeyDown}
       >
         {originalIndex + 1}
       </span>
@@ -156,6 +172,16 @@ const LineRow = React.memo(function LineRow({
         {renderLineContent(line)}
       </span>
     </div>
+  );
+}, (prevProps, nextProps) => {
+  // renderLineContent は毎回新しい関数なので、比較から除外
+  return (
+    prevProps.line === nextProps.line &&
+    prevProps.originalIndex === nextProps.originalIndex &&
+    prevProps.wrapLines === nextProps.wrapLines &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.hasSelection === nextProps.hasSelection &&
+    prevProps.isDraggingLineSelection === nextProps.isDraggingLineSelection
   );
 });
 
@@ -178,9 +204,25 @@ export default function TextViewerPage() {
     focusIndex: null,
   });
   const [isDraggingLineSelection, setIsDraggingLineSelection] = useState(false);
+  const [selectionCopied, setSelectionCopied] = useState(false);
+
+  // コールバックの参照安定化のための ref
+  // state 変更時もコールバック参照を維持し、LineRow のメモ化を有効に保つ
+  const selectionRef = useRef(selection);
+  const isDraggingLineSelectionRef = useRef(isDraggingLineSelection);
+
+  // ref を state と同期
+  useEffect(() => {
+    selectionRef.current = selection;
+  }, [selection]);
+
+  useEffect(() => {
+    isDraggingLineSelectionRef.current = isDraggingLineSelection;
+  }, [isDraggingLineSelection]);
 
   // テキスト選択状態（ポップアップ用）
   const [textSelection, setTextSelection] = useState<TextSelectionState | null>(null);
+  const [textSelectionCopied, setTextSelectionCopied] = useState(false);
   const textViewerRef = useRef<HTMLDivElement>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -188,6 +230,9 @@ export default function TextViewerPage() {
 
   // 正規表現ヘルプボックスの状態
   const [showRegexHelp, setShowRegexHelp] = useState(false);
+
+  // 選択ヘルプツールチップの状態（クリックで即時表示用）
+  const [showSelectionHelp, setShowSelectionHelp] = useState(false);
 
   // フローティングメモの状態
   const [showMemo, setShowMemo] = useState(false);
@@ -387,12 +432,35 @@ export default function TextViewerPage() {
       }
     };
 
+    // ウィンドウがフォーカスを失った時にポップアップを閉じる
+    const handleWindowBlur = () => {
+      setTextSelection(null);
+    };
+
+    // Escapeキーでポップアップを閉じる
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setTextSelection(null);
+      }
+    };
+
+    // スクロール時にポップアップを閉じる（位置がずれるため）
+    const handleScroll = () => {
+      setTextSelection(null);
+    };
+
     document.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('scroll', handleScroll, { capture: true });
 
     return () => {
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('scroll', handleScroll, { capture: true });
     };
   }, []);
 
@@ -402,9 +470,15 @@ export default function TextViewerPage() {
 
     try {
       await navigator.clipboard.writeText(textSelection.text);
-      setTextSelection(null);
+      // コピー成功のフィードバック表示
+      setTextSelectionCopied(true);
       // 選択をクリア
       window.getSelection()?.removeAllRanges();
+      // 少し待ってからポップアップを消す
+      setTimeout(() => {
+        setTextSelectionCopied(false);
+        setTextSelection(null);
+      }, 1000);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
@@ -432,9 +506,15 @@ export default function TextViewerPage() {
     return selected;
   }, [selection, filteredLines]);
 
+  // 選択解除
+  const clearSelection = useCallback(() => {
+    setSelection({ anchorIndex: null, focusIndex: null });
+  }, []);
+
   // 行番号マウスダウンハンドラ（ドラッグ開始）
+  // ref を使用して依存配列を空にし、コールバック参照を安定化
   const handleLineNumberMouseDown = useCallback((originalIndex: number, shiftKey: boolean) => {
-    if (shiftKey && selection.anchorIndex !== null) {
+    if (shiftKey && selectionRef.current.anchorIndex !== null) {
       // Shift+クリック: 範囲選択
       setSelection((prev) => ({ ...prev, focusIndex: originalIndex }));
     } else {
@@ -442,14 +522,96 @@ export default function TextViewerPage() {
       setSelection({ anchorIndex: originalIndex, focusIndex: originalIndex });
       setIsDraggingLineSelection(true);
     }
-  }, [selection.anchorIndex]);
+  }, []);
 
   // 行番号マウスエンターハンドラ（ドラッグ中）
+  // ref を使用して依存配列を空にし、コールバック参照を安定化
   const handleLineNumberMouseEnter = useCallback((originalIndex: number) => {
-    if (isDraggingLineSelection) {
+    if (isDraggingLineSelectionRef.current) {
       setSelection((prev) => ({ ...prev, focusIndex: originalIndex }));
     }
-  }, [isDraggingLineSelection]);
+  }, []);
+
+  // 行番号キーボードハンドラ
+  // ref を使用して selection 依存を除去し、コールバック参照を安定化
+  // filteredLines は検索条件変更時に更新が必要なため依存配列に含める
+  const handleLineNumberKeyDown = useCallback((originalIndex: number, e: React.KeyboardEvent) => {
+    const currentFilteredIndex = filteredLines.findIndex(l => l.originalIndex === originalIndex);
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        if (currentFilteredIndex < filteredLines.length - 1) {
+          const nextLine = filteredLines[currentFilteredIndex + 1];
+          if (e.shiftKey) {
+            setSelection((prev) => ({
+              anchorIndex: prev.anchorIndex ?? originalIndex,
+              focusIndex: nextLine.originalIndex,
+            }));
+          } else {
+            setSelection({
+              anchorIndex: nextLine.originalIndex,
+              focusIndex: nextLine.originalIndex,
+            });
+          }
+          // フォーカスを次の行番号に移動
+          const nextElement = document.querySelector(
+            `[aria-label="Line ${nextLine.originalIndex + 1}"]`
+          ) as HTMLElement;
+          nextElement?.focus();
+        }
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        if (currentFilteredIndex > 0) {
+          const prevLine = filteredLines[currentFilteredIndex - 1];
+          if (e.shiftKey) {
+            setSelection((prev) => ({
+              anchorIndex: prev.anchorIndex ?? originalIndex,
+              focusIndex: prevLine.originalIndex,
+            }));
+          } else {
+            setSelection({
+              anchorIndex: prevLine.originalIndex,
+              focusIndex: prevLine.originalIndex,
+            });
+          }
+          // フォーカスを前の行番号に移動
+          const prevElement = document.querySelector(
+            `[aria-label="Line ${prevLine.originalIndex + 1}"]`
+          ) as HTMLElement;
+          prevElement?.focus();
+        }
+        break;
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        if (e.shiftKey && selectionRef.current.anchorIndex !== null) {
+          setSelection((prev) => ({ ...prev, focusIndex: originalIndex }));
+        } else {
+          setSelection({
+            anchorIndex: originalIndex,
+            focusIndex: originalIndex,
+          });
+        }
+        break;
+      case 'Escape':
+        e.preventDefault();
+        clearSelection();
+        break;
+      case 'a':
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          if (filteredLines.length > 0) {
+            setSelection({
+              anchorIndex: filteredLines[0].originalIndex,
+              focusIndex: filteredLines[filteredLines.length - 1].originalIndex,
+            });
+          }
+        }
+        break;
+    }
+  }, [filteredLines, clearSelection]);
 
   // ドラッグ終了ハンドラ
   useEffect(() => {
@@ -463,11 +625,6 @@ export default function TextViewerPage() {
     };
   }, []);
 
-  // 選択解除
-  const clearSelection = useCallback(() => {
-    setSelection({ anchorIndex: null, focusIndex: null });
-  }, []);
-
   // 選択範囲をコピー
   const copySelectedLines = useCallback(async () => {
     const selectedText = filteredLines
@@ -477,10 +634,36 @@ export default function TextViewerPage() {
 
     try {
       await navigator.clipboard.writeText(selectedText);
+      // コピー成功のフィードバック表示
+      setSelectionCopied(true);
+      // 少し待ってから選択を解除
+      setTimeout(() => {
+        setSelectionCopied(false);
+        clearSelection();
+      }, 1500);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
-  }, [filteredLines, selectedLines]);
+  }, [filteredLines, selectedLines, clearSelection]);
+
+  // Ctrl+C グローバルショートカット（行選択時）
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && selectedLines.size > 0) {
+        // テキスト選択がない場合のみ行選択をコピー
+        const sel = window.getSelection();
+        if (!sel || sel.toString().length === 0) {
+          e.preventDefault();
+          copySelectedLines();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [selectedLines.size, copySelectedLines]);
 
   const handleFileSelect = useCallback(
     async (selectedFiles: FileList | null) => {
@@ -625,10 +808,11 @@ export default function TextViewerPage() {
   };
 
   return (
-    <div className="flex h-full items-start justify-center py-4 px-4">
-      <div className="w-full max-w-7xl">
-        <Breadcrumbs items={[{ label: t("breadcrumb") }]} />
-        <div className="space-y-6 bg-white dark:bg-black rounded-lg p-6 border mt-6">
+    <TooltipProvider>
+      <div className="flex h-full items-start justify-center py-4 px-4">
+        <div className="w-full max-w-7xl">
+          <Breadcrumbs items={[{ label: t("breadcrumb") }]} />
+          <div className="space-y-6 bg-white dark:bg-black rounded-lg p-6 border mt-6">
           <div className="text-center">
             <h1 className="text-3xl font-semibold">{t("title")}</h1>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -871,42 +1055,54 @@ export default function TextViewerPage() {
                         </Select>
                       </div>
 
-                      {/* 選択ツールバー（エリア常に確保、内容は選択時のみ表示） */}
-                      <div className={`flex items-center gap-4 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md transition-opacity ${
-                        selectedLines.size > 0 ? "opacity-100" : "opacity-0 pointer-events-none"
-                      }`}>
-                        <span className="text-sm text-blue-700 dark:text-blue-300">
-                          {t("selection.count", { count: selectedLines.size })}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={copySelectedLines}
-                          className="h-7 text-xs"
-                        >
-                          <Copy className="w-3.5 h-3.5 mr-1" />
-                          {t("selection.copy")}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={clearSelection}
-                          className="h-7 text-xs"
-                        >
-                          {t("selection.clear")}
-                        </Button>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="cursor-help">
-                                <HelpCircle className="w-4 h-4 text-blue-500 dark:text-blue-400" />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{t("selection.helpTooltip")}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                      {/* 選択ツールバー（min-heightで領域確保、内容は条件付きレンダリング） */}
+                      <div className="min-h-[2.5rem]">
+                        {selectedLines.size > 0 && (
+                          <div className="flex items-center gap-4 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md">
+                            <span className="text-sm text-blue-700 dark:text-blue-300">
+                              {t("selection.count", { count: selectedLines.size })}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={copySelectedLines}
+                              disabled={selectionCopied}
+                              className={`h-7 text-xs transition-colors ${
+                                selectionCopied
+                                  ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
+                                  : ""
+                              }`}
+                            >
+                              {selectionCopied ? (
+                                <Check className="w-3.5 h-3.5 mr-1" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5 mr-1" />
+                              )}
+                              {selectionCopied ? tCommon("copied") : t("selection.copy")}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={clearSelection}
+                              className="h-7 text-xs"
+                            >
+                              {t("selection.clear")}
+                            </Button>
+                            <Tooltip open={showSelectionHelp} onOpenChange={setShowSelectionHelp}>
+                              <TooltipTrigger asChild>
+                                <span
+                                  className="cursor-help"
+                                  onClick={() => setShowSelectionHelp(true)}
+                                >
+                                  <HelpCircle className="w-4 h-4 text-blue-500 dark:text-blue-400" />
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{t("selection.helpTooltip")}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        )}
                       </div>
 
                       {/* フィルタ結果カウントとメモボタン */}
@@ -974,10 +1170,12 @@ export default function TextViewerPage() {
                           // ビューポートの高さを計算
                           const viewportHeight = visibleLines * LINE_HEIGHT;
 
-                          // 仮想スクロール対応（表示行数より多い場合）
-                          if (filteredLines.length > visibleLines) {
+                          // 仮想スクロール対応（表示行数より多い場合、かつ行折り返し無効時のみ）
+                          // 行折り返し有効時は行の高さが可変になるため、仮想スクロールを使用せず max-height でスクロール
+                          if (filteredLines.length > visibleLines && !wrapLines) {
                             return (
                               <Virtuoso
+                                key={`${file.id}-${file.searchText}-${file.isRegex}`}
                                 style={{ height: `${viewportHeight}px` }}
                                 totalCount={filteredLines.length}
                                 overscan={20}
@@ -992,6 +1190,7 @@ export default function TextViewerPage() {
                                       hasSelection={selectedLines.size > 0}
                                       onLineNumberMouseDown={handleLineNumberMouseDown}
                                       onLineNumberMouseEnter={handleLineNumberMouseEnter}
+                                      onLineNumberKeyDown={handleLineNumberKeyDown}
                                       isDraggingLineSelection={isDraggingLineSelection}
                                       renderLineContent={renderLineContent}
                                     />
@@ -1001,21 +1200,32 @@ export default function TextViewerPage() {
                             );
                           }
 
-                          // 少ない行数の場合は通常レンダリング（スクロール不要）
-                          return filteredLines.map(({ line, originalIndex }) => (
-                            <LineRow
-                              key={originalIndex}
-                              line={line}
-                              originalIndex={originalIndex}
-                              wrapLines={wrapLines}
-                              isSelected={selectedLines.has(originalIndex)}
-                              hasSelection={selectedLines.size > 0}
-                              onLineNumberMouseDown={handleLineNumberMouseDown}
-                              onLineNumberMouseEnter={handleLineNumberMouseEnter}
-                              isDraggingLineSelection={isDraggingLineSelection}
-                              renderLineContent={renderLineContent}
-                            />
-                          ));
+                          // 行折り返し有効時、または少ない行数の場合は通常レンダリング
+                          // 行数が多い場合は max-height でスクロール
+                          const needsScroll = filteredLines.length > visibleLines;
+                          const containerStyle = needsScroll
+                            ? { maxHeight: `${viewportHeight}px`, overflowY: 'auto' as const }
+                            : undefined;
+
+                          return (
+                            <div style={containerStyle}>
+                              {filteredLines.map(({ line, originalIndex }) => (
+                                <LineRow
+                                  key={originalIndex}
+                                  line={line}
+                                  originalIndex={originalIndex}
+                                  wrapLines={wrapLines}
+                                  isSelected={selectedLines.has(originalIndex)}
+                                  hasSelection={selectedLines.size > 0}
+                                  onLineNumberMouseDown={handleLineNumberMouseDown}
+                                  onLineNumberMouseEnter={handleLineNumberMouseEnter}
+                                  onLineNumberKeyDown={handleLineNumberKeyDown}
+                                  isDraggingLineSelection={isDraggingLineSelection}
+                                  renderLineContent={renderLineContent}
+                                />
+                              ))}
+                            </div>
+                          );
                         })()}
                       </div>
                     </div>
@@ -1111,33 +1321,43 @@ export default function TextViewerPage() {
           className="z-50"
         >
           <Button
-            variant="default"
+            variant={textSelectionCopied ? "outline" : "default"}
             size="sm"
             onClick={copyTextSelection}
-            className="h-7 text-xs shadow-lg"
+            disabled={textSelectionCopied}
+            className={`h-7 text-xs shadow-lg transition-colors ${
+              textSelectionCopied
+                ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
+                : ""
+            }`}
           >
-            <Copy className="w-3.5 h-3.5 mr-1" />
-            {t("selection.copyText")}
+            {textSelectionCopied ? (
+              <Check className="w-3.5 h-3.5 mr-1" />
+            ) : (
+              <Copy className="w-3.5 h-3.5 mr-1" />
+            )}
+            {textSelectionCopied ? tCommon("copied") : t("selection.copyText")}
           </Button>
         </div>
       )}
 
-      {/* フローティングメモ */}
-      <FloatingMemo
-        storageKey="necobox:floating-memo:text-viewer"
-        isOpen={showMemo}
-        onClose={() => setShowMemo(false)}
-        translations={{
-          title: t("memo.title"),
-          placeholder: t("memo.placeholder"),
-          clear: t("memo.clear"),
-          clearConfirm: t("memo.clearConfirm"),
-          copy: t("memo.copy"),
-          copied: t("memo.copied"),
-          close: t("memo.close"),
-          resize: t("memo.resize"),
-        }}
-      />
-    </div>
+        {/* フローティングメモ */}
+        <FloatingMemo
+          storageKey="necobox:floating-memo:text-viewer"
+          isOpen={showMemo}
+          onClose={() => setShowMemo(false)}
+          translations={{
+            title: t("memo.title"),
+            placeholder: t("memo.placeholder"),
+            clear: t("memo.clear"),
+            clearConfirm: t("memo.clearConfirm"),
+            copy: t("memo.copy"),
+            copied: t("memo.copied"),
+            close: t("memo.close"),
+            resize: t("memo.resize"),
+          }}
+        />
+      </div>
+    </TooltipProvider>
   );
 }
