@@ -7,6 +7,7 @@ import { useState } from "react";
 interface CopyButtonProps {
   text: string;
   onCopy?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   className?: string;
   label?: string;
   copiedLabel?: string;
@@ -15,13 +16,15 @@ interface CopyButtonProps {
 export function CopyButton({
   text,
   onCopy,
+  onClick,
   className = "",
   label,
   copiedLabel,
 }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = async () => {
+  const handleCopy = async (e: React.MouseEvent) => {
+    onClick?.(e);
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);

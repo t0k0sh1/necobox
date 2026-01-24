@@ -348,7 +348,14 @@
     },
     "options": {
       "wrapLines": "Wrap Lines",
-      "showLineNumbers": "Show Line Numbers"
+      "visibleLines": "Visible lines"
+    },
+    "selection": {
+      "count": "{count} lines selected",
+      "copy": "Copy selection",
+      "clear": "Clear selection",
+      "helpTooltip": "Drag line numbers to select range",
+      "copyText": "Copy"
     },
     "emptyState": "Please upload a file",
     "memo": {
