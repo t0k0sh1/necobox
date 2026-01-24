@@ -68,7 +68,8 @@ export function FloatingMemo({
       const y = Math.max(50, window.innerHeight - size.height - 100);
       updatePosition({ x, y });
     }
-  }, [isInitialized, isOpen, position.x, position.y, size.width, size.height, updatePosition]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- updatePosition is stable (empty deps useCallback)
+  }, [isInitialized, isOpen, position.x, position.y, size.width, size.height]);
 
   // ウィンドウリサイズ時の位置制約
   useEffect(() => {
@@ -92,7 +93,8 @@ export function FloatingMemo({
     return () => {
       window.removeEventListener("resize", handleWindowResize);
     };
-  }, [isInitialized, isOpen, position.x, position.y, size.width, size.height, updatePosition]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- updatePosition is stable (empty deps useCallback)
+  }, [isInitialized, isOpen, position.x, position.y, size.width, size.height]);
 
   // ドラッグ処理
   useEffect(() => {
@@ -115,7 +117,8 @@ export function FloatingMemo({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDragging, dragOffset, size.width, size.height, updatePosition]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- updatePosition is stable (empty deps useCallback)
+  }, [isDragging, dragOffset, size.width, size.height]);
 
   // リサイズ処理
   useEffect(() => {
@@ -142,7 +145,8 @@ export function FloatingMemo({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isResizing, resizeStart, updateSize]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- updateSize is stable (empty deps useCallback)
+  }, [isResizing, resizeStart]);
 
   const handleHeaderMouseDown = (e: React.MouseEvent) => {
     if (boxRef.current) {
@@ -192,7 +196,8 @@ export function FloatingMemo({
 
     e.preventDefault();
     updatePosition({ x: newX, y: newY });
-  }, [position.x, position.y, size.width, size.height, updatePosition]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- updatePosition is stable (empty deps useCallback)
+  }, [position.x, position.y, size.width, size.height]);
 
   // キーボードによるリサイズ
   const handleResizeKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -220,7 +225,8 @@ export function FloatingMemo({
 
     e.preventDefault();
     updateSize({ width: newWidth, height: newHeight });
-  }, [size.width, size.height, updateSize]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- updateSize is stable (empty deps useCallback)
+  }, [size.width, size.height]);
 
   // ヘッダーのキーボードハンドラ（移動とリサイズの両方）
   const handleHeaderKeyDown = useCallback((e: React.KeyboardEvent) => {
