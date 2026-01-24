@@ -31,6 +31,7 @@
     "timeZoneConverter": "タイムゾーン変換",
     "imageConverter": "画像フォーマット変換",
     "accessLogViewer": "アクセスログビューアー",
+    "textViewer": "テキストビューア",
     "sectionGenerators": "生成ツール",
     "sectionConverters": "変換ツール",
     "sectionAnalyzers": "解析・情報ツール"
@@ -290,6 +291,26 @@
     "scheduledMaintenance": "定期メンテナンス予定",
     "maintenanceFrom": "開始: {date}",
     "maintenanceUntil": "終了: {date}"
+  },
+  "textViewer": {
+    "title": "テキストファイルビューア",
+    "description": "テキストファイルをアップロードして表示・検索",
+    "breadcrumb": "テキストファイルビューア",
+    "upload": {
+      "title": "ファイルをアップロード",
+      "description": ".txt, .log, .md, .json, .gz, .zip などに対応",
+      "selectFiles": "ファイルを選択",
+      "dragDrop": "ここにドラッグ&ドロップ"
+    },
+    "filter": {
+      "placeholder": "テキストで検索...",
+      "resultsCount": "{filtered}行 / 全{total}行"
+    },
+    "options": {
+      "wrapLines": "行折り返し",
+      "showLineNumbers": "行番号表示"
+    },
+    "emptyState": "ファイルをアップロードしてください"
   },
   "accessLogViewer": {
     "title": "アクセスログビューアー",

@@ -31,6 +31,7 @@
     "timeZoneConverter": "Time Zone Converter",
     "imageConverter": "Image Format Converter",
     "accessLogViewer": "Access Log Viewer",
+    "textViewer": "Text Viewer",
     "sectionGenerators": "Generators",
     "sectionConverters": "Converters",
     "sectionAnalyzers": "Analyzers & Info"
@@ -290,6 +291,26 @@
     "scheduledMaintenance": "Scheduled Maintenance",
     "maintenanceFrom": "From: {date}",
     "maintenanceUntil": "Until: {date}"
+  },
+  "textViewer": {
+    "title": "Text File Viewer",
+    "description": "Upload and view text files with search",
+    "breadcrumb": "Text File Viewer",
+    "upload": {
+      "title": "Upload Files",
+      "description": "Supports .txt, .log, .md, .json, .gz, .zip and more",
+      "selectFiles": "Select Files",
+      "dragDrop": "Drag and drop files here"
+    },
+    "filter": {
+      "placeholder": "Search text...",
+      "resultsCount": "{filtered} of {total} lines"
+    },
+    "options": {
+      "wrapLines": "Wrap Lines",
+      "showLineNumbers": "Show Line Numbers"
+    },
+    "emptyState": "Please upload a file"
   },
   "accessLogViewer": {
     "title": "Access Log Viewer",

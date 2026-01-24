@@ -7,6 +7,7 @@ import {
   ArrowRightLeft,
   Clock,
   Dices,
+  FileText,
   Globe,
   Image,
   Key,
@@ -129,6 +130,15 @@ export default function Home() {
               >
                 <Activity className="size-10" />
                 <span className="text-sm">{t("serviceStatus")}</span>
+              </Button>
+            </Link>
+            <Link href="/text-viewer" className="block">
+              <Button
+                variant="outline"
+                className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
+              >
+                <FileText className="size-10" />
+                <span className="text-sm">{t("textViewer")}</span>
               </Button>
             </Link>
           </div>

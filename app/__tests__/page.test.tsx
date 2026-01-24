@@ -29,6 +29,7 @@ describe("Home Page", () => {
     expect(screen.getByText("Image Format Converter")).toBeInTheDocument();
     expect(screen.getByText("IP/Hostname Info")).toBeInTheDocument();
     expect(screen.getByText("Service Status")).toBeInTheDocument();
+    expect(screen.getByText("Text Viewer")).toBeInTheDocument();
   });
 
   it("has correct links for each tool", () => {
@@ -64,11 +65,15 @@ describe("Home Page", () => {
       "href",
       "/service-status"
     );
+    expect(screen.getByText("Text Viewer").closest("a")).toHaveAttribute(
+      "href",
+      "/text-viewer"
+    );
   });
 
-  it("renders 9 tool buttons", () => {
+  it("renders 10 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(9);
+    expect(buttons).toHaveLength(10);
   });
 
   it("displays buttons with correct styling", () => {
