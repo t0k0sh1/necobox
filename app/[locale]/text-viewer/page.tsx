@@ -371,10 +371,24 @@ export default function TextViewerPage() {
   // 別名編集を開始
   const startEditingAlias = useCallback((fileId: string, tabElement: HTMLElement) => {
     const rect = tabElement.getBoundingClientRect();
-    setAliasInputPosition({
-      x: rect.left,
-      y: rect.bottom + 4,
-    });
+    const editorWidth = 220; // 概算のエディタ幅
+    const editorHeight = 50; // 概算のエディタ高さ
+
+    // ビューポート境界チェック
+    let x = rect.left;
+    let y = rect.bottom + 4;
+
+    // 右端からはみ出す場合は左にずらす
+    if (x + editorWidth > window.innerWidth) {
+      x = Math.max(8, window.innerWidth - editorWidth - 8);
+    }
+
+    // 下端からはみ出す場合は上に表示
+    if (y + editorHeight > window.innerHeight) {
+      y = rect.top - editorHeight - 4;
+    }
+
+    setAliasInputPosition({ x, y });
     setEditingAliasFileId(fileId);
     // 次のレンダリング後にフォーカス
     setTimeout(() => {
@@ -1030,7 +1044,6 @@ export default function TextViewerPage() {
                       onClick={(e) => {
                         // アクティブなタブをクリックしたら別名編集を開始
                         if (file.id === activeFileId) {
-                          e.preventDefault();
                           startEditingAlias(file.id, e.currentTarget);
                         }
                       }}
@@ -1128,6 +1141,12 @@ export default function TextViewerPage() {
                                 <button
                                   type="button"
                                   onClick={() => updateSearchText(file.id, "")}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      updateSearchText(file.id, "");
+                                    }
+                                  }}
                                   className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                                   aria-label={tCommon("clear")}
                                 >
@@ -1556,53 +1575,63 @@ export default function TextViewerPage() {
       )}
 
       {/* フローティング別名編集 */}
-      {editingAliasFileId && (
-        <div
-          style={{
-            position: 'fixed',
-            left: aliasInputPosition.x,
-            top: aliasInputPosition.y,
-          }}
-          className="z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2"
-        >
-          <div className="flex items-center gap-2">
-            <Label className="text-xs whitespace-nowrap text-gray-600 dark:text-gray-400">
-              {t("alias.label")}:
-            </Label>
-            <div className="relative">
-              <Input
-                ref={aliasInputRef}
-                type="text"
-                placeholder={files.find(f => f.id === editingAliasFileId)?.name || ""}
-                value={files.find(f => f.id === editingAliasFileId)?.alias || ""}
-                onChange={(e) => updateAlias(editingAliasFileId, e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    e.preventDefault();
-                    finishEditingAlias();
-                  }
-                }}
-                onBlur={finishEditingAlias}
-                className="h-7 text-sm w-48 pr-7"
-              />
-              {files.find(f => f.id === editingAliasFileId)?.alias && (
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault(); // blur を防ぐ
-                    updateAlias(editingAliasFileId, "");
-                    aliasInputRef.current?.focus();
+      {editingAliasFileId && (() => {
+        const editingFile = files.find(f => f.id === editingAliasFileId);
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              left: aliasInputPosition.x,
+              top: aliasInputPosition.y,
+            }}
+            className="z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2"
+          >
+            <div className="flex items-center gap-2">
+              <Label className="text-xs whitespace-nowrap text-gray-600 dark:text-gray-400">
+                {t("alias.label")}:
+              </Label>
+              <div className="relative">
+                <Input
+                  ref={aliasInputRef}
+                  type="text"
+                  placeholder={editingFile?.name || ""}
+                  value={editingFile?.alias || ""}
+                  onChange={(e) => updateAlias(editingAliasFileId, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      finishEditingAlias();
+                    }
                   }}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  aria-label={t("alias.clear")}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+                  onBlur={finishEditingAlias}
+                  className="h-7 text-sm w-48 pr-7"
+                />
+                {editingFile?.alias && (
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault(); // blur を防ぐ
+                      updateAlias(editingAliasFileId, "");
+                      aliasInputRef.current?.focus();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        updateAlias(editingAliasFileId, "");
+                        aliasInputRef.current?.focus();
+                      }
+                    }}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    aria-label={t("alias.clear")}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
         {/* フローティングメモ */}
         <FloatingMemo
