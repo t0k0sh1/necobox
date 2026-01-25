@@ -371,6 +371,10 @@
       "resize": "リサイズ",
       "show": "メモを表示",
       "hide": "メモを非表示"
+    },
+    "alias": {
+      "label": "別名",
+      "clear": "別名をクリア"
     }
   },
   "accessLogViewer": {
