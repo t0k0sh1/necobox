@@ -371,6 +371,10 @@
       "resize": "Resize",
       "show": "Show Memo",
       "hide": "Hide Memo"
+    },
+    "alias": {
+      "label": "Alias",
+      "clear": "Clear alias"
     }
   },
   "accessLogViewer": {

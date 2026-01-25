@@ -67,6 +67,7 @@ interface UploadedFile {
   isRegex: boolean;
   delimiterType: DelimiterType;
   customDelimiter: string;
+  alias: string;  // 別名（空文字の場合は元の名前を使用）
 }
 
 // 選択状態の型
@@ -258,6 +259,11 @@ export default function TextViewerPage() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const helpBoxRef = useRef<HTMLDivElement>(null);
 
+  // 別名編集状態
+  const [editingAliasFileId, setEditingAliasFileId] = useState<string | null>(null);
+  const [aliasInputPosition, setAliasInputPosition] = useState({ x: 0, y: 0 });
+  const aliasInputRef = useRef<HTMLInputElement>(null);
+
   // ドラッグ処理
   useEffect(() => {
     if (!isDraggingHelp) return;
@@ -351,6 +357,35 @@ export default function TextViewerPage() {
         f.id === fileId ? { ...f, customDelimiter: newDelimiter } : f
       )
     );
+  }, []);
+
+  // ファイルごとの別名を更新
+  const updateAlias = useCallback((fileId: string, newAlias: string) => {
+    setFiles((prev) =>
+      prev.map((f) =>
+        f.id === fileId ? { ...f, alias: newAlias } : f
+      )
+    );
+  }, []);
+
+  // 別名編集を開始
+  const startEditingAlias = useCallback((fileId: string, tabElement: HTMLElement) => {
+    const rect = tabElement.getBoundingClientRect();
+    setAliasInputPosition({
+      x: rect.left,
+      y: rect.bottom + 4,
+    });
+    setEditingAliasFileId(fileId);
+    // 次のレンダリング後にフォーカス
+    setTimeout(() => {
+      aliasInputRef.current?.focus();
+      aliasInputRef.current?.select();
+    }, 0);
+  }, []);
+
+  // 別名編集を終了
+  const finishEditingAlias = useCallback(() => {
+    setEditingAliasFileId(null);
   }, []);
 
   // 区切り文字を取得
@@ -708,6 +743,7 @@ export default function TextViewerPage() {
                   isRegex: false,
                   delimiterType: "none" as DelimiterType,
                   customDelimiter: "",
+                  alias: "",
                 };
               });
             }
@@ -728,6 +764,7 @@ export default function TextViewerPage() {
                 isRegex: false,
                 delimiterType: "none" as DelimiterType,
                 customDelimiter: "",
+                alias: "",
               }];
             }
 
@@ -750,6 +787,7 @@ export default function TextViewerPage() {
               isRegex: false,
               delimiterType: "none" as DelimiterType,
               customDelimiter: "",
+              alias: "",
             }];
           } catch (fileError) {
             const errorMessage =
@@ -989,8 +1027,17 @@ export default function TextViewerPage() {
                       key={file.id}
                       value={file.id}
                       className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 max-w-[200px]"
+                      onClick={(e) => {
+                        // アクティブなタブをクリックしたら別名編集を開始
+                        if (file.id === activeFileId) {
+                          e.preventDefault();
+                          startEditingAlias(file.id, e.currentTarget);
+                        }
+                      }}
                     >
-                      <span className="truncate">{file.name}</span>
+                      <span className="truncate" title={file.alias || file.name}>
+                        {file.alias || file.name}
+                      </span>
                       <span
                         role="button"
                         tabIndex={0}
@@ -1006,7 +1053,7 @@ export default function TextViewerPage() {
                           }
                         }}
                         className="ml-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded p-0.5 cursor-pointer"
-                        aria-label={`Remove ${file.name}`}
+                        aria-label={`Remove ${file.alias || file.name}`}
                       >
                         <X className="w-3 h-3" />
                       </span>
@@ -1063,7 +1110,7 @@ export default function TextViewerPage() {
                         {/* 検索入力 */}
                         <div className="flex-1 space-y-2">
                           <div className="flex flex-col sm:flex-row gap-2">
-                            <div className="flex-1">
+                            <div className="flex-1 relative">
                               <Input
                                 type="text"
                                 placeholder={
@@ -1075,8 +1122,18 @@ export default function TextViewerPage() {
                                 }
                                 value={file.searchText}
                                 onChange={(e) => updateSearchText(file.id, e.target.value)}
-                                className={file.isRegex && !regexValidation.isValid && file.searchText ? "border-red-500" : ""}
+                                className={`pr-8 ${file.isRegex && !regexValidation.isValid && file.searchText ? "border-red-500" : ""}`}
                               />
+                              {file.searchText && (
+                                <button
+                                  type="button"
+                                  onClick={() => updateSearchText(file.id, "")}
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                  aria-label={tCommon("clear")}
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              )}
                             </div>
                             <div className="flex items-center space-x-2">
                               <Checkbox
@@ -1487,12 +1544,63 @@ export default function TextViewerPage() {
                     onClick={() => handleSearchInFile(file.id, textSelection.text)}
                     className="text-xs"
                   >
-                    <span className="truncate max-w-[200px]">{file.name}</span>
+                    <span className="truncate max-w-[200px]">
+                      {file.alias ? `${file.alias} (${file.name})` : file.name}
+                    </span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
           ) : null}
+        </div>
+      )}
+
+      {/* フローティング別名編集 */}
+      {editingAliasFileId && (
+        <div
+          style={{
+            position: 'fixed',
+            left: aliasInputPosition.x,
+            top: aliasInputPosition.y,
+          }}
+          className="z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-2"
+        >
+          <div className="flex items-center gap-2">
+            <Label className="text-xs whitespace-nowrap text-gray-600 dark:text-gray-400">
+              {t("alias.label")}:
+            </Label>
+            <div className="relative">
+              <Input
+                ref={aliasInputRef}
+                type="text"
+                placeholder={files.find(f => f.id === editingAliasFileId)?.name || ""}
+                value={files.find(f => f.id === editingAliasFileId)?.alias || ""}
+                onChange={(e) => updateAlias(editingAliasFileId, e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    finishEditingAlias();
+                  }
+                }}
+                onBlur={finishEditingAlias}
+                className="h-7 text-sm w-48 pr-7"
+              />
+              {files.find(f => f.id === editingAliasFileId)?.alias && (
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault(); // blur を防ぐ
+                    updateAlias(editingAliasFileId, "");
+                    aliasInputRef.current?.focus();
+                  }}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  aria-label={t("alias.clear")}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
