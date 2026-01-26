@@ -384,6 +384,10 @@
     "alias": {
       "label": "別名",
       "clear": "別名をクリア"
+    },
+    "pin": {
+      "pin": "ピン止め",
+      "unpin": "ピン止め解除"
     }
   },
   "accessLogViewer": {

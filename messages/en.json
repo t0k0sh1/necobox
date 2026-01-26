@@ -384,6 +384,10 @@
     "alias": {
       "label": "Alias",
       "clear": "Clear alias"
+    },
+    "pin": {
+      "pin": "Pin line",
+      "unpin": "Unpin line"
     }
   },
   "accessLogViewer": {
