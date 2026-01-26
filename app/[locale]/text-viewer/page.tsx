@@ -41,7 +41,7 @@ import { decompressGz, isGzipFile } from "@/lib/utils/gz-decompressor";
 import { validateRegex } from "@/lib/utils/log-filter";
 import { hasNonEmptyMatch, highlightMatches } from "@/lib/utils/text-highlight";
 import { decompressZip, isBinaryContent, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
-import { Check, ChevronDown, Copy, FileText, HelpCircle, Search, StickyNote, Upload, X } from "lucide-react";
+import { Check, ChevronDown, Copy, FileText, HelpCircle, Pin, Search, StickyNote, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -69,6 +69,7 @@ interface UploadedFile {
   delimiterType: DelimiterType;
   customDelimiter: string;
   alias: string;  // 別名（空文字の場合は元の名前を使用）
+  pinnedLines: number[];  // ピン止めされた行のoriginalIndex（ピン順序を維持）
 }
 
 // 選択状態の型
@@ -95,6 +96,8 @@ interface LineRowProps {
   onLineNumberKeyDown: (originalIndex: number, e: React.KeyboardEvent) => void;
   isDraggingLineSelection: boolean;
   renderLineContent: (line: string) => ReactNode;
+  isPinned: boolean;
+  onTogglePin: (originalIndex: number) => void;
 }
 
 // メモ化された行コンポーネント
@@ -109,6 +112,8 @@ const LineRow = React.memo(function LineRow({
   onLineNumberKeyDown,
   isDraggingLineSelection,
   renderLineContent,
+  isPinned,
+  onTogglePin,
 }: LineRowProps) {
   const handleLineNumberMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -131,6 +136,14 @@ const LineRow = React.memo(function LineRow({
     [originalIndex, onLineNumberKeyDown]
   );
 
+  const handleTogglePin = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onTogglePin(originalIndex);
+    },
+    [originalIndex, onTogglePin]
+  );
+
   return (
     <div
       className={`group flex ${
@@ -138,11 +151,28 @@ const LineRow = React.memo(function LineRow({
       } ${
         isSelected
           ? "bg-blue-100 dark:bg-blue-900/30"
-          : ""
+          : isPinned
+            ? "bg-amber-50 dark:bg-amber-900/20"
+            : ""
       }`}
       role="row"
       aria-selected={isSelected}
     >
+      {/* ピンボタン - 行選択中は非表示（エリアは維持） */}
+      <span className={`flex-shrink-0 select-none transition-opacity ${
+        hasSelection ? "opacity-0" : isPinned ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+      }`}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className={`h-6 w-6 p-0 ${isPinned ? "text-amber-500" : ""}`}
+          onClick={handleTogglePin}
+          aria-label={isPinned ? "Unpin line" : "Pin line"}
+        >
+          <Pin className={`w-4 h-4 ${isPinned ? "fill-current" : ""}`} />
+        </Button>
+      </span>
       {/* コピーボタン - 行選択中は非表示（エリアは維持） */}
       <span className={`flex-shrink-0 select-none transition-opacity ${
         hasSelection ? "opacity-0" : "opacity-0 group-hover:opacity-100"
@@ -189,7 +219,8 @@ const LineRow = React.memo(function LineRow({
     prevProps.wrapLines === nextProps.wrapLines &&
     prevProps.isSelected === nextProps.isSelected &&
     prevProps.hasSelection === nextProps.hasSelection &&
-    prevProps.isDraggingLineSelection === nextProps.isDraggingLineSelection
+    prevProps.isDraggingLineSelection === nextProps.isDraggingLineSelection &&
+    prevProps.isPinned === nextProps.isPinned
   );
 });
 
@@ -419,38 +450,74 @@ export default function TextViewerPage() {
     }
   }, []);
 
-  // フィルタされた行
+  // ピン止めトグルハンドラ
+  const handleTogglePin = useCallback((originalIndex: number) => {
+    if (!activeFileId) return;
+
+    setFiles(prev => prev.map(file => {
+      if (file.id !== activeFileId) return file;
+
+      const pinnedLines = [...file.pinnedLines];
+      const index = pinnedLines.indexOf(originalIndex);
+
+      if (index === -1) {
+        pinnedLines.push(originalIndex);  // ピンを追加
+      } else {
+        pinnedLines.splice(index, 1);     // ピンを解除
+      }
+
+      return { ...file, pinnedLines };
+    }));
+  }, [activeFileId]);
+
+  // ピン止めされた行のデータ（ピン順序を維持）
+  const pinnedLinesData = useMemo(() => {
+    const pinnedIndices = activeFile?.pinnedLines ?? [];
+    return pinnedIndices
+      .filter(index => index < lines.length)
+      .map(index => ({ line: lines[index], originalIndex: index }));
+  }, [lines, activeFile?.pinnedLines]);
+
+  // ピン止めされた行のSetを作成（フィルタで除外用）
+  const pinnedSet = useMemo(() => {
+    return new Set(activeFile?.pinnedLines ?? []);
+  }, [activeFile?.pinnedLines]);
+
+  // フィルタされた行（ピン行を除外）
   const filteredLines = useMemo(() => {
+    let baseFiltered: { line: string; originalIndex: number }[];
+
     if (!searchText.trim()) {
-      return lines.map((line, index) => ({ line, originalIndex: index }));
+      baseFiltered = lines.map((line, index) => ({ line, originalIndex: index }));
+    } else if (isRegex && !regexValidation.isValid) {
+      // 正規表現モードで無効な正規表現の場合は全行を返す
+      baseFiltered = lines.map((line, index) => ({ line, originalIndex: index }));
+    } else {
+      // 列フィルタの解析
+      const parsedFilter = parseColumnFilter(searchText);
+      const delimiter = activeFile ? getDelimiter(activeFile) : "";
+
+      // 列フィルタモードの場合
+      if (isColumnFilterMode(parsedFilter) && delimiter) {
+        baseFiltered = lines
+          .map((line, index) => ({ line, originalIndex: index }))
+          .filter(({ line }) => {
+            const columns = splitLineToColumns(line, delimiter);
+            return matchesColumnFilters(columns, parsedFilter.columnFilters, isRegex);
+          });
+      } else {
+        // 通常の全文検索
+        const pattern = parsedFilter.generalPattern || searchText;
+        // hasNonEmptyMatch を使用して空文字列マッチを除外
+        baseFiltered = lines
+          .map((line, index) => ({ line, originalIndex: index }))
+          .filter(({ line }) => hasNonEmptyMatch(line, pattern, isRegex));
+      }
     }
 
-    // 正規表現モードで無効な正規表現の場合は全行を返す
-    if (isRegex && !regexValidation.isValid) {
-      return lines.map((line, index) => ({ line, originalIndex: index }));
-    }
-
-    // 列フィルタの解析
-    const parsedFilter = parseColumnFilter(searchText);
-    const delimiter = activeFile ? getDelimiter(activeFile) : "";
-
-    // 列フィルタモードの場合
-    if (isColumnFilterMode(parsedFilter) && delimiter) {
-      return lines
-        .map((line, index) => ({ line, originalIndex: index }))
-        .filter(({ line }) => {
-          const columns = splitLineToColumns(line, delimiter);
-          return matchesColumnFilters(columns, parsedFilter.columnFilters, isRegex);
-        });
-    }
-
-    // 通常の全文検索
-    const pattern = parsedFilter.generalPattern || searchText;
-    // hasNonEmptyMatch を使用して空文字列マッチを除外
-    return lines
-      .map((line, index) => ({ line, originalIndex: index }))
-      .filter(({ line }) => hasNonEmptyMatch(line, pattern, isRegex));
-  }, [lines, searchText, isRegex, regexValidation.isValid, activeFile, getDelimiter]);
+    // ピン行を除外
+    return baseFiltered.filter(item => !pinnedSet.has(item.originalIndex));
+  }, [lines, searchText, isRegex, regexValidation.isValid, activeFile, getDelimiter, pinnedSet]);
 
   // フィルタ変更時に選択を解除
   useEffect(() => {
@@ -759,6 +826,7 @@ export default function TextViewerPage() {
                   delimiterType: "none" as DelimiterType,
                   customDelimiter: "",
                   alias: "",
+                  pinnedLines: [],
                 };
               });
             }
@@ -780,6 +848,7 @@ export default function TextViewerPage() {
                 delimiterType: "none" as DelimiterType,
                 customDelimiter: "",
                 alias: "",
+                pinnedLines: [],
               }];
             }
 
@@ -803,6 +872,7 @@ export default function TextViewerPage() {
               delimiterType: "none" as DelimiterType,
               customDelimiter: "",
               alias: "",
+              pinnedLines: [],
             }];
           } catch (fileError) {
             const errorMessage =
@@ -1348,7 +1418,7 @@ export default function TextViewerPage() {
                         wrapLines ? "" : "overflow-x-auto"
                       }`}
                     >
-                      <div className="p-4 font-mono text-sm">
+                      <div className="font-mono text-sm">
                         {(() => {
                           // 事前計算: mapの外で一度だけ計算（パフォーマンス最適化）
                           const delimiter = getDelimiter(file);
@@ -1383,30 +1453,24 @@ export default function TextViewerPage() {
                             return highlightMatches(line, searchText, file.isRegex);
                           };
 
-                          // ビューポートの高さを計算
-                          const viewportHeight = visibleLines * LINE_HEIGHT;
+                          // ピン止め行エリアの高さを計算
+                          const pinnedAreaHeight = pinnedLinesData.length * LINE_HEIGHT;
 
-                          // 仮想スクロール対応（表示行数より多い場合、かつ行折り返し無効時のみ）
-                          // 行折り返し有効時は行の高さが可変になるため、仮想スクロールを使用せず max-height でスクロール
-                          if (filteredLines.length > visibleLines && !wrapLines) {
-                            // 保存されたスクロール位置を取得（stateから復元用の値を取得）
-                            const savedScrollPosition = scrollPositions.get(file.id);
+                          // ビューポートの高さを計算（ピン行エリアの高さを引く）
+                          const baseViewportHeight = visibleLines * LINE_HEIGHT;
+                          const adjustedViewportHeight = Math.max(
+                            baseViewportHeight - pinnedAreaHeight,
+                            LINE_HEIGHT * 3 // 最低3行分は確保
+                          );
 
-                            return (
-                              <Virtuoso
-                                key={`${file.id}-${file.searchText}-${file.isRegex}`}
-                                style={{ height: `${viewportHeight}px` }}
-                                totalCount={filteredLines.length}
-                                overscan={20}
-                                initialTopMostItemIndex={savedScrollPosition ?? 0}
-                                rangeChanged={({ startIndex }) => {
-                                  // スクロール位置をrefに保存（頻繁な再レンダリングを防ぐ）
-                                  scrollPositionsRef.current.set(file.id, startIndex);
-                                }}
-                                itemContent={(index) => {
-                                  const { line, originalIndex } = filteredLines[index];
-                                  return (
+                          return (
+                            <>
+                              {/* ピン止めされた行（固定表示） */}
+                              {pinnedLinesData.length > 0 && (
+                                <div className="border-b border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-900/10 p-4 pb-2">
+                                  {pinnedLinesData.map(({ line, originalIndex }) => (
                                     <LineRow
+                                      key={`pinned-${originalIndex}`}
                                       line={line}
                                       originalIndex={originalIndex}
                                       wrapLines={wrapLines}
@@ -1417,50 +1481,101 @@ export default function TextViewerPage() {
                                       onLineNumberKeyDown={handleLineNumberKeyDown}
                                       isDraggingLineSelection={isDraggingLineSelection}
                                       renderLineContent={renderLineContent}
+                                      isPinned={true}
+                                      onTogglePin={handleTogglePin}
                                     />
-                                  );
-                                }}
-                              />
-                            );
-                          }
+                                  ))}
+                                </div>
+                              )}
 
-                          // 行折り返し有効時、または少ない行数の場合は通常レンダリング
-                          // 行数が多い場合は max-height でスクロール
-                          const needsScroll = filteredLines.length > visibleLines;
-                          const containerStyle = needsScroll
-                            ? { maxHeight: `${viewportHeight}px`, overflowY: 'auto' as const }
-                            : undefined;
+                              {/* スクロール可能なエリア */}
+                              <div className="p-4">
+                                {/* 仮想スクロール対応（表示行数より多い場合、かつ行折り返し無効時のみ） */}
+                                {/* 行折り返し有効時は行の高さが可変になるため、仮想スクロールを使用せず max-height でスクロール */}
+                                {filteredLines.length > visibleLines && !wrapLines ? (
+                                  (() => {
+                                    // 保存されたスクロール位置を取得（stateから復元用の値を取得）
+                                    const savedScrollPosition = scrollPositions.get(file.id);
 
-                          return (
-                            <div
-                              ref={(ref) => {
-                                if (ref) {
-                                  scrollContainerRefs.current.set(file.id, ref);
-                                }
-                              }}
-                              style={containerStyle}
-                              onScroll={(e) => {
-                                // 通常スクロールの位置をrefに保存（頻繁な再レンダリングを防ぐ）
-                                const target = e.target as HTMLDivElement;
-                                scrollTopsRef.current.set(file.id, target.scrollTop);
-                              }}
-                            >
-                              {filteredLines.map(({ line, originalIndex }) => (
-                                <LineRow
-                                  key={originalIndex}
-                                  line={line}
-                                  originalIndex={originalIndex}
-                                  wrapLines={wrapLines}
-                                  isSelected={selectedLines.has(originalIndex)}
-                                  hasSelection={selectedLines.size > 0}
-                                  onLineNumberMouseDown={handleLineNumberMouseDown}
-                                  onLineNumberMouseEnter={handleLineNumberMouseEnter}
-                                  onLineNumberKeyDown={handleLineNumberKeyDown}
-                                  isDraggingLineSelection={isDraggingLineSelection}
-                                  renderLineContent={renderLineContent}
-                                />
-                              ))}
-                            </div>
+                                    return (
+                                      <Virtuoso
+                                        key={`${file.id}-${file.searchText}-${file.isRegex}-${pinnedLinesData.length}`}
+                                        style={{ height: `${adjustedViewportHeight}px` }}
+                                        totalCount={filteredLines.length}
+                                        overscan={20}
+                                        initialTopMostItemIndex={savedScrollPosition ?? 0}
+                                        rangeChanged={({ startIndex }) => {
+                                          // スクロール位置をrefに保存（頻繁な再レンダリングを防ぐ）
+                                          scrollPositionsRef.current.set(file.id, startIndex);
+                                        }}
+                                        itemContent={(index) => {
+                                          const { line, originalIndex } = filteredLines[index];
+                                          return (
+                                            <LineRow
+                                              line={line}
+                                              originalIndex={originalIndex}
+                                              wrapLines={wrapLines}
+                                              isSelected={selectedLines.has(originalIndex)}
+                                              hasSelection={selectedLines.size > 0}
+                                              onLineNumberMouseDown={handleLineNumberMouseDown}
+                                              onLineNumberMouseEnter={handleLineNumberMouseEnter}
+                                              onLineNumberKeyDown={handleLineNumberKeyDown}
+                                              isDraggingLineSelection={isDraggingLineSelection}
+                                              renderLineContent={renderLineContent}
+                                              isPinned={false}
+                                              onTogglePin={handleTogglePin}
+                                            />
+                                          );
+                                        }}
+                                      />
+                                    );
+                                  })()
+                                ) : (
+                                  (() => {
+                                    // 行折り返し有効時、または少ない行数の場合は通常レンダリング
+                                    // 行数が多い場合は max-height でスクロール
+                                    const needsScroll = filteredLines.length > visibleLines;
+                                    const containerStyle = needsScroll
+                                      ? { maxHeight: `${adjustedViewportHeight}px`, overflowY: 'auto' as const }
+                                      : undefined;
+
+                                    return (
+                                      <div
+                                        ref={(ref) => {
+                                          if (ref) {
+                                            scrollContainerRefs.current.set(file.id, ref);
+                                          }
+                                        }}
+                                        style={containerStyle}
+                                        onScroll={(e) => {
+                                          // 通常スクロールの位置をrefに保存（頻繁な再レンダリングを防ぐ）
+                                          const target = e.target as HTMLDivElement;
+                                          scrollTopsRef.current.set(file.id, target.scrollTop);
+                                        }}
+                                      >
+                                        {filteredLines.map(({ line, originalIndex }) => (
+                                          <LineRow
+                                            key={originalIndex}
+                                            line={line}
+                                            originalIndex={originalIndex}
+                                            wrapLines={wrapLines}
+                                            isSelected={selectedLines.has(originalIndex)}
+                                            hasSelection={selectedLines.size > 0}
+                                            onLineNumberMouseDown={handleLineNumberMouseDown}
+                                            onLineNumberMouseEnter={handleLineNumberMouseEnter}
+                                            onLineNumberKeyDown={handleLineNumberKeyDown}
+                                            isDraggingLineSelection={isDraggingLineSelection}
+                                            renderLineContent={renderLineContent}
+                                            isPinned={false}
+                                            onTogglePin={handleTogglePin}
+                                          />
+                                        ))}
+                                      </div>
+                                    );
+                                  })()
+                                )}
+                              </div>
+                            </>
                           );
                         })()}
                       </div>
