@@ -319,13 +319,19 @@
       "invalidRegex": "Invalid regular expression",
       "resultsCount": "{filtered} of {total} lines",
       "columnHelp": {
-        "title": "Column Filter",
+        "title": "Column Filter (regex: not required)",
         "example1": "3: → Highlight column 3",
         "example2": "3:for → Lines with 'for' in column 3",
-        "example3": "2:GET, 3:200 → Multiple conditions (AND)"
+        "example3": "2:GET, 3:200 → Multiple conditions (AND)",
+        "example4": "3:>=400 → Column 3 >= 400",
+        "example5": "4:100-500 → Column 4 in range 100-500"
+      },
+      "searchHelp": {
+        "title": "Input Methods",
+        "close": "Close"
       },
       "regexHelp": {
-        "title": "Regular Expression Patterns",
+        "title": "Regex Patterns (regex: required)",
         "close": "Close",
         "dot": ". - Any character",
         "asterisk": "* - 0 or more times",
@@ -357,7 +363,10 @@
       "helpTooltip": "Drag line numbers to select range",
       "copyText": "Copy",
       "searchThis": "Search this text",
-      "selectFile": "Search in file"
+      "selectFile": "Search in file",
+      "searchActions": "Search",
+      "addOr": "Add as OR condition",
+      "addAnd": "Add as AND condition"
     },
     "emptyState": "Please upload a file",
     "memo": {

@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   parseColumnFilter,
+  parseNumericComparison,
   splitLineToColumns,
   splitLineToColumnsWithPositions,
   matchesColumnFilters,
@@ -93,9 +94,163 @@ describe("column-filter", () => {
     it("2桁の列番号を解析できる", () => {
       const result = parseColumnFilter("12:value");
       expect(result).toEqual({
-        columnFilters: [{ column: 12, pattern: "value" }],
+        columnFilters: [{ column: 12, pattern: "value", comparison: undefined }],
         generalPattern: null,
       });
+    });
+
+    it("数値比較パターン（>=）を解析できる", () => {
+      const result = parseColumnFilter("3:>=400");
+      expect(result).toEqual({
+        columnFilters: [{
+          column: 3,
+          pattern: ">=400",
+          comparison: { operator: ">=", value: 400 },
+        }],
+        generalPattern: null,
+      });
+    });
+
+    it("数値比較パターン（>）を解析できる", () => {
+      const result = parseColumnFilter("3:>300");
+      expect(result).toEqual({
+        columnFilters: [{
+          column: 3,
+          pattern: ">300",
+          comparison: { operator: ">", value: 300 },
+        }],
+        generalPattern: null,
+      });
+    });
+
+    it("数値比較パターン（<=）を解析できる", () => {
+      const result = parseColumnFilter("3:<=200");
+      expect(result).toEqual({
+        columnFilters: [{
+          column: 3,
+          pattern: "<=200",
+          comparison: { operator: "<=", value: 200 },
+        }],
+        generalPattern: null,
+      });
+    });
+
+    it("数値比較パターン（<）を解析できる", () => {
+      const result = parseColumnFilter("3:<500");
+      expect(result).toEqual({
+        columnFilters: [{
+          column: 3,
+          pattern: "<500",
+          comparison: { operator: "<", value: 500 },
+        }],
+        generalPattern: null,
+      });
+    });
+
+    it("数値比較パターン（=）を解析できる", () => {
+      const result = parseColumnFilter("3:=404");
+      expect(result).toEqual({
+        columnFilters: [{
+          column: 3,
+          pattern: "=404",
+          comparison: { operator: "=", value: 404 },
+        }],
+        generalPattern: null,
+      });
+    });
+
+    it("数値比較パターン（!=）を解析できる", () => {
+      const result = parseColumnFilter("3:!=200");
+      expect(result).toEqual({
+        columnFilters: [{
+          column: 3,
+          pattern: "!=200",
+          comparison: { operator: "!=", value: 200 },
+        }],
+        generalPattern: null,
+      });
+    });
+
+    it("範囲パターンを解析できる", () => {
+      const result = parseColumnFilter("3:100-500");
+      expect(result).toEqual({
+        columnFilters: [{
+          column: 3,
+          pattern: "100-500",
+          comparison: { operator: "range", value: 100, value2: 500 },
+        }],
+        generalPattern: null,
+      });
+    });
+
+    it("範囲パターンで逆順の数値を正規化できる", () => {
+      const result = parseColumnFilter("3:500-100");
+      expect(result).toEqual({
+        columnFilters: [{
+          column: 3,
+          pattern: "500-100",
+          comparison: { operator: "range", value: 100, value2: 500 },
+        }],
+        generalPattern: null,
+      });
+    });
+
+    it("数値比較と通常パターンを組み合わせられる", () => {
+      const result = parseColumnFilter("2:GET, 3:>=400");
+      expect(result).toEqual({
+        columnFilters: [
+          { column: 2, pattern: "GET", comparison: undefined },
+          { column: 3, pattern: ">=400", comparison: { operator: ">=", value: 400 } },
+        ],
+        generalPattern: null,
+      });
+    });
+  });
+
+  describe("parseNumericComparison", () => {
+    it(">=演算子を解析できる", () => {
+      expect(parseNumericComparison(">=400")).toEqual({ operator: ">=", value: 400 });
+    });
+
+    it(">演算子を解析できる", () => {
+      expect(parseNumericComparison(">300")).toEqual({ operator: ">", value: 300 });
+    });
+
+    it("<=演算子を解析できる", () => {
+      expect(parseNumericComparison("<=200")).toEqual({ operator: "<=", value: 200 });
+    });
+
+    it("<演算子を解析できる", () => {
+      expect(parseNumericComparison("<500")).toEqual({ operator: "<", value: 500 });
+    });
+
+    it("=演算子を解析できる", () => {
+      expect(parseNumericComparison("=404")).toEqual({ operator: "=", value: 404 });
+    });
+
+    it("!=演算子を解析できる", () => {
+      expect(parseNumericComparison("!=200")).toEqual({ operator: "!=", value: 200 });
+    });
+
+    it("範囲パターンを解析できる", () => {
+      expect(parseNumericComparison("100-500")).toEqual({ operator: "range", value: 100, value2: 500 });
+    });
+
+    it("空白を含むパターンを解析できる", () => {
+      expect(parseNumericComparison(" >=400 ")).toEqual({ operator: ">=", value: 400 });
+    });
+
+    it("数値比較パターンでない場合はnullを返す", () => {
+      expect(parseNumericComparison("GET")).toBeNull();
+      expect(parseNumericComparison("error")).toBeNull();
+      expect(parseNumericComparison("")).toBeNull();
+    });
+
+    it("不完全なパターンはnullを返す", () => {
+      expect(parseNumericComparison(">=")).toBeNull();
+      expect(parseNumericComparison(">")).toBeNull();
+      expect(parseNumericComparison("100-")).toBeNull();
+      expect(parseNumericComparison("-500")).toBeNull();
     });
   });
 
@@ -284,6 +439,115 @@ describe("column-filter", () => {
     it("無効な正規表現は文字列マッチにフォールバック", () => {
       const filters: ColumnFilter[] = [{ column: 1, pattern: "[invalid" }];
       expect(matchesColumnFilters(columns, filters, true)).toBe(false);
+    });
+
+    // 数値比較のテスト
+    describe("数値比較", () => {
+      const numericColumns = ["GET", "/api/users", "200", "123ms"];
+      const errorColumns = ["GET", "/api/error", "404", "50ms"];
+      const serverErrorColumns = ["GET", "/api/fail", "500", "200ms"];
+
+      it(">=演算子でマッチ", () => {
+        const filters: ColumnFilter[] = [{
+          column: 3,
+          pattern: ">=200",
+          comparison: { operator: ">=", value: 200 },
+        }];
+        expect(matchesColumnFilters(numericColumns, filters, false)).toBe(true);
+        expect(matchesColumnFilters(errorColumns, filters, false)).toBe(true);
+        expect(matchesColumnFilters(serverErrorColumns, filters, false)).toBe(true);
+      });
+
+      it(">=演算子でマッチしない", () => {
+        const filters: ColumnFilter[] = [{
+          column: 3,
+          pattern: ">=500",
+          comparison: { operator: ">=", value: 500 },
+        }];
+        expect(matchesColumnFilters(numericColumns, filters, false)).toBe(false);
+        expect(matchesColumnFilters(errorColumns, filters, false)).toBe(false);
+        expect(matchesColumnFilters(serverErrorColumns, filters, false)).toBe(true);
+      });
+
+      it(">演算子でマッチ", () => {
+        const filters: ColumnFilter[] = [{
+          column: 3,
+          pattern: ">300",
+          comparison: { operator: ">", value: 300 },
+        }];
+        expect(matchesColumnFilters(numericColumns, filters, false)).toBe(false);
+        expect(matchesColumnFilters(errorColumns, filters, false)).toBe(true);
+        expect(matchesColumnFilters(serverErrorColumns, filters, false)).toBe(true);
+      });
+
+      it("<=演算子でマッチ", () => {
+        const filters: ColumnFilter[] = [{
+          column: 3,
+          pattern: "<=200",
+          comparison: { operator: "<=", value: 200 },
+        }];
+        expect(matchesColumnFilters(numericColumns, filters, false)).toBe(true);
+        expect(matchesColumnFilters(errorColumns, filters, false)).toBe(false);
+      });
+
+      it("<演算子でマッチ", () => {
+        const filters: ColumnFilter[] = [{
+          column: 3,
+          pattern: "<400",
+          comparison: { operator: "<", value: 400 },
+        }];
+        expect(matchesColumnFilters(numericColumns, filters, false)).toBe(true);
+        expect(matchesColumnFilters(errorColumns, filters, false)).toBe(false);
+      });
+
+      it("=演算子でマッチ", () => {
+        const filters: ColumnFilter[] = [{
+          column: 3,
+          pattern: "=404",
+          comparison: { operator: "=", value: 404 },
+        }];
+        expect(matchesColumnFilters(numericColumns, filters, false)).toBe(false);
+        expect(matchesColumnFilters(errorColumns, filters, false)).toBe(true);
+      });
+
+      it("!=演算子でマッチ", () => {
+        const filters: ColumnFilter[] = [{
+          column: 3,
+          pattern: "!=200",
+          comparison: { operator: "!=", value: 200 },
+        }];
+        expect(matchesColumnFilters(numericColumns, filters, false)).toBe(false);
+        expect(matchesColumnFilters(errorColumns, filters, false)).toBe(true);
+      });
+
+      it("範囲でマッチ", () => {
+        const filters: ColumnFilter[] = [{
+          column: 3,
+          pattern: "400-500",
+          comparison: { operator: "range", value: 400, value2: 500 },
+        }];
+        expect(matchesColumnFilters(numericColumns, filters, false)).toBe(false);
+        expect(matchesColumnFilters(errorColumns, filters, false)).toBe(true);
+        expect(matchesColumnFilters(serverErrorColumns, filters, false)).toBe(true);
+      });
+
+      it("非数値列はマッチしない", () => {
+        const filters: ColumnFilter[] = [{
+          column: 1,
+          pattern: ">=200",
+          comparison: { operator: ">=", value: 200 },
+        }];
+        expect(matchesColumnFilters(numericColumns, filters, false)).toBe(false);
+      });
+
+      it("数値比較と通常パターンの組み合わせ", () => {
+        const filters: ColumnFilter[] = [
+          { column: 1, pattern: "GET" },
+          { column: 3, pattern: ">=400", comparison: { operator: ">=", value: 400 } },
+        ];
+        expect(matchesColumnFilters(numericColumns, filters, false)).toBe(false);
+        expect(matchesColumnFilters(errorColumns, filters, false)).toBe(true);
+      });
     });
   });
 

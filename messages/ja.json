@@ -319,13 +319,19 @@
       "invalidRegex": "無効な正規表現です",
       "resultsCount": "{filtered}行 / 全{total}行",
       "columnHelp": {
-        "title": "列フィルタ",
+        "title": "列フィルタ（正規表現：不要）",
         "example1": "3: → 3列目をハイライト",
         "example2": "3:for → 3列目に'for'を含む行",
-        "example3": "2:GET, 3:200 → 複数条件(AND)"
+        "example3": "2:GET, 3:200 → 複数条件(AND)",
+        "example4": "3:>=400 → 3列目が400以上",
+        "example5": "4:100-500 → 4列目が100〜500の範囲"
+      },
+      "searchHelp": {
+        "title": "入力方法",
+        "close": "閉じる"
       },
       "regexHelp": {
-        "title": "正規表現パターン",
+        "title": "正規表現パターン（正規表現：要）",
         "close": "閉じる",
         "dot": ". - 任意の1文字",
         "asterisk": "* - 0回以上の繰り返し",
@@ -357,7 +363,10 @@
       "helpTooltip": "行番号をドラッグで範囲選択",
       "copyText": "コピー",
       "searchThis": "このテキストで検索",
-      "selectFile": "検索するファイル"
+      "selectFile": "検索するファイル",
+      "searchActions": "検索",
+      "addOr": "OR条件で追加",
+      "addAnd": "AND条件で追加"
     },
     "emptyState": "ファイルをアップロードしてください",
     "memo": {
