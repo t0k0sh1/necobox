@@ -19,6 +19,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -202,7 +203,7 @@ export default function TextViewerPage() {
   const [error, setError] = useState<string | null>(null);
 
   // 表示オプション
-  const [wrapLines, setWrapLines] = useState(true);
+  const [wrapLines, setWrapLines] = useState(false);
   const [visibleLines, setVisibleLines] = useState<VisibleLinesOption>(20);
 
   // 行選択状態
@@ -930,6 +931,53 @@ export default function TextViewerPage() {
     window.getSelection()?.removeAllRanges();
   }, [activeFileId, updateIsRegex, updateSearchText, handleTabChange]);
 
+  // OR条件で検索に追加
+  const handleAddOrCondition = useCallback((addText: string) => {
+    if (!activeFileId || !activeFile) return;
+
+    const currentSearch = activeFile.searchText.trim();
+    let newSearch: string;
+
+    if (currentSearch) {
+      // 既存の検索がある場合は | で連結
+      newSearch = `${currentSearch}|${addText}`;
+    } else {
+      // 既存の検索がない場合はそのまま
+      newSearch = addText;
+    }
+
+    // OR条件のため正規表現モードを有効にする
+    updateIsRegex(activeFileId, true);
+    updateSearchText(activeFileId, newSearch);
+
+    // テキスト選択をクリア
+    setTextSelection(null);
+    window.getSelection()?.removeAllRanges();
+  }, [activeFileId, activeFile, updateIsRegex, updateSearchText]);
+
+  // AND条件で検索に追加
+  const handleAddAndCondition = useCallback((addText: string) => {
+    if (!activeFileId || !activeFile) return;
+
+    const currentSearch = activeFile.searchText.trim();
+    let newSearch: string;
+
+    if (currentSearch) {
+      // 既存の検索がある場合は , で連結（列フィルタのAND条件と同じ）
+      newSearch = `${currentSearch}, ${addText}`;
+    } else {
+      // 既存の検索がない場合はそのまま
+      newSearch = addText;
+    }
+
+    // 正規表現モードは維持（変更しない）
+    updateSearchText(activeFileId, newSearch);
+
+    // テキスト選択をクリア
+    setTextSelection(null);
+    window.getSelection()?.removeAllRanges();
+  }, [activeFileId, activeFile, updateSearchText]);
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -955,7 +1003,7 @@ export default function TextViewerPage() {
   return (
     <TooltipProvider>
       <div className="flex h-full items-start justify-center py-4 px-4">
-        <div className="w-full max-w-7xl">
+        <div className="w-full">
           <Breadcrumbs items={[{ label: t("breadcrumb") }]} />
           <div className="space-y-6 bg-white dark:bg-black rounded-lg p-6 border mt-6">
           <div className="text-center">
@@ -1433,7 +1481,7 @@ export default function TextViewerPage() {
         </div>
       </div>
 
-      {/* 正規表現ヘルプフローティングボックス */}
+      {/* 検索ヘルプフローティングボックス */}
       {showRegexHelp && (
         <div
           ref={helpBoxRef}
@@ -1448,12 +1496,12 @@ export default function TextViewerPage() {
             onMouseDown={handleHelpBoxMouseDown}
             className="flex items-center justify-between p-2 bg-gray-800 rounded-t-lg cursor-move border-b border-gray-700"
           >
-            <span className="font-semibold">{t("filter.regexHelp.title")}</span>
+            <span className="font-semibold">{t("filter.searchHelp.title")}</span>
             <button
               type="button"
               onClick={() => setShowRegexHelp(false)}
               className="p-1 rounded hover:bg-gray-700 transition-colors"
-              aria-label={t("filter.regexHelp.close")}
+              aria-label={t("filter.searchHelp.close")}
             >
               <X className="w-4 h-4" />
             </button>
@@ -1467,6 +1515,8 @@ export default function TextViewerPage() {
               <div>{t("filter.columnHelp.example1")}</div>
               <div>{t("filter.columnHelp.example2")}</div>
               <div>{t("filter.columnHelp.example3")}</div>
+              <div>{t("filter.columnHelp.example4")}</div>
+              <div>{t("filter.columnHelp.example5")}</div>
             </div>
 
             {/* 正規表現パターン */}
@@ -1528,22 +1578,8 @@ export default function TextViewerPage() {
             {textSelectionCopied ? tCommon("copied") : t("selection.copyText")}
           </Button>
 
-          {/* 検索ボタン（ファイルが1つの場合は直接検索、複数の場合はドロップダウン） */}
-          {files.length === 1 ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                if (activeFileId) {
-                  handleSearchInFile(activeFileId, textSelection.text);
-                }
-              }}
-              className="h-7 text-xs shadow-lg"
-            >
-              <Search className="w-3.5 h-3.5 mr-1" />
-              {t("selection.searchThis")}
-            </Button>
-          ) : files.length > 1 ? (
+          {/* 検索ボタン（ドロップダウンメニュー） */}
+          {files.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -1552,25 +1588,70 @@ export default function TextViewerPage() {
                   className="h-7 text-xs shadow-lg"
                 >
                   <Search className="w-3.5 h-3.5 mr-1" />
-                  {t("selection.searchThis")}
+                  {t("selection.searchActions")}
                   <ChevronDown className="w-3 h-3 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center">
-                {files.map((file) => (
-                  <DropdownMenuItem
-                    key={file.id}
-                    onClick={() => handleSearchInFile(file.id, textSelection.text)}
-                    className="text-xs"
-                  >
-                    <span className="truncate max-w-[200px]">
-                      {file.alias ? `${file.alias} (${file.name})` : file.name}
-                    </span>
-                  </DropdownMenuItem>
-                ))}
+                {/* 単一ファイルの場合：直接検索/OR追加/AND追加 */}
+                {files.length === 1 ? (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (activeFileId) {
+                          handleSearchInFile(activeFileId, textSelection.text);
+                        }
+                      }}
+                      className="text-xs"
+                    >
+                      {t("selection.searchThis")}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => handleAddOrCondition(textSelection.text)}
+                      className="text-xs"
+                    >
+                      {t("selection.addOr")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleAddAndCondition(textSelection.text)}
+                      className="text-xs"
+                    >
+                      {t("selection.addAnd")}
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    {/* 複数ファイルの場合：ファイル選択 */}
+                    {files.map((file) => (
+                      <DropdownMenuItem
+                        key={file.id}
+                        onClick={() => handleSearchInFile(file.id, textSelection.text)}
+                        className="text-xs"
+                      >
+                        <span className="truncate max-w-[200px]">
+                          {file.alias ? `${file.alias} (${file.name})` : file.name}
+                        </span>
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => handleAddOrCondition(textSelection.text)}
+                      className="text-xs"
+                    >
+                      {t("selection.addOr")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleAddAndCondition(textSelection.text)}
+                      className="text-xs"
+                    >
+                      {t("selection.addAnd")}
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : null}
+          )}
         </div>
       )}
 

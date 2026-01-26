@@ -1,11 +1,21 @@
 import type { ReactNode } from "react";
 
 /**
+ * 数値比較条件
+ */
+export interface NumericComparison {
+  operator: '>=' | '>' | '<=' | '<' | '=' | '!=' | 'range';
+  value: number;
+  value2?: number;  // range の場合の上限
+}
+
+/**
  * 列フィルタ条件
  */
 export interface ColumnFilter {
   column: number; // 1始まり
   pattern: string; // 空文字 = ハイライトのみ
+  comparison?: NumericComparison; // 数値比較条件（オプション）
 }
 
 /**
@@ -17,6 +27,42 @@ export interface ParsedFilter {
 }
 
 /**
+ * 数値比較パターンをパースする
+ *
+ * @param pattern 列フィルタのパターン部分（例: ">=400", ">300", "100-500"）
+ * @returns NumericComparison または null（数値比較パターンでない場合）
+ */
+export function parseNumericComparison(pattern: string): NumericComparison | null {
+  const trimmed = pattern.trim();
+
+  // 範囲パターン: "100-500" (数字-数字)
+  const rangeMatch = trimmed.match(/^(\d+)-(\d+)$/);
+  if (rangeMatch) {
+    const value1 = parseInt(rangeMatch[1], 10);
+    const value2 = parseInt(rangeMatch[2], 10);
+    if (!isNaN(value1) && !isNaN(value2)) {
+      return {
+        operator: 'range',
+        value: Math.min(value1, value2),
+        value2: Math.max(value1, value2),
+      };
+    }
+  }
+
+  // 比較演算子パターン: ">=400", ">300", "<=200", "<500", "=404", "!=200"
+  const comparisonMatch = trimmed.match(/^(>=|<=|>|<|!=|=)(\d+)$/);
+  if (comparisonMatch) {
+    const operator = comparisonMatch[1] as NumericComparison['operator'];
+    const value = parseInt(comparisonMatch[2], 10);
+    if (!isNaN(value)) {
+      return { operator, value };
+    }
+  }
+
+  return null;
+}
+
+/**
  * 検索テキストを解析して列フィルタと一般パターンを分離する
  *
  * 例:
@@ -24,6 +70,8 @@ export interface ParsedFilter {
  * - "3:" -> { columnFilters: [{ column: 3, pattern: "" }], generalPattern: null }
  * - "3:for" -> { columnFilters: [{ column: 3, pattern: "for" }], generalPattern: null }
  * - "2:GET, 3:200" -> { columnFilters: [{ column: 2, pattern: "GET" }, { column: 3, pattern: "200" }], generalPattern: null }
+ * - "3:>=400" -> { columnFilters: [{ column: 3, pattern: ">=400", comparison: { operator: '>=', value: 400 } }], generalPattern: null }
+ * - "3:100-500" -> { columnFilters: [{ column: 3, pattern: "100-500", comparison: { operator: 'range', value: 100, value2: 500 } }], generalPattern: null }
  */
 export function parseColumnFilter(searchText: string): ParsedFilter {
   const trimmed = searchText.trim();
@@ -47,7 +95,9 @@ export function parseColumnFilter(searchText: string): ParsedFilter {
       const column = parseInt(match[1], 10);
       const pattern = match[2].trim();
       if (column >= 1) {
-        columnFilters.push({ column, pattern });
+        // 数値比較パターンかどうかをチェック
+        const comparison = parseNumericComparison(pattern);
+        columnFilters.push({ column, pattern, comparison: comparison ?? undefined });
       }
     } else {
       nonColumnParts.push(part);
@@ -131,6 +181,44 @@ export function splitLineToColumnsWithPositions(line: string, delimiter: string)
 }
 
 /**
+ * 数値比較条件をチェックする
+ *
+ * @param value 比較対象の値（文字列から数値を抽出）
+ * @param comparison 比較条件
+ * @returns マッチした場合はtrue
+ */
+function matchesNumericComparison(value: string, comparison: NumericComparison): boolean {
+  // 値から数値を抽出（先頭の数値部分のみ）
+  const numMatch = value.match(/^(\d+)/);
+  if (!numMatch) {
+    return false;
+  }
+  const numValue = parseInt(numMatch[1], 10);
+  if (isNaN(numValue)) {
+    return false;
+  }
+
+  switch (comparison.operator) {
+    case '>=':
+      return numValue >= comparison.value;
+    case '>':
+      return numValue > comparison.value;
+    case '<=':
+      return numValue <= comparison.value;
+    case '<':
+      return numValue < comparison.value;
+    case '=':
+      return numValue === comparison.value;
+    case '!=':
+      return numValue !== comparison.value;
+    case 'range':
+      return numValue >= comparison.value && numValue <= (comparison.value2 ?? comparison.value);
+    default:
+      return false;
+  }
+}
+
+/**
  * 列フィルタが行にマッチするかを判定する
  * すべてのフィルタがマッチした場合にtrueを返す（AND条件）
  */
@@ -159,7 +247,15 @@ export function matchesColumnFilters(
       continue;
     }
 
-    // パターンマッチ
+    // 数値比較条件がある場合はそちらを使用
+    if (filter.comparison) {
+      if (!matchesNumericComparison(columnValue, filter.comparison)) {
+        return false;
+      }
+      continue;
+    }
+
+    // 通常のパターンマッチ
     if (isRegex) {
       try {
         const regex = new RegExp(filter.pattern, "i");
