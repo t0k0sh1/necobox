@@ -1453,8 +1453,11 @@ export default function TextViewerPage() {
                             return highlightMatches(line, searchText, file.isRegex);
                           };
 
-                          // ピン止め行エリアの高さを計算
-                          const pinnedAreaHeight = pinnedLinesData.length * LINE_HEIGHT;
+                          // ピン止め行エリアの高さを計算（行の高さ + コンテナのパディング）
+                          const pinnedAreaHeight =
+                            pinnedLinesData.length > 0
+                              ? pinnedLinesData.length * LINE_HEIGHT + 24 // p-4 pb-2 相当の垂直パディング (~24px)
+                              : 0;
 
                           // ビューポートの高さを計算（ピン行エリアの高さを引く）
                           const baseViewportHeight = visibleLines * LINE_HEIGHT;
