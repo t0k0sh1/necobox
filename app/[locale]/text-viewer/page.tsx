@@ -38,8 +38,33 @@ import {
   splitLineToColumns,
 } from "@/lib/utils/column-filter";
 import { decompressGz, isGzipFile } from "@/lib/utils/gz-decompressor";
-import { validateRegex } from "@/lib/utils/log-filter";
 import { hasNonEmptyMatch, highlightMatches } from "@/lib/utils/text-highlight";
+
+/**
+ * 正規表現パターンの検証
+ */
+function validateRegex(pattern: string): {
+  isValid: boolean;
+  error?: string;
+  regex?: RegExp;
+} {
+  if (!pattern.trim()) {
+    return { isValid: true, error: undefined };
+  }
+
+  try {
+    const regex = new RegExp(pattern);
+    return { isValid: true, regex };
+  } catch (error) {
+    return {
+      isValid: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Invalid regular expression",
+    };
+  }
+}
 import { decompressZip, isBinaryContent, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
 import { Check, ChevronDown, Copy, FileText, HelpCircle, Pin, Search, StickyNote, Upload, X } from "lucide-react";
 import { useTranslations } from "next-intl";
