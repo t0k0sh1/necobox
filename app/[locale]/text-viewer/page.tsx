@@ -98,6 +98,8 @@ interface LineRowProps {
   renderLineContent: (line: string) => ReactNode;
   isPinned: boolean;
   onTogglePin: (originalIndex: number) => void;
+  pinLabel: string;
+  unpinLabel: string;
 }
 
 // メモ化された行コンポーネント
@@ -114,6 +116,8 @@ const LineRow = React.memo(function LineRow({
   renderLineContent,
   isPinned,
   onTogglePin,
+  pinLabel,
+  unpinLabel,
 }: LineRowProps) {
   const handleLineNumberMouseDown = useCallback(
     (e: React.MouseEvent) => {
@@ -168,7 +172,7 @@ const LineRow = React.memo(function LineRow({
           size="sm"
           className={`h-6 w-6 p-0 ${isPinned ? "text-amber-500" : ""}`}
           onClick={handleTogglePin}
-          aria-label={isPinned ? "Unpin line" : "Pin line"}
+          aria-label={isPinned ? unpinLabel : pinLabel}
         >
           <Pin className={`w-4 h-4 ${isPinned ? "fill-current" : ""}`} />
         </Button>
@@ -213,6 +217,7 @@ const LineRow = React.memo(function LineRow({
   );
 }, (prevProps, nextProps) => {
   // renderLineContent は毎回新しい関数なので、比較から除外
+  // pinLabel, unpinLabel は翻訳文字列で実行中に変わらないため比較から除外
   return (
     prevProps.line === nextProps.line &&
     prevProps.originalIndex === nextProps.originalIndex &&
@@ -1486,6 +1491,8 @@ export default function TextViewerPage() {
                                       renderLineContent={renderLineContent}
                                       isPinned={true}
                                       onTogglePin={handleTogglePin}
+                                      pinLabel={t("pin.pin")}
+                                      unpinLabel={t("pin.unpin")}
                                     />
                                   ))}
                                 </div>
@@ -1527,6 +1534,8 @@ export default function TextViewerPage() {
                                               renderLineContent={renderLineContent}
                                               isPinned={false}
                                               onTogglePin={handleTogglePin}
+                                              pinLabel={t("pin.pin")}
+                                              unpinLabel={t("pin.unpin")}
                                             />
                                           );
                                         }}
@@ -1571,6 +1580,8 @@ export default function TextViewerPage() {
                                             renderLineContent={renderLineContent}
                                             isPinned={false}
                                             onTogglePin={handleTogglePin}
+                                            pinLabel={t("pin.pin")}
+                                            unpinLabel={t("pin.unpin")}
                                           />
                                         ))}
                                       </div>
