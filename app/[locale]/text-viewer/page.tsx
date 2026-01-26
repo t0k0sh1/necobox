@@ -39,6 +39,12 @@ import {
 } from "@/lib/utils/column-filter";
 import { decompressGz, isGzipFile } from "@/lib/utils/gz-decompressor";
 import { hasNonEmptyMatch, highlightMatches } from "@/lib/utils/text-highlight";
+import { decompressZip, isBinaryContent, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
+import { Check, ChevronDown, Copy, FileText, HelpCircle, Pin, Search, StickyNote, Upload, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Virtuoso } from "react-virtuoso";
 
 /**
  * 正規表現パターンの検証
@@ -65,12 +71,6 @@ function validateRegex(pattern: string): {
     };
   }
 }
-import { decompressZip, isBinaryContent, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
-import { Check, ChevronDown, Copy, FileText, HelpCircle, Pin, Search, StickyNote, Upload, X } from "lucide-react";
-import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Virtuoso } from "react-virtuoso";
 
 // 区切り文字の選択肢
 type DelimiterType = "none" | "space" | "tab" | "comma" | "custom";
