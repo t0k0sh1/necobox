@@ -69,11 +69,15 @@ describe("Home Page", () => {
       "href",
       "/text-viewer"
     );
+    expect(screen.getByText("CSV Editor").closest("a")).toHaveAttribute(
+      "href",
+      "/csv-editor"
+    );
   });
 
-  it("renders 10 tool buttons", () => {
+  it("renders 11 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(10);
+    expect(buttons).toHaveLength(11);
   });
 
   it("displays buttons with correct styling", () => {
