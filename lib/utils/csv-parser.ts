@@ -6,14 +6,22 @@
 // 列のデータ型
 export type ColumnType = "auto" | "string" | "number";
 
-// サポートするエンコーディング
+// サポートするエンコーディング（入力用：自動検出対応）
 export type EncodingType = "utf-8" | "utf-8-bom" | "shift_jis" | "euc-jp";
+
+// 出力用エンコーディング（ブラウザのTextEncoderがサポートするもののみ）
+export type OutputEncodingType = "utf-8" | "utf-8-bom";
 
 export const ENCODING_LABELS: Record<EncodingType, string> = {
   "utf-8": "UTF-8",
   "utf-8-bom": "UTF-8 (BOM)",
   shift_jis: "Shift_JIS",
   "euc-jp": "EUC-JP",
+};
+
+export const OUTPUT_ENCODING_LABELS: Record<OutputEncodingType, string> = {
+  "utf-8": "UTF-8",
+  "utf-8-bom": "UTF-8 (BOM)",
 };
 
 export interface CsvData {
@@ -32,6 +40,7 @@ export interface CsvOptions {
   quoteChar: '"' | "'";
   encoding: EncodingType;
   quoteStyle: QuoteStyle;
+  columnNamePrefix: string; // デフォルト列名のプレフィックス（国際化用）
 }
 
 export interface CellPosition {
@@ -45,6 +54,7 @@ export const DEFAULT_CSV_OPTIONS: CsvOptions = {
   quoteChar: '"',
   encoding: "utf-8",
   quoteStyle: "as-needed",
+  columnNamePrefix: "Column",
 };
 
 /**
@@ -82,11 +92,21 @@ export function detectDelimiter(text: string): string {
   for (const delimiter of delimiters) {
     counts[delimiter] = lines.map((line) => {
       // クォート内の区切り文字を除外してカウント
+      // RFC 4180準拠: ダブルクォートのみをクォート文字として扱い、
+      // エスケープされたクォート（""）も考慮
       let count = 0;
       let inQuote = false;
-      for (const char of line) {
-        if (char === '"' || char === "'") {
-          inQuote = !inQuote;
+      const quoteChar = '"';
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        if (char === quoteChar) {
+          if (inQuote && nextChar === quoteChar) {
+            // エスケープされたクォート（""）はスキップ
+            i++;
+          } else {
+            inQuote = !inQuote;
+          }
         } else if (!inQuote && char === delimiter) {
           count++;
         }
@@ -234,7 +254,7 @@ export function parseCSV(
   options: Partial<CsvOptions> = {}
 ): CsvData {
   const opts = { ...DEFAULT_CSV_OPTIONS, ...options };
-  const { delimiter, hasHeader, quoteChar } = opts;
+  const { delimiter, hasHeader, quoteChar, columnNamePrefix } = opts;
 
   const rows: string[][] = [];
   let currentRow: string[] = [];
@@ -351,7 +371,7 @@ export function parseCSV(
   }
 
   // ヘッダーなしの場合、列番号をヘッダーとして使用
-  const headers = Array.from({ length: maxCols }, (_, i) => `Column ${i + 1}`);
+  const headers = Array.from({ length: maxCols }, (_, i) => `${columnNamePrefix} ${i + 1}`);
   return {
     headers,
     rows: normalizedRows,
@@ -491,13 +511,18 @@ export function downloadCSV(
 
 /**
  * 空のCsvDataを生成
+ * @param cols 列数
+ * @param rows 行数
+ * @param hasHeader ヘッダーありかどうか
+ * @param columnNamePrefix 列名のプレフィックス（国際化用）
  */
 export function createEmptyCsvData(
   cols: number = 3,
   rows: number = 5,
-  hasHeader: boolean = true
+  hasHeader: boolean = true,
+  columnNamePrefix: string = "Column"
 ): CsvData {
-  const headers = Array.from({ length: cols }, (_, i) => `Column ${i + 1}`);
+  const headers = Array.from({ length: cols }, (_, i) => `${columnNamePrefix} ${i + 1}`);
   const emptyRows = Array.from({ length: rows }, () =>
     Array.from({ length: cols }, () => "")
   );
@@ -543,11 +568,16 @@ export function removeRow(data: CsvData, index: number): CsvData {
 
 /**
  * 列を追加
+ * @param data CSVデータ
+ * @param index 挿入位置（省略時は末尾）
+ * @param columnType 列のデータ型
+ * @param columnNamePrefix 列名のプレフィックス（国際化用）
  */
 export function addColumn(
   data: CsvData,
   index?: number,
-  columnType: ColumnType = "auto"
+  columnType: ColumnType = "auto",
+  columnNamePrefix: string = "Column"
 ): CsvData {
   const colIndex =
     index === undefined || index >= data.headers.length
@@ -555,7 +585,7 @@ export function addColumn(
       : index;
 
   const newHeaders = [...data.headers];
-  newHeaders.splice(colIndex, 0, `Column ${newHeaders.length + 1}`);
+  newHeaders.splice(colIndex, 0, `${columnNamePrefix} ${newHeaders.length + 1}`);
 
   const newRows = data.rows.map((row) => {
     const newRow = [...row];
@@ -601,11 +631,11 @@ export function updateCell(
   col: number,
   value: string
 ): CsvData {
-  if (row < 0 || col < 0 || col >= data.headers.length) {
+  if (col < 0 || col >= data.headers.length) {
     return data;
   }
 
-  // ヘッダー行の更新
+  // ヘッダー行の更新（row === -1）
   if (row === -1) {
     const newHeaders = [...data.headers];
     newHeaders[col] = value;
@@ -613,7 +643,7 @@ export function updateCell(
   }
 
   // データ行の更新
-  if (row >= data.rows.length) {
+  if (row < 0 || row >= data.rows.length) {
     return data;
   }
 

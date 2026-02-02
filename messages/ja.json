@@ -420,7 +420,8 @@
       "description": "CSVファイルをドラッグ&ドロップまたは選択",
       "selectFile": "ファイルを選択",
       "dragDrop": "ここにドラッグ&ドロップ",
-      "pasteData": "またはテキストを貼り付け"
+      "pasteData": "またはテキストを貼り付け",
+      "pastePlaceholder": "列1,列2,列3\n値1,値2,値3"
     },
     "options": {
       "delimiter": "区切り文字",
@@ -458,7 +459,9 @@
       "column": "列",
       "cell": "セル",
       "editCell": "セルを編集",
-      "noData": "データがありません"
+      "noData": "データがありません",
+      "columnTypeHeader": "型",
+      "defaultColumnName": "列"
     },
     "export": {
       "download": "ダウンロード",

@@ -29,6 +29,7 @@ interface CsvTableProps {
     columnTypeAuto?: string;
     columnTypeString?: string;
     columnTypeNumber?: string;
+    columnTypeHeader?: string;
   };
 }
 
@@ -46,6 +47,9 @@ export function CsvTable({
   onColumnTypeChange,
   translations,
 }: CsvTableProps) {
+  // inputRefはヘッダーセルとデータセルの両方で共有される。
+  // 同時に編集できるセルは1つだけなので、Reactは常に編集中のセルの
+  // inputへの参照を保持する。
   const inputRef = useRef<HTMLInputElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
 
@@ -250,7 +254,7 @@ export function CsvTable({
           {onColumnTypeChange && (
             <tr className="bg-gray-50 dark:bg-gray-900">
               <th className="sticky left-0 z-30 bg-gray-100 dark:bg-gray-800 border-b border-r px-2 py-1 text-xs text-gray-400">
-                型
+                {translations.columnTypeHeader || "Type"}
               </th>
               {data.headers.map((_, col) => (
                 <th

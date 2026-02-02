@@ -29,6 +29,7 @@ import {
   downloadCSV,
   ENCODING_LABELS,
   FILE_EXTENSION_LABELS,
+  OUTPUT_ENCODING_LABELS,
   parseCSV,
   redetectColumnTypes,
   removeColumn,
@@ -41,6 +42,7 @@ import {
   type CsvOptions,
   type EncodingType,
   type FileExtension,
+  type OutputEncodingType,
   type QuoteStyle,
 } from "@/lib/utils/csv-parser";
 import {
@@ -77,7 +79,7 @@ export default function CsvEditorPage() {
     "auto"
   );
   const [outputEncoding, setOutputEncoding] =
-    useState<EncodingType>("utf-8-bom");
+    useState<OutputEncodingType>("utf-8-bom");
   const [detectedEncoding, setDetectedEncoding] =
     useState<EncodingType>("utf-8");
 
@@ -135,6 +137,7 @@ export default function CsvEditorPage() {
         const options: Partial<CsvOptions> = {
           delimiter: actualDelimiter,
           hasHeader,
+          columnNamePrefix: t("table.defaultColumnName"),
         };
 
         const data = parseCSV(text, options);
@@ -228,13 +231,13 @@ export default function CsvEditorPage() {
 
   // 新規作成
   const handleNew = useCallback(() => {
-    const newData = createEmptyCsvData(3, 5, hasHeader);
+    const newData = createEmptyCsvData(3, 5, hasHeader, t("table.defaultColumnName"));
     setCsvData(newData);
     setSelectedCell(null);
     setEditingCell(null);
     setError(null);
     setExportFilename("data");
-  }, [hasHeader]);
+  }, [hasHeader, t]);
 
   // クリア
   const handleClear = useCallback(() => {
@@ -424,7 +427,10 @@ export default function CsvEditorPage() {
 
       const maxRow = csvData.rows.length - 1;
       const maxCol = csvData.headers.length - 1;
-      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      // Mac検出: userAgentData（新API）を優先し、フォールバックとしてuserAgentを使用
+      const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+      const platform = nav.userAgentData?.platform || nav.userAgent || "";
+      const isMac = /mac/i.test(platform);
       const isModifierKey = isMac ? e.metaKey : e.ctrlKey;
 
       // コピー・切り取り・ペースト
@@ -535,9 +541,9 @@ export default function CsvEditorPage() {
   // 列を追加
   const handleAddColumn = useCallback(() => {
     if (!csvData) return;
-    const newData = addColumn(csvData);
+    const newData = addColumn(csvData, undefined, "auto", t("table.defaultColumnName"));
     setCsvData(newData);
-  }, [csvData]);
+  }, [csvData, t]);
 
   // 列を削除
   const handleDeleteColumn = useCallback(() => {
@@ -591,9 +597,10 @@ export default function CsvEditorPage() {
           }
         } else if (!checked && csvData.hasHeader) {
           // ヘッダーあり -> ヘッダーなし: ヘッダーを最初の行に
+          const columnPrefix = t("table.defaultColumnName");
           const newHeaders = Array.from(
             { length: csvData.headers.length },
-            (_, i) => `Column ${i + 1}`
+            (_, i) => `${columnPrefix} ${i + 1}`
           );
           setCsvData({
             ...csvData,
@@ -604,7 +611,7 @@ export default function CsvEditorPage() {
         }
       }
     },
-    [csvData]
+    [csvData, t]
   );
 
   return (
@@ -702,7 +709,7 @@ export default function CsvEditorPage() {
                   <textarea
                     ref={textareaRef}
                     className="w-full h-32 px-3 py-2 border rounded-md bg-transparent text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="col1,col2,col3&#10;value1,value2,value3"
+                    placeholder={t("upload.pastePlaceholder")}
                   />
                   <Button variant="outline" onClick={handlePaste}>
                     {tCommon("convert")}
@@ -946,6 +953,7 @@ export default function CsvEditorPage() {
                     columnTypeAuto: t("columnType.auto"),
                     columnTypeString: t("columnType.string"),
                     columnTypeNumber: t("columnType.number"),
+                    columnTypeHeader: t("table.columnTypeHeader"),
                   }}
                 />
               </div>
@@ -962,15 +970,15 @@ export default function CsvEditorPage() {
                     </Label>
                     <Select
                       value={outputEncoding}
-                      onValueChange={(v) => setOutputEncoding(v as EncodingType)}
+                      onValueChange={(v) => setOutputEncoding(v as OutputEncodingType)}
                     >
                       <SelectTrigger className="w-[140px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {(
-                          Object.entries(ENCODING_LABELS) as [
-                            EncodingType,
+                          Object.entries(OUTPUT_ENCODING_LABELS) as [
+                            OutputEncodingType,
                             string,
                           ][]
                         ).map(([key, label]) => (

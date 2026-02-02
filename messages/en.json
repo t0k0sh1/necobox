@@ -420,7 +420,8 @@
       "description": "Drag and drop or select a CSV file",
       "selectFile": "Select File",
       "dragDrop": "Drag and drop here",
-      "pasteData": "Or paste text data"
+      "pasteData": "Or paste text data",
+      "pastePlaceholder": "col1,col2,col3\nvalue1,value2,value3"
     },
     "options": {
       "delimiter": "Delimiter",
@@ -458,7 +459,9 @@
       "column": "Column",
       "cell": "Cell",
       "editCell": "Edit cell",
-      "noData": "No data"
+      "noData": "No data",
+      "columnTypeHeader": "Type",
+      "defaultColumnName": "Column"
     },
     "export": {
       "download": "Download",
