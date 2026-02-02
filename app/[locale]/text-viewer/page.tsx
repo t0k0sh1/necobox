@@ -48,6 +48,21 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Virtuoso } from "react-virtuoso";
 
 /**
+ * UUID を生成（crypto.randomUUID が使えない環境ではフォールバック）
+ */
+function generateUUID(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  // フォールバック: Math.random ベースの UUID 生成
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+/**
  * 正規表現パターンの検証
  */
 function validateRegex(pattern: string): {
@@ -848,7 +863,7 @@ export default function TextViewerPage() {
             if (isZipFile(file)) {
               const extractedFiles: ExtractedFile[] = await decompressZip(file);
               return extractedFiles.map((extracted) => {
-                const fileId = crypto.randomUUID();
+                const fileId = generateUUID();
                 const fileLines = extracted.content.split(/\r?\n/);
                 return {
                   id: fileId,
@@ -868,7 +883,7 @@ export default function TextViewerPage() {
             // GZファイルの場合は解凍して1ファイルとして返す
             if (isGzipFile(file)) {
               const content = await decompressGz(file);
-              const fileId = crypto.randomUUID();
+              const fileId = generateUUID();
               const fileLines = content.split(/\r?\n/);
               // .gz を除いた名前を使用
               const displayName = file.name.replace(/\.gz$/i, "");
@@ -894,7 +909,7 @@ export default function TextViewerPage() {
               throw new Error("バイナリファイルは対応していません");
             }
 
-            const fileId = crypto.randomUUID();
+            const fileId = generateUUID();
             const fileLines = content.split(/\r?\n/);
             return [{
               id: fileId,
@@ -921,8 +936,8 @@ export default function TextViewerPage() {
         const newFiles = results.flat();
         setFiles((prev) => [...prev, ...newFiles]);
 
-        // 最初のファイルがアップロードされた場合、自動的に選択
-        if (newFiles.length > 0 && !activeFileId) {
+        // アップロードしたファイルの最初のファイルを自動的に選択
+        if (newFiles.length > 0) {
           setActiveFileId(newFiles[0].id);
         }
       } catch (err) {
@@ -931,7 +946,7 @@ export default function TextViewerPage() {
         setIsLoading(false);
       }
     },
-    [tCommon, activeFileId]
+    [tCommon]
   );
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
