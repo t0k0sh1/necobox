@@ -7,6 +7,7 @@ import {
   ArrowRightLeft,
   Clock,
   Dices,
+  FileSpreadsheet,
   FileText,
   Globe,
   Image,
@@ -84,6 +85,15 @@ export default function Home() {
               >
                 <Image className="size-10" aria-label={t("imageConverter")} />
                 <span className="text-sm">{t("imageConverter")}</span>
+              </Button>
+            </Link>
+            <Link href="/csv-editor" className="block">
+              <Button
+                variant="outline"
+                className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
+              >
+                <FileSpreadsheet className="size-10" />
+                <span className="text-sm">{t("csvEditor")}</span>
               </Button>
             </Link>
           </div>

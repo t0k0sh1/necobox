@@ -1,0 +1,690 @@
+/**
+ * CSVパーサーユーティリティ
+ * RFC 4180準拠のCSV解析・生成機能を提供
+ */
+
+// 列のデータ型
+export type ColumnType = "auto" | "string" | "number";
+
+// サポートするエンコーディング（入力用：自動検出対応）
+export type EncodingType = "utf-8" | "utf-8-bom" | "shift_jis" | "euc-jp";
+
+// 出力用エンコーディング（ブラウザのTextEncoderがサポートするもののみ）
+export type OutputEncodingType = "utf-8" | "utf-8-bom";
+
+export const ENCODING_LABELS: Record<EncodingType, string> = {
+  "utf-8": "UTF-8",
+  "utf-8-bom": "UTF-8 (BOM)",
+  shift_jis: "Shift_JIS",
+  "euc-jp": "EUC-JP",
+};
+
+export const OUTPUT_ENCODING_LABELS: Record<OutputEncodingType, string> = {
+  "utf-8": "UTF-8",
+  "utf-8-bom": "UTF-8 (BOM)",
+};
+
+export interface CsvData {
+  headers: string[];
+  rows: string[][];
+  hasHeader: boolean;
+  columnTypes: ColumnType[]; // 各列のデータ型
+}
+
+// 文字列のクォート方法
+export type QuoteStyle = "always" | "as-needed";
+
+export interface CsvOptions {
+  delimiter: string;
+  hasHeader: boolean;
+  quoteChar: '"' | "'";
+  encoding: EncodingType;
+  quoteStyle: QuoteStyle;
+  columnNamePrefix: string; // デフォルト列名のプレフィックス（国際化用）
+}
+
+export interface CellPosition {
+  row: number;
+  col: number;
+}
+
+export const DEFAULT_CSV_OPTIONS: CsvOptions = {
+  delimiter: ",",
+  hasHeader: true,
+  quoteChar: '"',
+  encoding: "utf-8",
+  quoteStyle: "as-needed",
+  columnNamePrefix: "Column",
+};
+
+/**
+ * 値が数値として解釈可能かチェック
+ */
+export function isNumeric(value: string): boolean {
+  if (value.trim() === "") return false;
+  const num = Number(value);
+  return !isNaN(num) && isFinite(num);
+}
+
+/**
+ * 列のデータ型を自動検出
+ * 全ての値が数値として解釈可能ならnumber、そうでなければstring
+ */
+export function detectColumnType(values: string[]): ColumnType {
+  const nonEmptyValues = values.filter((v) => v.trim() !== "");
+  if (nonEmptyValues.length === 0) return "auto";
+
+  const allNumeric = nonEmptyValues.every((v) => isNumeric(v));
+  return allNumeric ? "number" : "string";
+}
+
+/**
+ * 区切り文字を自動検出する
+ * カンマ、タブ、セミコロン、パイプの出現頻度から推定
+ */
+export function detectDelimiter(text: string): string {
+  const lines = text.split(/\r?\n/).slice(0, 10); // 最初の10行をサンプリング
+  if (lines.length === 0) return ",";
+
+  const delimiters = [",", "\t", ";", "|"];
+  const counts: Record<string, number[]> = {};
+
+  for (const delimiter of delimiters) {
+    counts[delimiter] = lines.map((line) => {
+      // クォート内の区切り文字を除外してカウント
+      // RFC 4180準拠: ダブルクォートのみをクォート文字として扱い、
+      // エスケープされたクォート（""）も考慮
+      let count = 0;
+      let inQuote = false;
+      const quoteChar = '"';
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+        if (char === quoteChar) {
+          if (inQuote && nextChar === quoteChar) {
+            // エスケープされたクォート（""）はスキップ
+            i++;
+          } else {
+            inQuote = !inQuote;
+          }
+        } else if (!inQuote && char === delimiter) {
+          count++;
+        }
+      }
+      return count;
+    });
+  }
+
+  // 各区切り文字の一貫性をスコア化（全行で同じ数出現するほど高スコア）
+  let bestDelimiter = ",";
+  let bestScore = -1;
+
+  for (const delimiter of delimiters) {
+    const delimiterCounts = counts[delimiter];
+    const nonZeroCounts = delimiterCounts.filter((c) => c > 0);
+    if (nonZeroCounts.length === 0) continue;
+
+    const avgCount =
+      nonZeroCounts.reduce((a, b) => a + b, 0) / nonZeroCounts.length;
+    const variance =
+      nonZeroCounts.reduce((sum, c) => sum + Math.pow(c - avgCount, 2), 0) /
+      nonZeroCounts.length;
+
+    // スコア: 平均出現数が多く、分散が小さいほど良い
+    const score = avgCount / (variance + 1);
+    if (score > bestScore) {
+      bestScore = score;
+      bestDelimiter = delimiter;
+    }
+  }
+
+  return bestDelimiter;
+}
+
+/**
+ * ArrayBufferを指定したエンコーディングでデコード
+ */
+export function decodeWithEncoding(
+  buffer: ArrayBuffer,
+  encoding: EncodingType
+): string {
+  // BOM付きUTF-8の場合はBOMを除去
+  const actualEncoding = encoding === "utf-8-bom" ? "utf-8" : encoding;
+
+  try {
+    const decoder = new TextDecoder(actualEncoding);
+    let text = decoder.decode(buffer);
+
+    // BOMを除去
+    if (text.charCodeAt(0) === 0xfeff) {
+      text = text.slice(1);
+    }
+
+    return text;
+  } catch {
+    // フォールバック: UTF-8で試行
+    const decoder = new TextDecoder("utf-8");
+    return decoder.decode(buffer);
+  }
+}
+
+/**
+ * エンコーディングを自動検出
+ * BOM、文字パターンから推定
+ */
+export function detectEncoding(buffer: ArrayBuffer): EncodingType {
+  const bytes = new Uint8Array(buffer);
+
+  // BOM検出
+  if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) {
+    return "utf-8-bom";
+  }
+
+  // Shift_JIS/EUC-JP判定（簡易版）
+  // 日本語文字が含まれているかをチェック
+  let shiftJisScore = 0;
+  let eucJpScore = 0;
+
+  for (let i = 0; i < Math.min(bytes.length - 1, 1000); i++) {
+    const b1 = bytes[i];
+    const b2 = bytes[i + 1];
+
+    // Shift_JIS: 0x81-0x9F, 0xE0-0xFC で始まる2バイト文字
+    if (
+      ((b1 >= 0x81 && b1 <= 0x9f) || (b1 >= 0xe0 && b1 <= 0xfc)) &&
+      ((b2 >= 0x40 && b2 <= 0x7e) || (b2 >= 0x80 && b2 <= 0xfc))
+    ) {
+      shiftJisScore++;
+    }
+
+    // EUC-JP: 0xA1-0xFE で始まる2バイト文字
+    if (b1 >= 0xa1 && b1 <= 0xfe && b2 >= 0xa1 && b2 <= 0xfe) {
+      eucJpScore++;
+    }
+  }
+
+  if (shiftJisScore > eucJpScore && shiftJisScore > 5) {
+    return "shift_jis";
+  }
+  if (eucJpScore > shiftJisScore && eucJpScore > 5) {
+    return "euc-jp";
+  }
+
+  return "utf-8";
+}
+
+/**
+ * 文字列を指定したエンコーディングでエンコード
+ * 注: ブラウザのTextEncoderはUTF-8のみ対応のため、Shift_JIS等は手動変換
+ */
+export function encodeWithEncoding(
+  text: string,
+  encoding: EncodingType
+): Uint8Array {
+  if (encoding === "utf-8") {
+    const encoder = new TextEncoder();
+    return encoder.encode(text);
+  }
+
+  if (encoding === "utf-8-bom") {
+    const encoder = new TextEncoder();
+    const content = encoder.encode(text);
+    const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+    const result = new Uint8Array(bom.length + content.length);
+    result.set(bom, 0);
+    result.set(content, bom.length);
+    return result;
+  }
+
+  // Shift_JIS/EUC-JPの場合は、ブラウザAPIでは直接対応できないため
+  // UTF-8にフォールバック（実用上はライブラリが必要）
+  console.warn(
+    `Encoding ${encoding} is not fully supported, falling back to UTF-8`
+  );
+  const encoder = new TextEncoder();
+  return encoder.encode(text);
+}
+
+/**
+ * CSVテキストをパースしてCsvDataに変換
+ * RFC 4180準拠: クォート内の改行、ダブルクォートのエスケープに対応
+ */
+export function parseCSV(
+  text: string,
+  options: Partial<CsvOptions> = {}
+): CsvData {
+  const opts = { ...DEFAULT_CSV_OPTIONS, ...options };
+  const { delimiter, hasHeader, quoteChar, columnNamePrefix } = opts;
+
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentField = "";
+  let inQuote = false;
+  let i = 0;
+
+  while (i < text.length) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (inQuote) {
+      if (char === quoteChar) {
+        if (nextChar === quoteChar) {
+          // エスケープされたクォート
+          currentField += quoteChar;
+          i += 2;
+          continue;
+        } else {
+          // クォート終了
+          inQuote = false;
+          i++;
+          continue;
+        }
+      } else {
+        // クォート内の文字（改行も含む）
+        currentField += char;
+        i++;
+        continue;
+      }
+    }
+
+    // クォート外
+    if (char === quoteChar) {
+      // クォート開始
+      inQuote = true;
+      i++;
+      continue;
+    }
+
+    if (char === delimiter) {
+      // フィールド区切り
+      currentRow.push(currentField);
+      currentField = "";
+      i++;
+      continue;
+    }
+
+    if (char === "\r" && nextChar === "\n") {
+      // Windows改行
+      currentRow.push(currentField);
+      rows.push(currentRow);
+      currentRow = [];
+      currentField = "";
+      i += 2;
+      continue;
+    }
+
+    if (char === "\n") {
+      // Unix改行
+      currentRow.push(currentField);
+      rows.push(currentRow);
+      currentRow = [];
+      currentField = "";
+      i++;
+      continue;
+    }
+
+    // 通常の文字
+    currentField += char;
+    i++;
+  }
+
+  // 最後のフィールドと行を追加
+  if (currentField || currentRow.length > 0) {
+    currentRow.push(currentField);
+    rows.push(currentRow);
+  }
+
+  // 空行を除去
+  const filteredRows = rows.filter(
+    (row) => row.length > 1 || (row.length === 1 && row[0] !== "")
+  );
+
+  if (filteredRows.length === 0) {
+    return { headers: [], rows: [], hasHeader, columnTypes: [] };
+  }
+
+  // 列数を統一（最大列数に合わせる）
+  const maxCols = Math.max(...filteredRows.map((row) => row.length));
+  const normalizedRows = filteredRows.map((row) => {
+    const newRow = [...row];
+    while (newRow.length < maxCols) {
+      newRow.push("");
+    }
+    return newRow;
+  });
+
+  // 各列のデータ型を自動検出
+  const dataRows = hasHeader ? normalizedRows.slice(1) : normalizedRows;
+  const columnTypes: ColumnType[] = [];
+  for (let col = 0; col < maxCols; col++) {
+    const columnValues = dataRows.map((row) => row[col]);
+    columnTypes.push(detectColumnType(columnValues));
+  }
+
+  if (hasHeader && normalizedRows.length > 0) {
+    return {
+      headers: normalizedRows[0],
+      rows: normalizedRows.slice(1),
+      hasHeader: true,
+      columnTypes,
+    };
+  }
+
+  // ヘッダーなしの場合、列番号をヘッダーとして使用
+  const headers = Array.from({ length: maxCols }, (_, i) => `${columnNamePrefix} ${i + 1}`);
+  return {
+    headers,
+    rows: normalizedRows,
+    hasHeader: false,
+    columnTypes,
+  };
+}
+
+/**
+ * フィールドをCSV形式にエスケープ
+ */
+function escapeField(
+  field: string,
+  delimiter: string,
+  quoteChar: '"' | "'",
+  columnType: ColumnType = "auto",
+  quoteStyle: QuoteStyle = "as-needed"
+): string {
+  // 数値型の場合、数値として解釈可能ならクォートなしで出力
+  if (columnType === "number" && isNumeric(field)) {
+    return field;
+  }
+
+  // クォートが必要かチェック
+  const needsQuote =
+    field.includes(quoteChar) ||
+    field.includes(delimiter) ||
+    field.includes("\n") ||
+    field.includes("\r");
+
+  // 文字列型の場合
+  if (columnType === "string") {
+    // 常にクォートするか、必要な時のみクォートするか
+    if (quoteStyle === "always" || needsQuote) {
+      const escaped = field.replace(
+        new RegExp(quoteChar, "g"),
+        quoteChar + quoteChar
+      );
+      return quoteChar + escaped + quoteChar;
+    }
+    return field;
+  }
+
+  // auto型の場合、必要に応じてクォート
+  if (needsQuote) {
+    // クォート文字をダブルにエスケープ
+    const escaped = field.replace(
+      new RegExp(quoteChar, "g"),
+      quoteChar + quoteChar
+    );
+    return quoteChar + escaped + quoteChar;
+  }
+
+  return field;
+}
+
+/**
+ * CsvDataをCSVテキストに変換
+ */
+export function stringifyCSV(
+  data: CsvData,
+  options: Partial<CsvOptions> = {}
+): string {
+  const opts = { ...DEFAULT_CSV_OPTIONS, ...options };
+  const { delimiter, hasHeader, quoteChar, quoteStyle } = opts;
+
+  const lines: string[] = [];
+
+  // ヘッダー行を出力（ヘッダーは常に文字列型として扱う）
+  if (hasHeader && data.headers.length > 0) {
+    const headerLine = data.headers
+      .map((h) => escapeField(h, delimiter, quoteChar, "string", quoteStyle))
+      .join(delimiter);
+    lines.push(headerLine);
+  }
+
+  // データ行を出力
+  for (const row of data.rows) {
+    const line = row
+      .map((cell, colIndex) => {
+        const columnType = data.columnTypes[colIndex] || "auto";
+        return escapeField(cell, delimiter, quoteChar, columnType, quoteStyle);
+      })
+      .join(delimiter);
+    lines.push(line);
+  }
+
+  return lines.join("\n");
+}
+
+// サポートする拡張子
+export type FileExtension = ".csv" | ".tsv" | ".txt";
+
+export const FILE_EXTENSION_LABELS: Record<FileExtension, string> = {
+  ".csv": "CSV (.csv)",
+  ".tsv": "TSV (.tsv)",
+  ".txt": "Text (.txt)",
+};
+
+/**
+ * CSVデータをファイルとしてダウンロード
+ */
+export function downloadCSV(
+  data: CsvData,
+  filename: string,
+  options: Partial<CsvOptions> = {},
+  extension: FileExtension = ".csv"
+): void {
+  const opts = { ...DEFAULT_CSV_OPTIONS, ...options };
+  const csvContent = stringifyCSV(data, opts);
+
+  // MIMEタイプを拡張子に応じて設定
+  let mimeType = "text/csv;charset=utf-8";
+  if (extension === ".tsv") {
+    mimeType = "text/tab-separated-values;charset=utf-8";
+  } else if (extension === ".txt") {
+    mimeType = "text/plain;charset=utf-8";
+  }
+
+  // エンコード
+  const encoded = encodeWithEncoding(csvContent, opts.encoding);
+  const blob = new Blob([encoded as BlobPart], {
+    type: mimeType,
+  });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  // 拡張子がすでに付いている場合は除去してから追加
+  const baseFilename = filename.replace(/\.(csv|tsv|txt)$/i, "");
+  link.download = `${baseFilename}${extension}`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * 空のCsvDataを生成
+ * @param cols 列数
+ * @param rows 行数
+ * @param hasHeader ヘッダーありかどうか
+ * @param columnNamePrefix 列名のプレフィックス（国際化用）
+ */
+export function createEmptyCsvData(
+  cols: number = 3,
+  rows: number = 5,
+  hasHeader: boolean = true,
+  columnNamePrefix: string = "Column"
+): CsvData {
+  const headers = Array.from({ length: cols }, (_, i) => `${columnNamePrefix} ${i + 1}`);
+  const emptyRows = Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => "")
+  );
+  const columnTypes: ColumnType[] = Array.from({ length: cols }, () => "auto");
+
+  return {
+    headers,
+    rows: emptyRows,
+    hasHeader,
+    columnTypes,
+  };
+}
+
+/**
+ * 行を追加
+ */
+export function addRow(data: CsvData, index?: number): CsvData {
+  const newRow = Array.from({ length: data.headers.length }, () => "");
+  const newRows = [...data.rows];
+
+  if (index === undefined || index >= newRows.length) {
+    newRows.push(newRow);
+  } else {
+    newRows.splice(index, 0, newRow);
+  }
+
+  return { ...data, rows: newRows };
+}
+
+/**
+ * 行を削除
+ */
+export function removeRow(data: CsvData, index: number): CsvData {
+  if (index < 0 || index >= data.rows.length) {
+    return data;
+  }
+
+  const newRows = [...data.rows];
+  newRows.splice(index, 1);
+
+  return { ...data, rows: newRows };
+}
+
+/**
+ * 列を追加
+ * @param data CSVデータ
+ * @param index 挿入位置（省略時は末尾）
+ * @param columnType 列のデータ型
+ * @param columnNamePrefix 列名のプレフィックス（国際化用）
+ */
+export function addColumn(
+  data: CsvData,
+  index?: number,
+  columnType: ColumnType = "auto",
+  columnNamePrefix: string = "Column"
+): CsvData {
+  const colIndex =
+    index === undefined || index >= data.headers.length
+      ? data.headers.length
+      : index;
+
+  const newHeaders = [...data.headers];
+  newHeaders.splice(colIndex, 0, `${columnNamePrefix} ${newHeaders.length + 1}`);
+
+  const newRows = data.rows.map((row) => {
+    const newRow = [...row];
+    newRow.splice(colIndex, 0, "");
+    return newRow;
+  });
+
+  const newColumnTypes = [...data.columnTypes];
+  newColumnTypes.splice(colIndex, 0, columnType);
+
+  return { ...data, headers: newHeaders, rows: newRows, columnTypes: newColumnTypes };
+}
+
+/**
+ * 列を削除
+ */
+export function removeColumn(data: CsvData, index: number): CsvData {
+  if (index < 0 || index >= data.headers.length) {
+    return data;
+  }
+
+  const newHeaders = [...data.headers];
+  newHeaders.splice(index, 1);
+
+  const newRows = data.rows.map((row) => {
+    const newRow = [...row];
+    newRow.splice(index, 1);
+    return newRow;
+  });
+
+  const newColumnTypes = [...data.columnTypes];
+  newColumnTypes.splice(index, 1);
+
+  return { ...data, headers: newHeaders, rows: newRows, columnTypes: newColumnTypes };
+}
+
+/**
+ * セルの値を更新
+ */
+export function updateCell(
+  data: CsvData,
+  row: number,
+  col: number,
+  value: string
+): CsvData {
+  if (col < 0 || col >= data.headers.length) {
+    return data;
+  }
+
+  // ヘッダー行の更新（row === -1）
+  if (row === -1) {
+    const newHeaders = [...data.headers];
+    newHeaders[col] = value;
+    return { ...data, headers: newHeaders };
+  }
+
+  // データ行の更新
+  if (row < 0 || row >= data.rows.length) {
+    return data;
+  }
+
+  const newRows = data.rows.map((r, i) => {
+    if (i === row) {
+      const newRow = [...r];
+      newRow[col] = value;
+      return newRow;
+    }
+    return r;
+  });
+
+  return { ...data, rows: newRows };
+}
+
+/**
+ * 列のデータ型を更新
+ */
+export function updateColumnType(
+  data: CsvData,
+  col: number,
+  columnType: ColumnType
+): CsvData {
+  if (col < 0 || col >= data.columnTypes.length) {
+    return data;
+  }
+
+  const newColumnTypes = [...data.columnTypes];
+  newColumnTypes[col] = columnType;
+
+  return { ...data, columnTypes: newColumnTypes };
+}
+
+/**
+ * 全ての列のデータ型を再検出
+ */
+export function redetectColumnTypes(data: CsvData): CsvData {
+  const columnTypes: ColumnType[] = [];
+  for (let col = 0; col < data.headers.length; col++) {
+    const columnValues = data.rows.map((row) => row[col]);
+    columnTypes.push(detectColumnType(columnValues));
+  }
+  return { ...data, columnTypes };
+}

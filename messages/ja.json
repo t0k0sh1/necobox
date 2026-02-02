@@ -31,6 +31,7 @@
     "timeZoneConverter": "タイムゾーン変換",
     "imageConverter": "画像フォーマット変換",
     "textViewer": "テキストビューア",
+    "csvEditor": "CSVエディタ",
     "sectionGenerators": "生成ツール",
     "sectionConverters": "変換ツール",
     "sectionAnalyzers": "解析・情報ツール"
@@ -409,5 +410,85 @@
         "non_standard": "非標準（CDN/クラウド）"
       }
     }
+  },
+  "csvEditor": {
+    "title": "CSVエディタ",
+    "description": "CSVファイルをオンラインで編集・変換",
+    "breadcrumb": "CSVエディタ",
+    "upload": {
+      "title": "ファイルをアップロード",
+      "description": "CSVファイルをドラッグ&ドロップまたは選択",
+      "selectFile": "ファイルを選択",
+      "dragDrop": "ここにドラッグ&ドロップ",
+      "pasteData": "またはテキストを貼り付け",
+      "pastePlaceholder": "列1,列2,列3\n値1,値2,値3"
+    },
+    "options": {
+      "delimiter": "区切り文字",
+      "delimiterComma": "カンマ (,)",
+      "delimiterTab": "タブ",
+      "delimiterSemicolon": "セミコロン (;)",
+      "delimiterPipe": "パイプ (|)",
+      "delimiterCustom": "カスタム",
+      "hasHeader": "1行目をヘッダーとして使用",
+      "autoDetect": "自動検出",
+      "encoding": "文字コード",
+      "encodingInput": "読み込み時",
+      "encodingOutput": "出力時",
+      "encodingAutoDetect": "自動検出",
+      "redetectTypes": "型を再検出"
+    },
+    "columnType": {
+      "label": "列のデータ型",
+      "auto": "自動",
+      "string": "文字列",
+      "number": "数値",
+      "tooltip": "列のデータ型を設定（エクスポート時のクォート処理に影響）"
+    },
+    "toolbar": {
+      "addRow": "行を追加",
+      "deleteRow": "行を削除",
+      "addColumn": "列を追加",
+      "deleteColumn": "列を削除",
+      "clear": "クリア",
+      "new": "新規作成"
+    },
+    "table": {
+      "header": "ヘッダー",
+      "row": "行",
+      "column": "列",
+      "cell": "セル",
+      "editCell": "セルを編集",
+      "noData": "データがありません",
+      "columnTypeHeader": "型",
+      "defaultColumnName": "列"
+    },
+    "export": {
+      "download": "ダウンロード",
+      "filename": "ファイル名",
+      "defaultFilename": "data",
+      "includeHeader": "ヘッダーを含める",
+      "quoteStrings": "文字列のクォート",
+      "quoteAlways": "常にクォート",
+      "quoteAsNeeded": "必要時のみ",
+      "extension": "拡張子"
+    },
+    "keyboard": {
+      "title": "キーボード操作",
+      "arrows": "↑↓←→: セル移動",
+      "enter": "Enter: 編集開始/確定",
+      "tab": "Tab: 次のセルへ",
+      "shiftTab": "Shift+Tab: 前のセルへ",
+      "escape": "Escape: 編集キャンセル",
+      "copy": "Ctrl/Cmd+C: コピー",
+      "cut": "Ctrl/Cmd+X: 切り取り",
+      "paste": "Ctrl/Cmd+V: 貼り付け"
+    },
+    "error": {
+      "parseError": "CSVの解析に失敗しました",
+      "emptyFile": "ファイルが空です",
+      "invalidFile": "無効なファイル形式です"
+    },
+    "emptyState": "CSVファイルをアップロードするか、新規作成してください"
   }
 }
