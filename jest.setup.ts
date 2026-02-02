@@ -63,6 +63,7 @@ jest.mock("next-intl", () => {
         return typeof value === "string" ? value : key;
       };
     },
+    useLocale: () => "en",
     NextIntlClientProvider: ({ children }: { children: React.ReactNode }) =>
       children,
   };

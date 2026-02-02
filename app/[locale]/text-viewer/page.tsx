@@ -2,6 +2,7 @@
 
 import { CopyButton } from "@/app/components/CopyButton";
 import { FloatingMemo } from "@/app/components/FloatingMemo";
+import { HttpStatusReference } from "@/app/components/HttpStatusReference";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,8 +41,8 @@ import {
 import { decompressGz, isGzipFile } from "@/lib/utils/gz-decompressor";
 import { hasNonEmptyMatch, highlightMatches } from "@/lib/utils/text-highlight";
 import { decompressZip, isBinaryContent, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
-import { Check, ChevronDown, Copy, FileText, HelpCircle, Pin, Search, StickyNote, Upload, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { Check, ChevronDown, Copy, FileText, Hash, HelpCircle, Pin, Search, StickyNote, Upload, X } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Virtuoso } from "react-virtuoso";
@@ -257,6 +258,7 @@ const LineRow = React.memo(function LineRow({
 export default function TextViewerPage() {
   const t = useTranslations("textViewer");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
 
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [activeFileId, setActiveFileId] = useState<string | null>(null);
@@ -316,6 +318,8 @@ export default function TextViewerPage() {
 
   // フローティングメモの状態
   const [showMemo, setShowMemo] = useState(false);
+  // HTTPステータスコードリファレンスの状態
+  const [showHttpStatusRef, setShowHttpStatusRef] = useState(false);
   const [helpBoxPosition, setHelpBoxPosition] = useState({ x: 100, y: 100 });
   const [isDraggingHelp, setIsDraggingHelp] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -1421,7 +1425,7 @@ export default function TextViewerPage() {
                         )}
                       </div>
 
-                      {/* フィルタ結果カウントとメモボタン */}
+                      {/* フィルタ結果カウントとツールボタン */}
                       <div className="flex items-center justify-between">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                           {t("filter.resultsCount", {
@@ -1429,15 +1433,26 @@ export default function TextViewerPage() {
                             total: lines.length,
                           })}
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowMemo(!showMemo)}
-                          className="h-7 text-xs"
-                        >
-                          <StickyNote className="w-3.5 h-3.5 mr-1" />
-                          {showMemo ? t("memo.hide") : t("memo.show")}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowHttpStatusRef(!showHttpStatusRef)}
+                            className="h-7 text-xs"
+                          >
+                            <Hash className="w-3.5 h-3.5 mr-1" />
+                            {showHttpStatusRef ? t("httpStatus.hide") : t("httpStatus.show")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowMemo(!showMemo)}
+                            className="h-7 text-xs"
+                          >
+                            <StickyNote className="w-3.5 h-3.5 mr-1" />
+                            {showMemo ? t("memo.hide") : t("memo.show")}
+                          </Button>
+                        </div>
                       </div>
                     </div>
 
@@ -1882,6 +1897,32 @@ export default function TextViewerPage() {
             copied: t("memo.copied"),
             close: t("memo.close"),
             resize: t("memo.resize"),
+          }}
+        />
+
+        {/* HTTPステータスコードリファレンス */}
+        <HttpStatusReference
+          storageKey="necobox:http-status-ref:text-viewer"
+          isOpen={showHttpStatusRef}
+          onClose={() => setShowHttpStatusRef(false)}
+          locale={locale}
+          translations={{
+            title: t("httpStatus.title"),
+            close: t("httpStatus.close"),
+            resize: t("httpStatus.resize"),
+            search: t("httpStatus.search"),
+            clearSearch: t("httpStatus.clearSearch"),
+            copy: t("httpStatus.copy"),
+            copied: t("httpStatus.copied"),
+            noResults: t("httpStatus.noResults"),
+            categories: {
+              "1xx": t("httpStatus.categories.1xx"),
+              "2xx": t("httpStatus.categories.2xx"),
+              "3xx": t("httpStatus.categories.3xx"),
+              "4xx": t("httpStatus.categories.4xx"),
+              "5xx": t("httpStatus.categories.5xx"),
+              non_standard: t("httpStatus.categories.non_standard"),
+            },
           }}
         />
       </div>
