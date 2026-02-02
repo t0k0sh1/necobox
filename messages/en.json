@@ -395,14 +395,17 @@
       "close": "Close",
       "resize": "Resize",
       "search": "Search by code or description...",
+      "clearSearch": "Clear search",
+      "copy": "Copy",
       "copied": "Copied",
       "noResults": "No results",
       "categories": {
+        "1xx": "1xx Informational",
         "2xx": "2xx Success",
         "3xx": "3xx Redirection",
         "4xx": "4xx Client Error",
         "5xx": "5xx Server Error",
-        "cloudflare": "CloudFront/AWS/Cloudflare"
+        "non_standard": "Non-Standard (CDN/Cloud)"
       }
     }
   }

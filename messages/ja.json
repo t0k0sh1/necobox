@@ -395,14 +395,17 @@
       "close": "閉じる",
       "resize": "リサイズ",
       "search": "コードまたは説明で検索...",
+      "clearSearch": "検索をクリア",
+      "copy": "コピー",
       "copied": "コピーしました",
       "noResults": "該当なし",
       "categories": {
+        "1xx": "1xx 情報",
         "2xx": "2xx 成功",
         "3xx": "3xx リダイレクト",
         "4xx": "4xx クライアントエラー",
         "5xx": "5xx サーバーエラー",
-        "cloudflare": "CloudFront/AWS/Cloudflare"
+        "non_standard": "非標準（CDN/クラウド）"
       }
     }
   }

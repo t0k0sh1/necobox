@@ -22,14 +22,17 @@ interface HttpStatusReferenceProps {
     close: string;
     resize: string;
     search: string;
+    clearSearch: string;
+    copy: string;
     copied: string;
     noResults: string;
     categories: {
+      "1xx": string;
       "2xx": string;
       "3xx": string;
       "4xx": string;
       "5xx": string;
-      cloudflare: string;
+      non_standard: string;
     };
   };
 }
@@ -76,21 +79,28 @@ export function HttpStatusReference({
   // コピー状態
   const [copiedCode, setCopiedCode] = useState<number | null>(null);
 
-  // 初期位置設定済みフラグ
-  const [hasSetInitialPosition, setHasSetInitialPosition] = useState(false);
+  // 初期位置設定済みフラグ（useRefで管理してuseEffect内のsetState呼び出しを回避）
+  const hasSetInitialPositionRef = useRef(false);
 
   // 初期位置の設定（画面右下付近）- 一度だけ実行
   useEffect(() => {
-    if (!isInitialized || !isOpen || hasSetInitialPosition) return;
+    if (!isInitialized || !isOpen || hasSetInitialPositionRef.current) return;
     if (position.x < 0 || position.y < 0) {
       // 初期位置を計算（画面右下から少し内側）
       const x = Math.max(50, window.innerWidth - size.width - 50);
       const y = Math.max(50, window.innerHeight - size.height - 100);
       updatePosition({ x, y });
     }
-    setHasSetInitialPosition(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- updatePosition is stable, size is only needed for initial calc
-  }, [isInitialized, isOpen, hasSetInitialPosition]);
+    hasSetInitialPositionRef.current = true;
+  }, [
+    isInitialized,
+    isOpen,
+    position.x,
+    position.y,
+    size.width,
+    size.height,
+    updatePosition,
+  ]);
 
   // ウィンドウリサイズ時の位置制約
   useEffect(() => {
@@ -113,8 +123,7 @@ export function HttpStatusReference({
     return () => {
       window.removeEventListener("resize", handleWindowResize);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- updatePosition is stable
-  }, [isInitialized, isOpen, position.x, position.y, size.width, size.height]);
+  }, [isInitialized, isOpen, position.x, position.y, size.width, size.height, updatePosition]);
 
   // ドラッグ処理
   useEffect(() => {
@@ -137,8 +146,7 @@ export function HttpStatusReference({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- updatePosition is stable
-  }, [isDragging, dragOffset, size.width, size.height]);
+  }, [isDragging, dragOffset, size.width, size.height, updatePosition]);
 
   // リサイズ処理
   useEffect(() => {
@@ -165,8 +173,7 @@ export function HttpStatusReference({
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- updateSize is stable
-  }, [isResizing, resizeStart]);
+  }, [isResizing, resizeStart, updateSize]);
 
   const handleHeaderMouseDown = (e: React.MouseEvent) => {
     if (boxRef.current) {
@@ -216,8 +223,7 @@ export function HttpStatusReference({
 
     e.preventDefault();
     updatePosition({ x: newX, y: newY });
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- updatePosition is stable
-  }, [position.x, position.y, size.width, size.height]);
+  }, [position.x, position.y, size.width, size.height, updatePosition]);
 
   // キーボードによるリサイズ
   const handleResizeKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -245,8 +251,7 @@ export function HttpStatusReference({
 
     e.preventDefault();
     updateSize({ width: newWidth, height: newHeight });
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- updateSize is stable
-  }, [size.width, size.height]);
+  }, [size.width, size.height, updateSize]);
 
   // ヘッダーのキーボードハンドラ
   const handleHeaderKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -313,13 +318,13 @@ export function HttpStatusReference({
     return translations.categories[category];
   };
 
-  // MDN URLを生成（cloudflareカテゴリは除外）
+  // MDN URLを生成（non_standardカテゴリは除外）
   const getMdnUrl = (code: HttpStatusCode): string | null => {
-    if (code.category === "cloudflare") {
+    if (code.category === "non_standard") {
       return null;
     }
     const mdnLocale = locale === "ja" ? "ja" : "en-US";
-    return `https://developer.mozilla.org/${mdnLocale}/docs/Web/HTTP/Reference/Status/${code.code}`;
+    return `https://developer.mozilla.org/${mdnLocale}/docs/Web/HTTP/Status/${code.code}`;
   };
 
   if (!isOpen || !isInitialized) return null;
@@ -385,7 +390,7 @@ export function HttpStatusReference({
               type="button"
               onClick={() => setSearchQuery("")}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-700 text-gray-500 hover:text-gray-300"
-              aria-label="Clear search"
+              aria-label={translations.clearSearch}
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -402,6 +407,7 @@ export function HttpStatusReference({
               if (!codes || codes.length === 0) return null;
 
               const isCollapsed = isCategoryCollapsed(category);
+              const categoryName = getCategoryName(category);
 
               return (
                 <div key={category}>
@@ -411,6 +417,7 @@ export function HttpStatusReference({
                     onClick={() => toggleCategoryCollapsed(category)}
                     className="flex items-center gap-1 w-full text-left py-1 px-1 rounded hover:bg-gray-800 transition-colors"
                     aria-expanded={!isCollapsed}
+                    aria-label={categoryName}
                   >
                     {isCollapsed ? (
                       <ChevronRight className="w-4 h-4 text-gray-400" aria-hidden="true" />
@@ -418,7 +425,7 @@ export function HttpStatusReference({
                       <ChevronDown className="w-4 h-4 text-gray-400" aria-hidden="true" />
                     )}
                     <span className="text-xs font-semibold text-gray-300">
-                      {getCategoryName(category)}
+                      {categoryName}
                     </span>
                     <span className="text-xs text-gray-500 ml-1">
                       ({codes.length})
@@ -474,8 +481,8 @@ export function HttpStatusReference({
                               type="button"
                               onClick={() => handleCopyCode(code)}
                               className="shrink-0 p-0.5 rounded hover:bg-gray-700 text-gray-500 hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                              title={copiedCode === code.code ? translations.copied : "Copy"}
-                              aria-label={`Copy ${code.code}`}
+                              title={copiedCode === code.code ? translations.copied : translations.copy}
+                              aria-label={`${translations.copy} ${code.code}`}
                             >
                               {copiedCode === code.code ? (
                                 <Check className="w-3.5 h-3.5 text-green-400" aria-hidden="true" />

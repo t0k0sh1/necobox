@@ -1911,14 +1911,17 @@ export default function TextViewerPage() {
             close: t("httpStatus.close"),
             resize: t("httpStatus.resize"),
             search: t("httpStatus.search"),
+            clearSearch: t("httpStatus.clearSearch"),
+            copy: t("httpStatus.copy"),
             copied: t("httpStatus.copied"),
             noResults: t("httpStatus.noResults"),
             categories: {
+              "1xx": t("httpStatus.categories.1xx"),
               "2xx": t("httpStatus.categories.2xx"),
               "3xx": t("httpStatus.categories.3xx"),
               "4xx": t("httpStatus.categories.4xx"),
               "5xx": t("httpStatus.categories.5xx"),
-              cloudflare: t("httpStatus.categories.cloudflare"),
+              non_standard: t("httpStatus.categories.non_standard"),
             },
           }}
         />
