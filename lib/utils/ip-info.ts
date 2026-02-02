@@ -1,6 +1,7 @@
 import * as dns from "dns/promises";
 import * as tls from "tls";
 import { lookup as whoisLookup } from "whois";
+import { isValidIP } from "./ip-validator";
 
 const DNS_TIMEOUT = 5000; // 5 seconds
 const TLS_TIMEOUT = 5000; // 5 seconds
@@ -18,19 +19,6 @@ const isPrivateIP = (ip: string): boolean => {
   // IPv6 private ranges (simplified)
   if (/^fc00:/i.test(ip) || /^fe80:/i.test(ip)) return true;
   return false;
-};
-
-// IPアドレス形式を検証
-const isValidIP = (ip: string): boolean => {
-  // IPv4
-  const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-  if (ipv4Regex.test(ip)) {
-    const parts = ip.split(".").map(Number);
-    return parts.every((part) => part >= 0 && part <= 255);
-  }
-  // IPv6 (簡易チェック)
-  const ipv6Regex = /^([0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/;
-  return ipv6Regex.test(ip);
 };
 
 // ホスト名形式を検証

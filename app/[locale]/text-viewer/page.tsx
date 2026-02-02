@@ -39,9 +39,10 @@ import {
   splitLineToColumns,
 } from "@/lib/utils/column-filter";
 import { decompressGz, isGzipFile } from "@/lib/utils/gz-decompressor";
+import { isValidIP } from "@/lib/utils/ip-validator";
 import { hasNonEmptyMatch, highlightMatches } from "@/lib/utils/text-highlight";
 import { decompressZip, isBinaryContent, isZipFile, type ExtractedFile } from "@/lib/utils/zip-decompressor";
-import { Check, ChevronDown, Copy, FileText, Hash, HelpCircle, Pin, Search, StickyNote, Upload, X } from "lucide-react";
+import { Check, ChevronDown, Copy, ExternalLink, FileText, Hash, HelpCircle, Pin, Search, StickyNote, Upload, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -1097,6 +1098,13 @@ export default function TextViewerPage() {
     window.getSelection()?.removeAllRanges();
   }, [activeFileId, activeFile, updateSearchText]);
 
+  // IP情報ページを別タブで開く（選択状態は維持）
+  const openIPInfoPage = useCallback((ip: string) => {
+    const url = `/${locale}/ip-info?ip=${encodeURIComponent(ip.trim())}`;
+    // noopener,noreferrer でタブナビング攻撃を防止
+    window.open(url, "_blank", "noopener,noreferrer");
+  }, [locale]);
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -1835,6 +1843,19 @@ export default function TextViewerPage() {
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
+          )}
+
+          {/* IP情報ボタン（選択テキストがIPアドレスの場合のみ表示） */}
+          {isValidIP(textSelection.text) && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openIPInfoPage(textSelection.text)}
+              className="h-7 text-xs shadow-lg"
+            >
+              <ExternalLink className="w-3.5 h-3.5 mr-1" />
+              {t("selection.ipInfo")}
+            </Button>
           )}
         </div>
       )}

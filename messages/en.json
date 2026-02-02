@@ -365,7 +365,8 @@
       "selectFile": "Search in file",
       "searchActions": "Search",
       "addOr": "Add as OR condition",
-      "addAnd": "Add as AND condition"
+      "addAnd": "Add as AND condition",
+      "ipInfo": "Show IP Info"
     },
     "emptyState": "Please upload a file",
     "memo": {
