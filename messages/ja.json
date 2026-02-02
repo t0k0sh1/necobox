@@ -365,7 +365,8 @@
       "selectFile": "検索するファイル",
       "searchActions": "検索",
       "addOr": "OR条件で追加",
-      "addAnd": "AND条件で追加"
+      "addAnd": "AND条件で追加",
+      "ipInfo": "IP情報を表示"
     },
     "emptyState": "ファイルをアップロードしてください",
     "memo": {

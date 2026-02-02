@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
 
 interface IPInfoData {
   input: string;
@@ -61,11 +62,15 @@ interface IPInfoData {
 export default function IPInfoPage() {
   const t = useTranslations("ipInfo");
   const tCommon = useTranslations("common");
+  const searchParams = useSearchParams();
 
   const [input, setInput] = useState("");
   const [data, setData] = useState<IPInfoData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // URLパラメータからIPを取得して自動検索するためのref（2回実行防止）
+  const hasAutoSearched = useRef(false);
 
   const handleSearch = async () => {
     if (!input.trim()) {
@@ -113,6 +118,51 @@ export default function IPInfoPage() {
       handleSearch();
     }
   };
+
+  // URLパラメータ ?ip=xxx を受け取り、自動検索を実行
+  useEffect(() => {
+    const ipParam = searchParams.get("ip");
+    if (ipParam && !hasAutoSearched.current) {
+      hasAutoSearched.current = true;
+      setInput(ipParam);
+      // setInputの後にhandleSearchを呼ぶため、直接fetch
+      (async () => {
+        setLoading(true);
+        setError(null);
+        setData(null);
+
+        try {
+          const response = await fetch("/api/v1/ip-info", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ input: ipParam.trim() }),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            setError(result.error || t("error.fetchFailed"));
+            setLoading(false);
+            return;
+          }
+
+          if (result.error) {
+            setError(result.error);
+            setLoading(false);
+            return;
+          }
+
+          setData(result);
+        } catch {
+          setError(t("error.fetchFailed"));
+        } finally {
+          setLoading(false);
+        }
+      })();
+    }
+  }, [searchParams, t]);
 
   return (
     <div className="flex h-full items-start justify-center py-4 px-4">
