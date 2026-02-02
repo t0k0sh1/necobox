@@ -387,6 +387,23 @@
     "pin": {
       "pin": "ピン止め",
       "unpin": "ピン止め解除"
+    },
+    "httpStatus": {
+      "title": "HTTPステータスコード",
+      "show": "HTTP Status",
+      "hide": "HTTP Status",
+      "close": "閉じる",
+      "resize": "リサイズ",
+      "search": "コードまたは説明で検索...",
+      "copied": "コピーしました",
+      "noResults": "該当なし",
+      "categories": {
+        "2xx": "2xx 成功",
+        "3xx": "3xx リダイレクト",
+        "4xx": "4xx クライアントエラー",
+        "5xx": "5xx サーバーエラー",
+        "cloudflare": "CloudFront/AWS/Cloudflare"
+      }
     }
   }
 }
