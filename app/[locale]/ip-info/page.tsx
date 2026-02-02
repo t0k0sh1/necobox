@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 
 interface IPInfoData {
   input: string;
@@ -71,47 +71,68 @@ export default function IPInfoPage() {
 
   // URLパラメータからIPを取得して自動検索するためのref（2回実行防止）
   const hasAutoSearched = useRef(false);
+  // 翻訳関数の参照を安定化（useEffectの依存配列から除外するため）
+  const tRef = useRef(t);
+  tRef.current = t;
 
-  const handleSearch = async () => {
-    if (!input.trim()) {
-      setError(t("error.emptyInput"));
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setData(null);
-
-    try {
-      const response = await fetch("/api/v1/ip-info", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ input: input.trim() }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.error || t("error.fetchFailed"));
-        setLoading(false);
+  /**
+   * IP情報を検索する共通関数
+   * @param searchInput 検索するIPアドレスまたはホスト名
+   * @param signal AbortSignal（キャンセル用）
+   */
+  const fetchIPInfo = useCallback(
+    async (searchInput: string, signal?: AbortSignal) => {
+      if (!searchInput.trim()) {
+        setError(tRef.current("error.emptyInput"));
         return;
       }
 
-      if (result.error) {
-        setError(result.error);
-        setLoading(false);
-        return;
-      }
+      setLoading(true);
+      setError(null);
+      setData(null);
 
-      setData(result);
-    } catch {
-      setError(t("error.fetchFailed"));
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        const response = await fetch("/api/v1/ip-info", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ input: searchInput.trim() }),
+          signal,
+        });
+
+        // キャンセルされた場合は何もしない
+        if (signal?.aborted) return;
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          setError(result.error || tRef.current("error.fetchFailed"));
+          return;
+        }
+
+        if (result.error) {
+          setError(result.error);
+          return;
+        }
+
+        setData(result);
+      } catch (err) {
+        // AbortErrorの場合は無視
+        if (err instanceof Error && err.name === "AbortError") return;
+        setError(tRef.current("error.fetchFailed"));
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+        }
+      }
+    },
+    []
+  );
+
+  const handleSearch = useCallback(() => {
+    fetchIPInfo(input);
+  }, [fetchIPInfo, input]);
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -125,44 +146,17 @@ export default function IPInfoPage() {
     if (ipParam && !hasAutoSearched.current) {
       hasAutoSearched.current = true;
       setInput(ipParam);
-      // setInputの後にhandleSearchを呼ぶため、直接fetch
-      (async () => {
-        setLoading(true);
-        setError(null);
-        setData(null);
 
-        try {
-          const response = await fetch("/api/v1/ip-info", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ input: ipParam.trim() }),
-          });
+      // AbortControllerでキャンセル可能にする
+      const abortController = new AbortController();
+      fetchIPInfo(ipParam, abortController.signal);
 
-          const result = await response.json();
-
-          if (!response.ok) {
-            setError(result.error || t("error.fetchFailed"));
-            setLoading(false);
-            return;
-          }
-
-          if (result.error) {
-            setError(result.error);
-            setLoading(false);
-            return;
-          }
-
-          setData(result);
-        } catch {
-          setError(t("error.fetchFailed"));
-        } finally {
-          setLoading(false);
-        }
-      })();
+      // クリーンアップ関数でリクエストをキャンセル
+      return () => {
+        abortController.abort();
+      };
     }
-  }, [searchParams, t]);
+  }, [searchParams, fetchIPInfo]);
 
   return (
     <div className="flex h-full items-start justify-center py-4 px-4">

@@ -1101,7 +1101,8 @@ export default function TextViewerPage() {
   // IP情報ページを別タブで開く（選択状態は維持）
   const openIPInfoPage = useCallback((ip: string) => {
     const url = `/${locale}/ip-info?ip=${encodeURIComponent(ip.trim())}`;
-    window.open(url, "_blank");
+    // noopener,noreferrer でタブナビング攻撃を防止
+    window.open(url, "_blank", "noopener,noreferrer");
   }, [locale]);
 
   const handleDragOver = (e: React.DragEvent) => {
