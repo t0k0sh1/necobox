@@ -451,6 +451,9 @@
       "addColumn": "列を追加",
       "deleteColumn": "列を削除",
       "clear": "クリア",
+      "reset": "リセット",
+      "resetFull": "完全リセット",
+      "resetDataOnly": "データのみクリア（スキーマ維持）",
       "new": "新規作成"
     },
     "table": {
@@ -467,6 +470,12 @@
       "download": "ダウンロード",
       "filename": "ファイル名",
       "defaultFilename": "data",
+      "prefix": "プレフィックス",
+      "suffix": "サフィックス",
+      "clearPrefix": "プレフィックスをクリア",
+      "clearSuffix": "サフィックスをクリア",
+      "clearFilename": "ファイル名をクリア",
+      "preview": "出力ファイル名",
       "includeHeader": "ヘッダーを含める",
       "quoteStrings": "文字列のクォート",
       "quoteAlways": "常にクォート",

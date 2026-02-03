@@ -451,6 +451,9 @@
       "addColumn": "Add Column",
       "deleteColumn": "Delete Column",
       "clear": "Clear",
+      "reset": "Reset",
+      "resetFull": "Full Reset",
+      "resetDataOnly": "Clear Data Only (Keep Schema)",
       "new": "New"
     },
     "table": {
@@ -467,6 +470,12 @@
       "download": "Download",
       "filename": "Filename",
       "defaultFilename": "data",
+      "prefix": "Prefix",
+      "suffix": "Suffix",
+      "clearPrefix": "Clear prefix",
+      "clearSuffix": "Clear suffix",
+      "clearFilename": "Clear filename",
+      "preview": "Output filename",
       "includeHeader": "Include header",
       "quoteStrings": "Quote strings",
       "quoteAlways": "Always quote",
