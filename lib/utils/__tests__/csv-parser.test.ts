@@ -3,6 +3,7 @@ import {
   stringifyCSV,
   detectDelimiter,
   detectEncoding,
+  encodeWithEncoding,
   isNumeric,
   detectColumnType,
   createEmptyCsvData,
@@ -231,6 +232,61 @@ describe("csv-parser", () => {
     it("通常のUTF-8を検出する", () => {
       const buffer = new Uint8Array([0x61, 0x62, 0x63]).buffer;
       expect(detectEncoding(buffer)).toBe("utf-8");
+    });
+  });
+
+  describe("encodeWithEncoding", () => {
+    it("UTF-8でエンコードする", () => {
+      const result = encodeWithEncoding("abc", "utf-8");
+      expect(result).toEqual(new Uint8Array([0x61, 0x62, 0x63]));
+    });
+
+    it("UTF-8でエンコードする（日本語）", () => {
+      const result = encodeWithEncoding("あ", "utf-8");
+      // "あ" in UTF-8: 0xE3 0x81 0x82
+      expect(result).toEqual(new Uint8Array([0xe3, 0x81, 0x82]));
+    });
+
+    it("UTF-8 BOMでエンコードする", () => {
+      const result = encodeWithEncoding("abc", "utf-8-bom");
+      // BOM (0xEF 0xBB 0xBF) + "abc"
+      expect(result).toEqual(new Uint8Array([0xef, 0xbb, 0xbf, 0x61, 0x62, 0x63]));
+    });
+
+    it("Shift_JISでエンコードする", () => {
+      const result = encodeWithEncoding("あ", "shift_jis");
+      // "あ" in Shift_JIS: 0x82 0xA0
+      expect(result).toEqual(new Uint8Array([0x82, 0xa0]));
+    });
+
+    it("Shift_JISでエンコードする（複数文字）", () => {
+      const result = encodeWithEncoding("あいう", "shift_jis");
+      // "あいう" in Shift_JIS: 0x82 0xA0 0x82 0xA2 0x82 0xA4
+      expect(result).toEqual(new Uint8Array([0x82, 0xa0, 0x82, 0xa2, 0x82, 0xa4]));
+    });
+
+    it("EUC-JPでエンコードする", () => {
+      const result = encodeWithEncoding("あ", "euc-jp");
+      // "あ" in EUC-JP: 0xA4 0xA2
+      expect(result).toEqual(new Uint8Array([0xa4, 0xa2]));
+    });
+
+    it("EUC-JPでエンコードする（複数文字）", () => {
+      const result = encodeWithEncoding("あいう", "euc-jp");
+      // "あいう" in EUC-JP: 0xA4 0xA2 0xA4 0xA4 0xA4 0xA6
+      expect(result).toEqual(new Uint8Array([0xa4, 0xa2, 0xa4, 0xa4, 0xa4, 0xa6]));
+    });
+
+    it("ASCII文字をShift_JISでエンコードする", () => {
+      const result = encodeWithEncoding("abc", "shift_jis");
+      // ASCII is same in Shift_JIS
+      expect(result).toEqual(new Uint8Array([0x61, 0x62, 0x63]));
+    });
+
+    it("ASCII文字をEUC-JPでエンコードする", () => {
+      const result = encodeWithEncoding("abc", "euc-jp");
+      // ASCII is same in EUC-JP
+      expect(result).toEqual(new Uint8Array([0x61, 0x62, 0x63]));
     });
   });
 

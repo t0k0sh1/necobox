@@ -181,6 +181,8 @@ export default function CsvEditorPage() {
         } else {
           encoding = inputEncoding;
         }
+        // 入力エンコーディングを出力エンコーディングにも自動設定
+        setOutputEncoding(encoding);
 
         // デコード
         const text = decodeWithEncoding(buffer, encoding);

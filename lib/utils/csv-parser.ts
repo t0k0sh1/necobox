@@ -3,14 +3,16 @@
  * RFC 4180準拠のCSV解析・生成機能を提供
  */
 
+import Encoding from "encoding-japanese";
+
 // 列のデータ型
 export type ColumnType = "auto" | "string" | "number";
 
 // サポートするエンコーディング（入力用：自動検出対応）
 export type EncodingType = "utf-8" | "utf-8-bom" | "shift_jis" | "euc-jp";
 
-// 出力用エンコーディング（ブラウザのTextEncoderがサポートするもののみ）
-export type OutputEncodingType = "utf-8" | "utf-8-bom";
+// 出力用エンコーディング（入力用と同一、Shift_JIS/EUC-JPはencoding-japaneseで対応）
+export type OutputEncodingType = EncodingType;
 
 export const ENCODING_LABELS: Record<EncodingType, string> = {
   "utf-8": "UTF-8",
@@ -22,6 +24,8 @@ export const ENCODING_LABELS: Record<EncodingType, string> = {
 export const OUTPUT_ENCODING_LABELS: Record<OutputEncodingType, string> = {
   "utf-8": "UTF-8",
   "utf-8-bom": "UTF-8 (BOM)",
+  shift_jis: "Shift_JIS",
+  "euc-jp": "EUC-JP",
 };
 
 export interface CsvData {
@@ -215,7 +219,7 @@ export function detectEncoding(buffer: ArrayBuffer): EncodingType {
 
 /**
  * 文字列を指定したエンコーディングでエンコード
- * 注: ブラウザのTextEncoderはUTF-8のみ対応のため、Shift_JIS等は手動変換
+ * UTF-8/UTF-8 BOMはTextEncoder、Shift_JIS/EUC-JPはencoding-japaneseを使用
  */
 export function encodeWithEncoding(
   text: string,
@@ -236,11 +240,27 @@ export function encodeWithEncoding(
     return result;
   }
 
-  // Shift_JIS/EUC-JPの場合は、ブラウザAPIでは直接対応できないため
-  // UTF-8にフォールバック（実用上はライブラリが必要）
-  console.warn(
-    `Encoding ${encoding} is not fully supported, falling back to UTF-8`
-  );
+  if (encoding === "shift_jis") {
+    // encoding-japaneseでShift_JISに変換
+    const unicodeArray = Encoding.stringToCode(text);
+    const sjisArray = Encoding.convert(unicodeArray, {
+      to: "SJIS",
+      from: "UNICODE",
+    });
+    return new Uint8Array(sjisArray);
+  }
+
+  if (encoding === "euc-jp") {
+    // encoding-japaneseでEUC-JPに変換
+    const unicodeArray = Encoding.stringToCode(text);
+    const eucjpArray = Encoding.convert(unicodeArray, {
+      to: "EUCJP",
+      from: "UNICODE",
+    });
+    return new Uint8Array(eucjpArray);
+  }
+
+  // フォールバック: UTF-8
   const encoder = new TextEncoder();
   return encoder.encode(text);
 }
@@ -472,6 +492,23 @@ export const FILE_EXTENSION_LABELS: Record<FileExtension, string> = {
 };
 
 /**
+ * エンコーディングに対応するcharset文字列を取得
+ */
+function getCharset(encoding: EncodingType): string {
+  switch (encoding) {
+    case "utf-8":
+    case "utf-8-bom":
+      return "utf-8";
+    case "shift_jis":
+      return "shift_jis";
+    case "euc-jp":
+      return "euc-jp";
+    default:
+      return "utf-8";
+  }
+}
+
+/**
  * CSVデータをファイルとしてダウンロード
  */
 export function downloadCSV(
@@ -482,13 +519,14 @@ export function downloadCSV(
 ): void {
   const opts = { ...DEFAULT_CSV_OPTIONS, ...options };
   const csvContent = stringifyCSV(data, opts);
+  const charset = getCharset(opts.encoding);
 
-  // MIMEタイプを拡張子に応じて設定
-  let mimeType = "text/csv;charset=utf-8";
+  // MIMEタイプを拡張子とエンコーディングに応じて設定
+  let mimeType = `text/csv;charset=${charset}`;
   if (extension === ".tsv") {
-    mimeType = "text/tab-separated-values;charset=utf-8";
+    mimeType = `text/tab-separated-values;charset=${charset}`;
   } else if (extension === ".txt") {
-    mimeType = "text/plain;charset=utf-8";
+    mimeType = `text/plain;charset=${charset}`;
   }
 
   // エンコード
