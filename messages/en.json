@@ -34,6 +34,7 @@
     "csvEditor": "CSV Editor",
     "sectionGenerators": "Generators",
     "sectionConverters": "Converters",
+    "sectionEditors": "Editors",
     "sectionAnalyzers": "Analyzers & Info"
   },
   "passwordGenerator": {

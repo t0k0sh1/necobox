@@ -3,6 +3,9 @@
  * Provides resize functionality for PNG/JPEG images
  */
 
+// formatFileSizeを共通ユーティリティから再エクスポート
+export { formatFileSize } from "./format";
+
 export interface ImageDimensions {
   width: number;
   height: number;
@@ -173,16 +176,4 @@ export async function processImage(
   });
 }
 
-/**
- * Format file size to a human-readable format
- */
-export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return "0 Bytes";
-
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
-}
 

@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import { getSecureRandomInt, shuffleArray } from "./random";
 
 interface GeneratePasswordOptions {
   uppercase: boolean;
@@ -92,23 +92,6 @@ export function generatePassword(options: GeneratePasswordOptions): string {
   // 全文字セットを結合
   const charset = characterSets.map((set) => set.chars).join("");
 
-  // セキュアな乱数を生成する関数
-  const getSecureRandomInt = (max: number): number => {
-    const randomBytes = crypto.randomBytes(4);
-    const randomValue = randomBytes.readUInt32BE(0) / 0x100000000;
-    return Math.floor(randomValue * max);
-  };
-
-  // Fisher-Yates法でシャッフルする関数
-  const shuffleArray = (array: string[]): string[] => {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = getSecureRandomInt(i + 1);
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  };
-
   // パスワード生成
   const passwordChars: string[] = [];
   const chars = charset.split("");
@@ -175,7 +158,7 @@ export function generatePassword(options: GeneratePasswordOptions): string {
     }
   }
 
-  // Fisher-Yates法でシャッフル
+  // Fisher-Yatesアルゴリズムでシャッフル
   const shuffledPassword = shuffleArray(passwordChars);
 
   return shuffledPassword.join("");

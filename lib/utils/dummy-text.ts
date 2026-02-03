@@ -1,3 +1,5 @@
+import { getSecureRandomInt, shuffleString as shuffleStringSecure } from "./random";
+
 export type TextType =
   | "alphanumeric"
   | "japanese-full"
@@ -40,20 +42,15 @@ export function countLength(str: string, mode: LengthMode): number {
   return str.length;
 }
 
-// Fisher-Yates シャッフル
+// Fisher-Yatesアルゴリズムでシャッフル（セキュアな乱数を使用）
 export function shuffleString(str: string): string {
-  const arr = str.split("");
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr.join("");
+  return shuffleStringSecure(str);
 }
 
-// UUIDv4生成関数
+// UUIDv4生成関数（セキュアな乱数を使用）
 function generateUUIDv4(): string {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
+    const r = getSecureRandomInt(16);
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
@@ -62,27 +59,30 @@ function generateUUIDv4(): string {
 // 文字種に応じた生成
 function generateByType(textType: TextType, len: number): string {
   switch (textType) {
-    case "alphanumeric":
+    case "alphanumeric": {
+      const alphanumericChars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
       return Array.from({ length: len }, () => {
-        const chars =
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        return chars[Math.floor(Math.random() * chars.length)];
+        return alphanumericChars[getSecureRandomInt(alphanumericChars.length)];
       }).join("");
-    case "japanese-full":
+    }
+    case "japanese-full": {
       const hiragana =
         "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん";
       const kanji = "一二三四五六七八九十日月火水木金土山川田海空";
-      const chars = hiragana + kanji;
+      const japaneseChars = hiragana + kanji;
       return Array.from(
         { length: len },
-        () => chars[Math.floor(Math.random() * chars.length)]
+        () => japaneseChars[getSecureRandomInt(japaneseChars.length)]
       ).join("");
-    case "mixed":
+    }
+    case "mixed": {
       const mixedChars = "ABC123abcあいうアイウ漢字";
       return Array.from(
         { length: len },
-        () => mixedChars[Math.floor(Math.random() * mixedChars.length)]
+        () => mixedChars[getSecureRandomInt(mixedChars.length)]
       ).join("");
+    }
     case "lorem":
       // 固定テキストを繰り返して指定文字数まで生成（characterモードの場合のみ）
       let result = "";
@@ -114,21 +114,24 @@ function generateByType(textType: TextType, len: number): string {
         japaneseIndex++;
       }
       return japaneseResult;
-    case "numeric-only":
+    case "numeric-only": {
+      const numericChars = "0123456789";
       return Array.from({ length: len }, () => {
-        const chars = "0123456789";
-        return chars[Math.floor(Math.random() * chars.length)];
+        return numericChars[getSecureRandomInt(numericChars.length)];
       }).join("");
-    case "lowercase-only":
+    }
+    case "lowercase-only": {
+      const lowercaseChars = "abcdefghijklmnopqrstuvwxyz";
       return Array.from({ length: len }, () => {
-        const chars = "abcdefghijklmnopqrstuvwxyz";
-        return chars[Math.floor(Math.random() * chars.length)];
+        return lowercaseChars[getSecureRandomInt(lowercaseChars.length)];
       }).join("");
-    case "uppercase-only":
+    }
+    case "uppercase-only": {
+      const uppercaseChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
       return Array.from({ length: len }, () => {
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        return chars[Math.floor(Math.random() * chars.length)];
+        return uppercaseChars[getSecureRandomInt(uppercaseChars.length)];
       }).join("");
+    }
     case "uuid-v4":
       // UUIDv4は固定長（36文字）のため、長さパラメータを無視
       return generateUUIDv4();
@@ -227,9 +230,9 @@ export function generateDummyTexts(
       ) {
         continue;
       }
-      // 最小値と最大値の間でランダムに選択
+      // 最小値と最大値の間でランダムに選択（セキュアな乱数を使用）
       targetLength =
-        Math.floor(Math.random() * (lengthSpec.max - lengthSpec.min + 1)) +
+        getSecureRandomInt(lengthSpec.max - lengthSpec.min + 1) +
         lengthSpec.min;
     }
 

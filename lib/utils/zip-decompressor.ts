@@ -1,5 +1,7 @@
 import JSZip from "jszip";
 
+import { formatFileSize } from "./format";
+
 export interface ExtractedFile {
   name: string;
   content: string;
@@ -54,7 +56,7 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
   // ZIPファイルサイズのチェック
   if (file.size > MAX_ZIP_SIZE) {
     throw new Error(
-      `ZIP file is too large (${formatSize(file.size)}). Maximum allowed size is ${formatSize(MAX_ZIP_SIZE)}.`
+      `ZIP file is too large (${formatFileSize(file.size)}). Maximum allowed size is ${formatFileSize(MAX_ZIP_SIZE)}.`
     );
   }
 
@@ -121,7 +123,7 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
       // 圧縮前のサイズをチェック（利用可能な場合）
       const uncompressedSize = (entry as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize;
       if (uncompressedSize && uncompressedSize > MAX_FILE_SIZE) {
-        console.warn(`Skipping ${path}: file too large (${formatSize(uncompressedSize)})`);
+        console.warn(`Skipping ${path}: file too large (${formatFileSize(uncompressedSize)})`);
         continue;
       }
 
@@ -142,7 +144,7 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
       // 合計サイズの事前チェック（推定値が利用可能な場合）
       if (uncompressedSize && totalExtractedSize + uncompressedSize > MAX_TOTAL_EXTRACTED_SIZE) {
         console.warn(
-          `Stopping extraction: total size limit would be exceeded (${formatSize(totalExtractedSize + uncompressedSize)})`
+          `Stopping extraction: total size limit would be exceeded (${formatFileSize(totalExtractedSize + uncompressedSize)})`
         );
         break;
       }
@@ -153,7 +155,7 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
         // 展開後のサイズチェック
         const contentSize = new Blob([content]).size;
         if (contentSize > MAX_FILE_SIZE) {
-          console.warn(`Skipping ${path}: extracted content too large (${formatSize(contentSize)})`);
+          console.warn(`Skipping ${path}: extracted content too large (${formatFileSize(contentSize)})`);
           continue;
         }
 
@@ -177,7 +179,7 @@ export async function decompressZip(file: File): Promise<ExtractedFile[]> {
         // 合計サイズチェック
         if (totalExtractedSize + contentSize > MAX_TOTAL_EXTRACTED_SIZE) {
           console.warn(
-            `Stopping extraction: total size limit exceeded (${formatSize(totalExtractedSize + contentSize)})`
+            `Stopping extraction: total size limit exceeded (${formatFileSize(totalExtractedSize + contentSize)})`
           );
           break;
         }
@@ -217,11 +219,3 @@ export function isZipFile(file: File): boolean {
   return file.name.toLowerCase().endsWith(".zip");
 }
 
-/**
- * バイト数を人間が読みやすい形式にフォーマット
- */
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}

@@ -2,6 +2,8 @@
  * ランダム整数ジェネレータのユーティリティ関数
  */
 
+import { createSeededRandom } from "./random";
+
 export interface GeneratorOptions {
   min: number
   max: number
@@ -46,7 +48,7 @@ export function generateUniform(
   seed: number
 ): number[] {
   const results: number[] = []
-  const rng = seededRandom(seed)
+  const rng = createSeededRandom(seed)
   const range = max - min + 1
 
   for (let i = 0; i < count; i++) {
@@ -73,7 +75,7 @@ export function generateNormal(
   seed: number
 ): number[] {
   const results: number[] = []
-  const rng = seededRandom(seed)
+  const rng = createSeededRandom(seed)
   const mean = (min + max) / 2
   const stdDev = (max - min) / 6
 
@@ -106,22 +108,5 @@ function boxMullerTransform(
   return mean + z0 * stdDev
 }
 
-/**
- * シード値を使用した再現可能な乱数生成器を返す
- * Xorshift アルゴリズムを使用
- * @param seed - シード値
- * @returns 乱数生成関数
- */
-export function seededRandom(seed: number): () => number {
-  let state = (seed >>> 0) || 1 // 32ビット符号なし整数に変換、0 の場合は 1 に
-
-  return () => {
-    // Xorshift32 アルゴリズム
-    state ^= state << 13
-    state ^= state >>> 17
-    state ^= state << 5
-
-    // 0 から 1 の間の値を返す（より均等な分布）
-    return (state >>> 0) / 0x100000000
-  }
-}
+// seededRandomはcreateSeededRandomとして共通ユーティリティから再エクスポート
+export { createSeededRandom as seededRandom } from "./random";
