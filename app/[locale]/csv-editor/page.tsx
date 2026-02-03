@@ -37,6 +37,7 @@ import {
   FILE_EXTENSION_LABELS,
   normalizeSelection,
   OUTPUT_ENCODING_LABELS,
+  parseClipboardText,
   parseCSV,
   redetectColumnTypes,
   removeColumn,
@@ -429,21 +430,14 @@ export default function CsvEditorPage() {
   const handlePasteCell = useCallback(() => {
     if (!selection || !csvData || !internalClipboard) return;
     const norm = normalizeSelection(selection);
-    const lines = internalClipboard.split("\n");
-    const updates: Array<{ row: number; col: number; value: string }> = [];
 
-    for (let i = 0; i < lines.length; i++) {
-      const row = norm.start.row + i;
-      // ヘッダー行（row === -1）は許可、データ行は範囲内のみ
-      if (row !== -1 && row >= csvData.rows.length) break;
-
-      const cells = lines[i].split("\t");
-      for (let j = 0; j < cells.length; j++) {
-        const col = norm.start.col + j;
-        if (col >= csvData.headers.length) break;
-        updates.push({ row, col, value: cells[j] });
-      }
-    }
+    const updates = parseClipboardText(
+      internalClipboard,
+      norm.start.row,
+      norm.start.col,
+      csvData.rows.length,
+      csvData.headers.length
+    );
 
     if (updates.length > 0) {
       setCsvData(updateCells(csvData, updates));
@@ -552,25 +546,18 @@ export default function CsvEditorPage() {
       e.preventDefault();
       const text = e.clipboardData?.getData("text/plain");
       if (text) {
-        // 内部クリップボードを更新してからペースト処理を実行
+        // 内部クリップボードを更新
         setInternalClipboard(text);
 
-        // ペースト処理（複数セル対応）
+        // ペースト処理（共有ヘルパーを使用）
         const norm = normalizeSelection(selection);
-        const lines = text.split("\n");
-        const updates: Array<{ row: number; col: number; value: string }> = [];
-
-        for (let i = 0; i < lines.length; i++) {
-          const row = norm.start.row + i;
-          if (row !== -1 && row >= csvData.rows.length) break;
-
-          const cells = lines[i].split("\t");
-          for (let j = 0; j < cells.length; j++) {
-            const col = norm.start.col + j;
-            if (col >= csvData.headers.length) break;
-            updates.push({ row, col, value: cells[j] });
-          }
-        }
+        const updates = parseClipboardText(
+          text,
+          norm.start.row,
+          norm.start.col,
+          csvData.rows.length,
+          csvData.headers.length
+        );
 
         if (updates.length > 0) {
           setCsvData(updateCells(csvData, updates));

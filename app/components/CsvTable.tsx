@@ -8,13 +8,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  isCellInSelection,
+  normalizeSelection,
   type CellPosition,
   type ColumnType,
   type CsvData,
   type SelectionRange,
 } from "@/lib/utils/csv-parser";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 
 interface CsvTableProps {
   data: CsvData;
@@ -64,9 +64,17 @@ export function CsvTable({
   // ドラッグ選択の状態
   const isDraggingRef = useRef(false);
   const justFinishedDraggingRef = useRef(false);
+  // 冗長な onExtendSelection 呼び出しを防ぐため、最後のセル位置を記録
+  const lastCellRef = useRef<{ row: number; col: number } | null>(null);
 
-  // 後方互換性のためのヘルパー
-  const selectedCell = selection ? selection.start : null;
+  // フォーカス用：選択範囲の終端（カーソル位置）
+  const selectedCell = selection ? selection.end : null;
+
+  // 正規化された選択範囲をキャッシュ（isCellInSelection のパフォーマンス改善）
+  const normalizedSelection = useMemo(
+    () => (selection ? normalizeSelection(selection) : null),
+    [selection]
+  );
 
   // 編集中のセルにフォーカス
   useEffect(() => {
@@ -127,6 +135,7 @@ export function CsvTable({
       e.preventDefault(); // テキスト選択を防止
       isDraggingRef.current = true;
       justFinishedDraggingRef.current = false;
+      lastCellRef.current = { row, col }; // ドラッグ開始位置を記録
       onSelectCell(row, col);
     },
     [onSelectCell]
@@ -158,6 +167,15 @@ export function CsvTable({
       const col = parseInt(cell.dataset.col || "", 10);
 
       if (!isNaN(row) && !isNaN(col)) {
+        // 前回と同じセルなら何もしない（冗長な呼び出しを防止）
+        if (
+          lastCellRef.current &&
+          lastCellRef.current.row === row &&
+          lastCellRef.current.col === col
+        ) {
+          return;
+        }
+        lastCellRef.current = { row, col };
         onExtendSelection(row, col);
       }
     },
@@ -172,6 +190,7 @@ export function CsvTable({
         justFinishedDraggingRef.current = true;
       }
       isDraggingRef.current = false;
+      lastCellRef.current = null; // ドラッグ終了時にリセット
     };
 
     document.addEventListener("mouseup", handleMouseUp);
@@ -241,12 +260,18 @@ export function CsvTable({
     [data.headers, data.rows]
   );
 
-  // セルが選択範囲内かどうか
+  // セルが選択範囲内かどうか（正規化済みの選択範囲を使用）
   const isCellSelected = useCallback(
     (row: number, col: number): boolean => {
-      return isCellInSelection(row, col, selection);
+      if (!normalizedSelection) return false;
+      return (
+        row >= normalizedSelection.start.row &&
+        row <= normalizedSelection.end.row &&
+        col >= normalizedSelection.start.col &&
+        col <= normalizedSelection.end.col
+      );
     },
-    [selection]
+    [normalizedSelection]
   );
 
   // アクティブセル（選択範囲の開始点/アンカー）かどうか
@@ -301,6 +326,7 @@ export function CsvTable({
       className="overflow-x-auto overflow-y-auto border rounded-lg max-h-[600px]"
       role="grid"
       aria-label="CSV data table"
+      aria-multiselectable="true"
       onMouseMove={handleTableMouseMove}
     >
       <table className="border-collapse" style={{ minWidth: "100%" }}>
