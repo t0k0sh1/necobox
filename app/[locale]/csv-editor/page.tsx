@@ -7,6 +7,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -46,6 +52,7 @@ import {
   type QuoteStyle,
 } from "@/lib/utils/csv-parser";
 import {
+  ChevronDown,
   Download,
   FileSpreadsheet,
   HelpCircle,
@@ -55,6 +62,7 @@ import {
   RefreshCw,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -85,6 +93,8 @@ export default function CsvEditorPage() {
 
   // エクスポート用のオプション
   const [exportFilename, setExportFilename] = useState<string>("data");
+  const [filenamePrefix, setFilenamePrefix] = useState<string>("");
+  const [filenameSuffix, setFilenameSuffix] = useState<string>("");
   const [exportWithHeader, setExportWithHeader] = useState<boolean>(true);
   const [quoteStyle, setQuoteStyle] = useState<QuoteStyle>("as-needed");
   const [fileExtension, setFileExtension] = useState<FileExtension>(".csv");
@@ -233,7 +243,7 @@ export default function CsvEditorPage() {
 
   // 新規作成
   const handleNew = useCallback(() => {
-    const newData = createEmptyCsvData(3, 5, hasHeader, t("table.defaultColumnName"));
+    const newData = createEmptyCsvData(3, 1, hasHeader, t("table.defaultColumnName"));
     setCsvData(newData);
     setSelectedCell(null);
     setEditingCell(null);
@@ -249,6 +259,19 @@ export default function CsvEditorPage() {
     setError(null);
     setExportFilename("data");
   }, []);
+
+  // データのみクリア（スキーマ維持）
+  const handleClearDataOnly = useCallback(() => {
+    if (!csvData) return;
+    // ヘッダーと列の型を維持して、行データだけをクリア
+    setCsvData({
+      ...csvData,
+      rows: [],
+    });
+    setSelectedCell(null);
+    setEditingCell(null);
+    setError(null);
+  }, [csvData]);
 
   // セル編集開始
   const handleStartEdit = useCallback((row: number, col: number) => {
@@ -572,8 +595,10 @@ export default function CsvEditorPage() {
       quoteStyle,
     };
 
-    downloadCSV(csvData, exportFilename, options, fileExtension);
-  }, [csvData, exportFilename, getDelimiter, outputEncoding, exportWithHeader, quoteStyle, fileExtension]);
+    // プレフィックス・サフィックスを含めた最終ファイル名を生成
+    const finalFilename = `${filenamePrefix}${exportFilename}${filenameSuffix}`;
+    downloadCSV(csvData, finalFilename, options, fileExtension);
+  }, [csvData, exportFilename, filenamePrefix, filenameSuffix, getDelimiter, outputEncoding, exportWithHeader, quoteStyle, fileExtension]);
 
   // オプション変更時にデータを再パース
   const handleDelimiterChange = useCallback((value: DelimiterType) => {
@@ -850,6 +875,14 @@ export default function CsvEditorPage() {
                       </div>
                     </TooltipContent>
                   </Tooltip>
+
+                  <div className="flex-1" />
+
+                  {/* クリア（アップロード画面に戻る） */}
+                  <Button variant="outline" size="sm" onClick={handleClear}>
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    {t("toolbar.clear")}
+                  </Button>
                 </div>
 
                 {/* 検出されたエンコーディングの表示 */}
@@ -915,11 +948,26 @@ export default function CsvEditorPage() {
 
                 <div className="flex-1" />
 
-                {/* クリア */}
-                <Button variant="outline" size="sm" onClick={handleClear}>
-                  <Trash2 className="w-4 h-4 mr-1" />
-                  {t("toolbar.clear")}
-                </Button>
+                {/* リセット（ドロップダウン） */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      {t("toolbar.reset")}
+                      <ChevronDown className="w-3 h-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleNew}>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      {t("toolbar.resetFull")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleClearDataOnly}>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      {t("toolbar.resetDataOnly")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
                 {/* ファイル追加 */}
                 <Button
@@ -1034,22 +1082,75 @@ export default function CsvEditorPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4">
-                  {/* ファイル名 */}
-                  <div className="flex items-center gap-2">
+                  {/* ファイル名（プレフィックス + ファイル名 + サフィックス） */}
+                  <div className="flex items-center gap-1">
                     <Label className="text-sm whitespace-nowrap">
                       {t("export.filename")}:
                     </Label>
-                    <Input
-                      type="text"
-                      value={exportFilename}
-                      onChange={(e) => setExportFilename(e.target.value)}
-                      className="w-48"
-                      placeholder={t("export.defaultFilename")}
-                    />
+                    {/* プレフィックス */}
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        value={filenamePrefix}
+                        onChange={(e) => setFilenamePrefix(e.target.value)}
+                        className="w-32 pr-7"
+                        placeholder={t("export.prefix")}
+                      />
+                      {filenamePrefix && (
+                        <button
+                          type="button"
+                          onClick={() => setFilenamePrefix("")}
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                          aria-label={t("export.clearPrefix")}
+                        >
+                          <X className="w-3.5 h-3.5 text-gray-500" />
+                        </button>
+                      )}
+                    </div>
+                    {/* ファイル名本体 */}
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        value={exportFilename}
+                        onChange={(e) => setExportFilename(e.target.value)}
+                        className="w-40 pr-7"
+                        placeholder={t("export.defaultFilename")}
+                      />
+                      {exportFilename && (
+                        <button
+                          type="button"
+                          onClick={() => setExportFilename("")}
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                          aria-label={t("export.clearFilename")}
+                        >
+                          <X className="w-3.5 h-3.5 text-gray-500" />
+                        </button>
+                      )}
+                    </div>
+                    {/* サフィックス */}
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        value={filenameSuffix}
+                        onChange={(e) => setFilenameSuffix(e.target.value)}
+                        className="w-32 pr-7"
+                        placeholder={t("export.suffix")}
+                      />
+                      {filenameSuffix && (
+                        <button
+                          type="button"
+                          onClick={() => setFilenameSuffix("")}
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+                          aria-label={t("export.clearSuffix")}
+                        >
+                          <X className="w-3.5 h-3.5 text-gray-500" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* 拡張子 */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Label className="text-sm whitespace-nowrap">
                       {t("export.extension")}:
                     </Label>
@@ -1080,6 +1181,11 @@ export default function CsvEditorPage() {
                     <Download className="w-4 h-4 mr-2" />
                     {t("export.download")}
                   </Button>
+                </div>
+
+                {/* ファイル名プレビュー */}
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  {t("export.preview")}: <span className="font-mono">{filenamePrefix}{exportFilename || t("export.defaultFilename")}{filenameSuffix}{fileExtension}</span>
                 </div>
               </div>
             )}
