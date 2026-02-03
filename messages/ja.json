@@ -487,6 +487,7 @@
       "arrows": "↑↓←→: セル移動",
       "shiftArrows": "Shift+↑↓←→: 選択範囲を拡張",
       "enter": "Enter: 編集開始/確定",
+      "newline": "Alt+Enter: セル内改行",
       "tab": "Tab: 次のセルへ",
       "shiftTab": "Shift+Tab: 前のセルへ",
       "escape": "Escape: 編集キャンセル",

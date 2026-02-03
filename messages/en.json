@@ -487,6 +487,7 @@
       "arrows": "↑↓←→: Move cell",
       "shiftArrows": "Shift+↑↓←→: Extend selection",
       "enter": "Enter: Start/confirm edit",
+      "newline": "Alt+Enter: Insert newline in cell",
       "tab": "Tab: Next cell",
       "shiftTab": "Shift+Tab: Previous cell",
       "escape": "Escape: Cancel edit",
