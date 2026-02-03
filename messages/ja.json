@@ -34,6 +34,7 @@
     "csvEditor": "CSVエディタ",
     "sectionGenerators": "生成ツール",
     "sectionConverters": "変換ツール",
+    "sectionEditors": "エディタツール",
     "sectionAnalyzers": "解析・情報ツール"
   },
   "passwordGenerator": {
