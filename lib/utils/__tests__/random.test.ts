@@ -28,6 +28,30 @@ describe("getSecureRandomInt", () => {
       expect(result).toBeLessThan(100);
     }
   });
+
+  it("max=0の場合はRangeErrorを投げる", () => {
+    expect(() => getSecureRandomInt(0)).toThrow(RangeError);
+    expect(() => getSecureRandomInt(0)).toThrow("max must be a positive integer");
+  });
+
+  it("負の値の場合はRangeErrorを投げる", () => {
+    expect(() => getSecureRandomInt(-1)).toThrow(RangeError);
+    expect(() => getSecureRandomInt(-10)).toThrow(RangeError);
+  });
+
+  it("非整数の場合はRangeErrorを投げる", () => {
+    expect(() => getSecureRandomInt(1.5)).toThrow(RangeError);
+    expect(() => getSecureRandomInt(10.1)).toThrow(RangeError);
+  });
+
+  it("NaNの場合はRangeErrorを投げる", () => {
+    expect(() => getSecureRandomInt(NaN)).toThrow(RangeError);
+  });
+
+  it("Infinityの場合はRangeErrorを投げる", () => {
+    expect(() => getSecureRandomInt(Infinity)).toThrow(RangeError);
+    expect(() => getSecureRandomInt(-Infinity)).toThrow(RangeError);
+  });
 });
 
 describe("createSeededRandom", () => {

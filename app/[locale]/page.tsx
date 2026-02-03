@@ -6,6 +6,7 @@ import {
   CATEGORY_ORDER,
   getToolsByCategory,
   TOOL_CATEGORIES,
+  type IconName,
   type ToolCategory,
   type ToolDefinition,
 } from "@/lib/tools";
@@ -28,7 +29,7 @@ import {
 import { useTranslations } from "next-intl";
 
 // アイコン名からコンポーネントへのマッピング
-const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   Activity,
   ArrowRightLeft,
   Clock,
@@ -45,16 +46,16 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Type,
 };
 
-// カテゴリアイコンのマッピング
+// カテゴリアイコンのマッピング（TOOL_CATEGORIES.iconを単一ソースとして利用）
 const CATEGORY_ICONS: Record<
   ToolCategory,
   React.ComponentType<{ className?: string }>
-> = {
-  generators: Sparkles,
-  converters: ArrowRightLeft,
-  editors: Edit,
-  analyzers: Search,
-};
+> = Object.fromEntries(
+  Object.entries(TOOL_CATEGORIES).map(([category, { icon }]) => [
+    category,
+    ICONS[icon],
+  ])
+) as Record<ToolCategory, React.ComponentType<{ className?: string }>>;
 
 interface ToolCardProps {
   tool: ToolDefinition;
@@ -71,7 +72,9 @@ function ToolCard({ tool, t }: ToolCardProps) {
         className="w-full h-32 flex flex-col items-center justify-center gap-3 hover:bg-gray-100 dark:hover:bg-gray-900"
       >
         {Icon && <Icon className="size-10" />}
-        <span className="text-sm">{t(tool.i18nKey as Parameters<typeof t>[0])}</span>
+        <span className="text-sm">
+          {t(tool.i18nKey as Parameters<typeof t>[0])}
+        </span>
       </Button>
     </Link>
   );

@@ -3,10 +3,27 @@
  * ホームページやナビゲーションで使用するツール情報を一元管理
  */
 
+// 使用可能なアイコン名（lucide-reactのアイコン名と一致）
+export type IconName =
+  | "Activity"
+  | "ArrowRightLeft"
+  | "Clock"
+  | "Dices"
+  | "Edit"
+  | "FileSpreadsheet"
+  | "FileText"
+  | "Globe"
+  | "Image"
+  | "Key"
+  | "Lock"
+  | "Search"
+  | "Sparkles"
+  | "Type";
+
 export interface ToolDefinition {
   id: string;
   path: string;
-  icon: string;
+  icon: IconName;
   category: ToolCategory;
   i18nKey: string;
 }
@@ -15,7 +32,7 @@ export type ToolCategory = "generators" | "converters" | "editors" | "analyzers"
 
 export const TOOL_CATEGORIES: Record<
   ToolCategory,
-  { icon: string; i18nKey: string }
+  { icon: IconName; i18nKey: string }
 > = {
   generators: { icon: "Sparkles", i18nKey: "sectionGenerators" },
   converters: { icon: "ArrowRightLeft", i18nKey: "sectionConverters" },
