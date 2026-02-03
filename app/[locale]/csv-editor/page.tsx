@@ -39,6 +39,7 @@ import {
   OUTPUT_ENCODING_LABELS,
   parseClipboardText,
   parseCSV,
+  quoteFieldForClipboard,
   redetectColumnTypes,
   removeColumn,
   removeRow,
@@ -398,7 +399,8 @@ export default function CsvEditorPage() {
     for (let row = norm.start.row; row <= norm.end.row; row++) {
       const cells: string[] = [];
       for (let col = norm.start.col; col <= norm.end.col; col++) {
-        cells.push(getCellValue(row, col));
+        // 改行やタブを含むセルはダブルクォートで囲む
+        cells.push(quoteFieldForClipboard(getCellValue(row, col)));
       }
       lines.push(cells.join("\t"));
     }
@@ -416,7 +418,8 @@ export default function CsvEditorPage() {
     for (let row = norm.start.row; row <= norm.end.row; row++) {
       const cells: string[] = [];
       for (let col = norm.start.col; col <= norm.end.col; col++) {
-        cells.push(getCellValue(row, col));
+        // 改行やタブを含むセルはダブルクォートで囲む
+        cells.push(quoteFieldForClipboard(getCellValue(row, col)));
         updates.push({ row, col, value: "" });
       }
       lines.push(cells.join("\t"));
@@ -1052,6 +1055,7 @@ export default function CsvEditorPage() {
                         <p>{t("keyboard.arrows")}</p>
                         <p>{t("keyboard.shiftArrows")}</p>
                         <p>{t("keyboard.enter")}</p>
+                        <p>{t("keyboard.newline")}</p>
                         <p>{t("keyboard.tab")}</p>
                         <p>{t("keyboard.shiftTab")}</p>
                         <p>{t("keyboard.escape")}</p>

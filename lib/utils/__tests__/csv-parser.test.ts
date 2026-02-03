@@ -15,6 +15,8 @@ import {
   updateCells,
   normalizeSelection,
   isCellInSelection,
+  quoteFieldForClipboard,
+  parseClipboardText,
   type CsvData,
   type SelectionRange,
 } from "../csv-parser";
@@ -561,6 +563,111 @@ describe("csv-parser", () => {
 
       expect(result.headers[0]).toBe("Header A");
       expect(result.rows[0][1]).toBe("Data B");
+    });
+  });
+
+  describe("quoteFieldForClipboard", () => {
+    it("通常の文字列はそのまま返す", () => {
+      expect(quoteFieldForClipboard("hello")).toBe("hello");
+      expect(quoteFieldForClipboard("123")).toBe("123");
+      expect(quoteFieldForClipboard("")).toBe("");
+    });
+
+    it("タブを含む文字列をダブルクォートで囲む", () => {
+      expect(quoteFieldForClipboard("a\tb")).toBe('"a\tb"');
+    });
+
+    it("改行を含む文字列をダブルクォートで囲む", () => {
+      expect(quoteFieldForClipboard("a\nb")).toBe('"a\nb"');
+      expect(quoteFieldForClipboard("line1\nline2\nline3")).toBe('"line1\nline2\nline3"');
+    });
+
+    it("ダブルクォートを含む文字列をエスケープして囲む", () => {
+      expect(quoteFieldForClipboard('a"b')).toBe('"a""b"');
+      expect(quoteFieldForClipboard('"quoted"')).toBe('"""quoted"""');
+    });
+
+    it("複合ケース: タブ、改行、ダブルクォートを含む", () => {
+      expect(quoteFieldForClipboard('a\t"b"\nc')).toBe('"a\t""b""\nc"');
+    });
+  });
+
+  describe("parseClipboardText", () => {
+    it("シンプルなTSVをパースする", () => {
+      const text = "a\tb\nc\td";
+      const result = parseClipboardText(text, 0, 0, 10, 10);
+      expect(result).toEqual([
+        { row: 0, col: 0, value: "a" },
+        { row: 0, col: 1, value: "b" },
+        { row: 1, col: 0, value: "c" },
+        { row: 1, col: 1, value: "d" },
+      ]);
+    });
+
+    it("ダブルクォートで囲まれた改行を含むフィールドをパースする", () => {
+      const text = '"line1\nline2"\tother';
+      const result = parseClipboardText(text, 0, 0, 10, 10);
+      expect(result).toEqual([
+        { row: 0, col: 0, value: "line1\nline2" },
+        { row: 0, col: 1, value: "other" },
+      ]);
+    });
+
+    it("エスケープされたダブルクォートをパースする", () => {
+      const text = '"a""b"';
+      const result = parseClipboardText(text, 0, 0, 10, 10);
+      expect(result).toEqual([
+        { row: 0, col: 0, value: 'a"b' },
+      ]);
+    });
+
+    it("クォートされていないフィールド内のダブルクォートをリテラルとして扱う", () => {
+      const text = 'a"b\tc';
+      const result = parseClipboardText(text, 0, 0, 10, 10);
+      expect(result).toEqual([
+        { row: 0, col: 0, value: 'a"b' },
+        { row: 0, col: 1, value: "c" },
+      ]);
+    });
+
+    it("開始位置を指定してパースする", () => {
+      const text = "a\tb";
+      const result = parseClipboardText(text, 2, 1, 10, 10);
+      expect(result).toEqual([
+        { row: 2, col: 1, value: "a" },
+        { row: 2, col: 2, value: "b" },
+      ]);
+    });
+
+    it("最大行数・列数を超えるデータは無視する", () => {
+      const text = "a\tb\tc\nd\te\tf";
+      const result = parseClipboardText(text, 0, 0, 1, 2);
+      expect(result).toEqual([
+        { row: 0, col: 0, value: "a" },
+        { row: 0, col: 1, value: "b" },
+      ]);
+    });
+
+    it("ラウンドトリップ: quoteFieldForClipboard でクォートした値を正しくパースする", () => {
+      const originalValues = [
+        ["simple", "with\ttab"],
+        ["with\nnewline", 'with"quote'],
+      ];
+
+      // クォートしてTSVを作成
+      const tsvLines = originalValues.map(row =>
+        row.map(quoteFieldForClipboard).join("\t")
+      );
+      const tsv = tsvLines.join("\n");
+
+      // パースして元の値が復元されることを確認
+      const result = parseClipboardText(tsv, 0, 0, 10, 10);
+      expect(result).toEqual([
+        { row: 0, col: 0, value: "simple" },
+        { row: 0, col: 1, value: "with\ttab" },
+        { row: 1, col: 0, value: "with\nnewline" },
+        { row: 1, col: 1, value: 'with"quote' },
+      ]);
     });
   });
 });

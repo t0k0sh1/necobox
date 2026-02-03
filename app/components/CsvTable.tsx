@@ -55,10 +55,10 @@ export function CsvTable({
   onColumnTypeChange,
   translations,
 }: CsvTableProps) {
-  // inputRefはヘッダーセルとデータセルの両方で共有される。
+  // textareaRefはヘッダーセルとデータセルの両方で共有される。
   // 同時に編集できるセルは1つだけなので、Reactは常に編集中のセルの
-  // inputへの参照を保持する。
-  const inputRef = useRef<HTMLInputElement>(null);
+  // textareaへの参照を保持する。
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
 
   // ドラッグ選択の状態
@@ -78,9 +78,9 @@ export function CsvTable({
 
   // 編集中のセルにフォーカス
   useEffect(() => {
-    if (editingCell && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+    if (editingCell && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.select();
     }
   }, [editingCell]);
 
@@ -207,12 +207,27 @@ export function CsvTable({
         if (e.key === "Escape") {
           e.preventDefault();
           onEndEdit();
-        } else if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          onEndEdit();
-          // 次の行に移動
-          if (row < data.rows.length - 1) {
-            onSelectCell(row + 1, col);
+        } else if (e.key === "Enter") {
+          if (e.altKey) {
+            // Alt+Enter (Windows) / Option+Enter (Mac): セル内改行
+            e.preventDefault();
+            const textarea = e.target as HTMLTextAreaElement;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const value = textarea.value;
+            const newValue = value.substring(0, start) + '\n' + value.substring(end);
+            onCellChange(row, col, newValue);
+            // カーソル位置を改行の後に設定
+            requestAnimationFrame(() => {
+              textarea.selectionStart = textarea.selectionEnd = start + 1;
+            });
+          } else if (!e.shiftKey) {
+            e.preventDefault();
+            onEndEdit();
+            // 次の行に移動
+            if (row < data.rows.length - 1) {
+              onSelectCell(row + 1, col);
+            }
           }
         } else if (e.key === "Tab") {
           e.preventDefault();
@@ -238,12 +253,12 @@ export function CsvTable({
         onKeyNavigation(e, row, col);
       }
     },
-    [editingCell, data.rows.length, data.headers.length, onEndEdit, onSelectCell, onKeyNavigation]
+    [editingCell, data.rows.length, data.headers.length, onEndEdit, onSelectCell, onKeyNavigation, onCellChange]
   );
 
   // 入力値の変更処理
   const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>, row: number, col: number) => {
+    (e: React.ChangeEvent<HTMLTextAreaElement>, row: number, col: number) => {
       onCellChange(row, col, e.target.value);
     },
     [onCellChange]
@@ -258,6 +273,15 @@ export function CsvTable({
       return data.rows[row]?.[col] || "";
     },
     [data.headers, data.rows]
+  );
+
+  // 改行数に基づいてtextareaの行数を計算
+  const getTextareaRows = useCallback(
+    (value: string): number => {
+      const lineCount = (value.match(/\n/g) || []).length + 1;
+      return Math.max(1, lineCount);
+    },
+    []
   );
 
   // セルが選択範囲内かどうか（正規化済みの選択範囲を使用）
@@ -374,20 +398,28 @@ export function CsvTable({
                   aria-label={`${translations.column} ${col + 1}: ${header}`}
                   aria-selected={isSelected}
                 >
-                  <div className="relative h-6">
+                  <div className={`relative ${isCellEditing(-1, col) ? 'min-h-6' : header.includes('\n') ? 'min-h-6' : 'h-6'}`}>
                     {isCellEditing(-1, col) ? (
-                      <input
-                        ref={inputRef}
-                        type="text"
+                      <textarea
+                        ref={textareaRef}
                         value={getCellValue(-1, col)}
                         onChange={(e) => handleInputChange(e, -1, col)}
                         onKeyDown={(e) => handleCellKeyDown(e, -1, col)}
                         onBlur={onEndEdit}
-                        className="absolute inset-0 w-full h-full px-1 py-0 text-sm font-semibold bg-white dark:bg-gray-900 border border-blue-500 rounded outline-none"
+                        rows={getTextareaRows(getCellValue(-1, col))}
+                        className="w-full px-1 py-0 text-sm font-semibold bg-white dark:bg-gray-900 border border-blue-500 rounded outline-none resize-none leading-6"
                         aria-label={translations.editCell}
                       />
                     ) : (
-                      <span className="block truncate leading-6">{header || "\u00A0"}</span>
+                      <span
+                        className={`block leading-6 ${
+                          header.includes('\n')
+                            ? 'whitespace-pre-wrap line-clamp-2'
+                            : 'truncate'
+                        }`}
+                      >
+                        {header || "\u00A0"}
+                      </span>
                     )}
                   </div>
                 </th>
@@ -477,25 +509,27 @@ export function CsvTable({
                     aria-label={`${translations.row} ${rowIndex + 1}, ${translations.column} ${col + 1}: ${cell}`}
                     aria-selected={isSelected}
                   >
-                    <div className="relative h-6">
+                    <div className={`relative ${isCellEditing(rowIndex, col) ? 'min-h-6' : cell.includes('\n') ? 'min-h-6' : 'h-6'}`}>
                       {isCellEditing(rowIndex, col) ? (
-                        <input
-                          ref={inputRef}
-                          type="text"
+                        <textarea
+                          ref={textareaRef}
                           value={getCellValue(rowIndex, col)}
                           onChange={(e) => handleInputChange(e, rowIndex, col)}
                           onKeyDown={(e) => handleCellKeyDown(e, rowIndex, col)}
                           onBlur={onEndEdit}
-                          className={`absolute inset-0 w-full h-full px-1 py-0 text-sm bg-white dark:bg-gray-900 border border-blue-500 rounded outline-none ${
+                          rows={getTextareaRows(getCellValue(rowIndex, col))}
+                          className={`w-full px-1 py-0 text-sm bg-white dark:bg-gray-900 border border-blue-500 rounded outline-none resize-none leading-6 ${
                             isNumberColumn ? "text-right" : ""
                           }`}
                           aria-label={translations.editCell}
                         />
                       ) : (
                         <span
-                          className={`block truncate leading-6 ${
-                            isNumberColumn ? "text-right" : ""
-                          }`}
+                          className={`block leading-6 ${
+                            cell.includes('\n')
+                              ? 'whitespace-pre-wrap line-clamp-2'
+                              : 'truncate'
+                          } ${isNumberColumn ? "text-right" : ""}`}
                         >
                           {cell || "\u00A0"}
                         </span>
