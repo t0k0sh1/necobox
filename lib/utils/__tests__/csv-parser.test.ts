@@ -12,7 +12,11 @@ import {
   removeRow,
   removeColumn,
   updateCell,
+  updateCells,
+  normalizeSelection,
+  isCellInSelection,
   type CsvData,
+  type SelectionRange,
 } from "../csv-parser";
 
 describe("csv-parser", () => {
@@ -424,6 +428,139 @@ describe("csv-parser", () => {
       const result = updateCell(data, 0, 5, "updated");
 
       expect(result).toBe(data);
+    });
+  });
+
+  describe("normalizeSelection", () => {
+    it("startが左上、endが右下になるように正規化する", () => {
+      const selection: SelectionRange = {
+        start: { row: 2, col: 3 },
+        end: { row: 0, col: 1 },
+      };
+      const result = normalizeSelection(selection);
+
+      expect(result.start).toEqual({ row: 0, col: 1 });
+      expect(result.end).toEqual({ row: 2, col: 3 });
+    });
+
+    it("すでに正規化されている場合はそのまま返す", () => {
+      const selection: SelectionRange = {
+        start: { row: 0, col: 0 },
+        end: { row: 2, col: 2 },
+      };
+      const result = normalizeSelection(selection);
+
+      expect(result.start).toEqual({ row: 0, col: 0 });
+      expect(result.end).toEqual({ row: 2, col: 2 });
+    });
+
+    it("単一セル選択を正しく処理する", () => {
+      const selection: SelectionRange = {
+        start: { row: 1, col: 1 },
+        end: { row: 1, col: 1 },
+      };
+      const result = normalizeSelection(selection);
+
+      expect(result.start).toEqual({ row: 1, col: 1 });
+      expect(result.end).toEqual({ row: 1, col: 1 });
+    });
+  });
+
+  describe("isCellInSelection", () => {
+    it("選択範囲内のセルに対してtrueを返す", () => {
+      const selection: SelectionRange = {
+        start: { row: 0, col: 0 },
+        end: { row: 2, col: 2 },
+      };
+
+      expect(isCellInSelection(0, 0, selection)).toBe(true);
+      expect(isCellInSelection(1, 1, selection)).toBe(true);
+      expect(isCellInSelection(2, 2, selection)).toBe(true);
+      expect(isCellInSelection(0, 2, selection)).toBe(true);
+      expect(isCellInSelection(2, 0, selection)).toBe(true);
+    });
+
+    it("選択範囲外のセルに対してfalseを返す", () => {
+      const selection: SelectionRange = {
+        start: { row: 0, col: 0 },
+        end: { row: 2, col: 2 },
+      };
+
+      expect(isCellInSelection(3, 0, selection)).toBe(false);
+      expect(isCellInSelection(0, 3, selection)).toBe(false);
+      expect(isCellInSelection(-1, 0, selection)).toBe(false);
+    });
+
+    it("正規化されていない選択範囲でも正しく判定する", () => {
+      const selection: SelectionRange = {
+        start: { row: 2, col: 2 },
+        end: { row: 0, col: 0 },
+      };
+
+      expect(isCellInSelection(1, 1, selection)).toBe(true);
+      expect(isCellInSelection(3, 3, selection)).toBe(false);
+    });
+
+    it("nullの場合はfalseを返す", () => {
+      expect(isCellInSelection(0, 0, null)).toBe(false);
+    });
+  });
+
+  describe("updateCells", () => {
+    it("複数のセルを一括で更新する", () => {
+      const data: CsvData = {
+        headers: ["a", "b", "c"],
+        rows: [
+          ["1", "2", "3"],
+          ["4", "5", "6"],
+        ],
+        hasHeader: true,
+        columnTypes: ["string", "string", "string"],
+      };
+      const updates = [
+        { row: 0, col: 0, value: "A" },
+        { row: 0, col: 1, value: "B" },
+        { row: 1, col: 2, value: "C" },
+      ];
+
+      const result = updateCells(data, updates);
+
+      expect(result.rows[0][0]).toBe("A");
+      expect(result.rows[0][1]).toBe("B");
+      expect(result.rows[0][2]).toBe("3"); // 変更なし
+      expect(result.rows[1][0]).toBe("4"); // 変更なし
+      expect(result.rows[1][2]).toBe("C");
+    });
+
+    it("空の更新配列の場合は元のデータを返す", () => {
+      const data: CsvData = {
+        headers: ["a"],
+        rows: [["1"]],
+        hasHeader: true,
+        columnTypes: ["string"],
+      };
+
+      const result = updateCells(data, []);
+
+      expect(result.rows[0][0]).toBe("1");
+    });
+
+    it("ヘッダーセルも更新できる", () => {
+      const data: CsvData = {
+        headers: ["a", "b"],
+        rows: [["1", "2"]],
+        hasHeader: true,
+        columnTypes: ["string", "string"],
+      };
+      const updates = [
+        { row: -1, col: 0, value: "Header A" },
+        { row: 0, col: 1, value: "Data B" },
+      ];
+
+      const result = updateCells(data, updates);
+
+      expect(result.headers[0]).toBe("Header A");
+      expect(result.rows[0][1]).toBe("Data B");
     });
   });
 });

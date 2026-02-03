@@ -52,6 +52,12 @@ export interface CellPosition {
   col: number;
 }
 
+// 複数セル選択の範囲
+export interface SelectionRange {
+  start: CellPosition;  // アンカーポイント（選択開始点）
+  end: CellPosition;    // 選択終了点
+}
+
 export const DEFAULT_CSV_OPTIONS: CsvOptions = {
   delimiter: ",",
   hasHeader: true,
@@ -725,4 +731,116 @@ export function redetectColumnTypes(data: CsvData): CsvData {
     columnTypes.push(detectColumnType(columnValues));
   }
   return { ...data, columnTypes };
+}
+
+/**
+ * 選択範囲を正規化（startが左上、endが右下になるように調整）
+ */
+export function normalizeSelection(selection: SelectionRange): SelectionRange {
+  return {
+    start: {
+      row: Math.min(selection.start.row, selection.end.row),
+      col: Math.min(selection.start.col, selection.end.col),
+    },
+    end: {
+      row: Math.max(selection.start.row, selection.end.row),
+      col: Math.max(selection.start.col, selection.end.col),
+    },
+  };
+}
+
+/**
+ * セルが選択範囲内にあるか判定
+ */
+export function isCellInSelection(
+  row: number,
+  col: number,
+  selection: SelectionRange | null
+): boolean {
+  if (!selection) return false;
+  const norm = normalizeSelection(selection);
+  return (
+    row >= norm.start.row &&
+    row <= norm.end.row &&
+    col >= norm.start.col &&
+    col <= norm.end.col
+  );
+}
+
+/**
+ * 複数セルの一括更新（パフォーマンス最適化版）
+ */
+export function updateCells(
+  data: CsvData,
+  updates: Array<{ row: number; col: number; value: string }>
+): CsvData {
+  // アップデートがない場合はそのまま返す
+  if (updates.length === 0) {
+    return data;
+  }
+
+  // ヘッダー更新があるかチェック
+  const headerUpdates = updates.filter((u) => u.row === -1);
+  const rowUpdates = updates.filter((u) => u.row >= 0);
+
+  // ヘッダーを一度だけクローン
+  const newHeaders =
+    headerUpdates.length > 0 ? [...data.headers] : data.headers;
+  for (const { col, value } of headerUpdates) {
+    if (col >= 0 && col < newHeaders.length) {
+      newHeaders[col] = value;
+    }
+  }
+
+  // 行配列を一度だけクローンし、その上で全ての更新を適用する
+  const newRows = data.rows.map((row) => [...row]);
+  for (const { row, col, value } of rowUpdates) {
+    if (row >= 0 && row < newRows.length && col >= 0 && col < newRows[row].length) {
+      newRows[row][col] = value;
+    }
+  }
+
+  return { ...data, headers: newHeaders, rows: newRows };
+}
+
+/**
+ * クリップボードテキストを解析して更新配列を生成
+ * @param text クリップボードのテキスト
+ * @param startRow 開始行
+ * @param startCol 開始列
+ * @param maxRows 最大行数（-1で無制限、ヘッダー行は別カウント）
+ * @param maxCols 最大列数
+ */
+export function parseClipboardText(
+  text: string,
+  startRow: number,
+  startCol: number,
+  maxRows: number,
+  maxCols: number
+): Array<{ row: number; col: number; value: string }> {
+  // CRLF/CR を LF に正規化
+  const normalizedText = text.replace(/\r\n?/g, "\n");
+  // 末尾の空行を除去
+  const rawLines = normalizedText.split("\n");
+  const lines =
+    rawLines.length > 0 && rawLines[rawLines.length - 1] === ""
+      ? rawLines.slice(0, -1)
+      : rawLines;
+
+  const updates: Array<{ row: number; col: number; value: string }> = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const row = startRow + i;
+    // ヘッダー行（row === -1）は許可、データ行は範囲内のみ
+    if (row !== -1 && maxRows !== -1 && row >= maxRows) break;
+
+    const cells = lines[i].split("\t");
+    for (let j = 0; j < cells.length; j++) {
+      const col = startCol + j;
+      if (col >= maxCols) break;
+      updates.push({ row, col, value: cells[j] });
+    }
+  }
+
+  return updates;
 }
