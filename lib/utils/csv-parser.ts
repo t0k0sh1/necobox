@@ -52,6 +52,12 @@ export interface CellPosition {
   col: number;
 }
 
+// 複数セル選択の範囲
+export interface SelectionRange {
+  start: CellPosition;  // アンカーポイント（選択開始点）
+  end: CellPosition;    // 選択終了点
+}
+
 export const DEFAULT_CSV_OPTIONS: CsvOptions = {
   delimiter: ",",
   hasHeader: true,
@@ -725,4 +731,52 @@ export function redetectColumnTypes(data: CsvData): CsvData {
     columnTypes.push(detectColumnType(columnValues));
   }
   return { ...data, columnTypes };
+}
+
+/**
+ * 選択範囲を正規化（startが左上、endが右下になるように調整）
+ */
+export function normalizeSelection(selection: SelectionRange): SelectionRange {
+  return {
+    start: {
+      row: Math.min(selection.start.row, selection.end.row),
+      col: Math.min(selection.start.col, selection.end.col),
+    },
+    end: {
+      row: Math.max(selection.start.row, selection.end.row),
+      col: Math.max(selection.start.col, selection.end.col),
+    },
+  };
+}
+
+/**
+ * セルが選択範囲内にあるか判定
+ */
+export function isCellInSelection(
+  row: number,
+  col: number,
+  selection: SelectionRange | null
+): boolean {
+  if (!selection) return false;
+  const norm = normalizeSelection(selection);
+  return (
+    row >= norm.start.row &&
+    row <= norm.end.row &&
+    col >= norm.start.col &&
+    col <= norm.end.col
+  );
+}
+
+/**
+ * 複数セルの一括更新
+ */
+export function updateCells(
+  data: CsvData,
+  updates: Array<{ row: number; col: number; value: string }>
+): CsvData {
+  let result = data;
+  for (const update of updates) {
+    result = updateCell(result, update.row, update.col, update.value);
+  }
+  return result;
 }

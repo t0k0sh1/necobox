@@ -35,12 +35,14 @@ import {
   downloadCSV,
   ENCODING_LABELS,
   FILE_EXTENSION_LABELS,
+  normalizeSelection,
   OUTPUT_ENCODING_LABELS,
   parseCSV,
   redetectColumnTypes,
   removeColumn,
   removeRow,
   updateCell,
+  updateCells,
   updateColumnType,
   type CellPosition,
   type ColumnType,
@@ -50,6 +52,7 @@ import {
   type FileExtension,
   type OutputEncodingType,
   type QuoteStyle,
+  type SelectionRange,
 } from "@/lib/utils/csv-parser";
 import {
   ChevronDown,
@@ -101,7 +104,10 @@ export default function CsvEditorPage() {
 
   // 編集状態
   const [editingCell, setEditingCell] = useState<CellPosition | null>(null);
-  const [selectedCell, setSelectedCell] = useState<CellPosition | null>(null);
+  const [selection, setSelection] = useState<SelectionRange | null>(null);
+
+  // 単一セル選択のヘルパー（後方互換性のため）
+  const selectedCell = selection ? selection.start : null;
 
   // 内部クリップボード（アプリ内でのコピー&ペースト用）
   const [internalClipboard, setInternalClipboard] = useState<string>("");
@@ -159,7 +165,7 @@ export default function CsvEditorPage() {
 
         setCsvData(data);
         setError(null);
-        setSelectedCell(null);
+        setSelection(null);
         setEditingCell(null);
       } catch (err) {
         setError(t("error.parseError"));
@@ -245,7 +251,7 @@ export default function CsvEditorPage() {
   const handleNew = useCallback(() => {
     const newData = createEmptyCsvData(3, 1, hasHeader, t("table.defaultColumnName"));
     setCsvData(newData);
-    setSelectedCell(null);
+    setSelection(null);
     setEditingCell(null);
     setError(null);
     setExportFilename("data");
@@ -254,7 +260,7 @@ export default function CsvEditorPage() {
   // クリア
   const handleClear = useCallback(() => {
     setCsvData(null);
-    setSelectedCell(null);
+    setSelection(null);
     setEditingCell(null);
     setError(null);
     setExportFilename("data");
@@ -268,7 +274,7 @@ export default function CsvEditorPage() {
       ...csvData,
       rows: [],
     });
-    setSelectedCell(null);
+    setSelection(null);
     setEditingCell(null);
     setError(null);
   }, [csvData]);
@@ -276,7 +282,7 @@ export default function CsvEditorPage() {
   // セル編集開始
   const handleStartEdit = useCallback((row: number, col: number) => {
     setEditingCell({ row, col });
-    setSelectedCell({ row, col });
+    setSelection({ start: { row, col }, end: { row, col } });
   }, []);
 
   // セル編集終了
@@ -284,9 +290,18 @@ export default function CsvEditorPage() {
     setEditingCell(null);
   }, []);
 
-  // セル選択
+  // セル選択（単一セル）
   const handleSelectCell = useCallback((row: number, col: number) => {
-    setSelectedCell({ row, col });
+    setSelection({ start: { row, col }, end: { row, col } });
+    setEditingCell(null);
+  }, []);
+
+  // 選択範囲の拡張（Shift+クリック/矢印キー）
+  const handleExtendSelection = useCallback((row: number, col: number) => {
+    setSelection((prev) => {
+      if (!prev) return { start: { row, col }, end: { row, col } };
+      return { ...prev, end: { row, col } };
+    });
     setEditingCell(null);
   }, []);
 
@@ -373,44 +388,163 @@ export default function CsvEditorPage() {
     });
   }, [refocusSelectedCell]);
 
-  // コピー処理
-  const handleCopy = useCallback(
-    (row: number, col: number) => {
-      const value = getCellValue(row, col);
-      copyToClipboard(value);
-    },
-    [getCellValue, copyToClipboard]
-  );
+  // コピー処理（複数セル対応）
+  const handleCopy = useCallback(() => {
+    if (!selection || !csvData) return;
+    const norm = normalizeSelection(selection);
+    const lines: string[] = [];
 
-  // 切り取り処理
-  const handleCut = useCallback(
-    (row: number, col: number) => {
-      const value = getCellValue(row, col);
-      copyToClipboard(value);
-      handleCellChange(row, col, "");
-    },
-    [getCellValue, copyToClipboard, handleCellChange]
-  );
-
-  // ペースト処理（内部クリップボードを使用）
-  const handlePasteCell = useCallback(
-    (row: number, col: number) => {
-      if (internalClipboard) {
-        handleCellChange(row, col, internalClipboard);
-        // フォーカスを維持
-        requestAnimationFrame(() => {
-          refocusSelectedCell();
-        });
+    for (let row = norm.start.row; row <= norm.end.row; row++) {
+      const cells: string[] = [];
+      for (let col = norm.start.col; col <= norm.end.col; col++) {
+        cells.push(getCellValue(row, col));
       }
-    },
-    [internalClipboard, handleCellChange, refocusSelectedCell]
-  );
+      lines.push(cells.join("\t"));
+    }
+
+    copyToClipboard(lines.join("\n"));
+  }, [selection, csvData, getCellValue, copyToClipboard]);
+
+  // 切り取り処理（複数セル対応）
+  const handleCut = useCallback(() => {
+    if (!selection || !csvData) return;
+    const norm = normalizeSelection(selection);
+    const lines: string[] = [];
+    const updates: Array<{ row: number; col: number; value: string }> = [];
+
+    for (let row = norm.start.row; row <= norm.end.row; row++) {
+      const cells: string[] = [];
+      for (let col = norm.start.col; col <= norm.end.col; col++) {
+        cells.push(getCellValue(row, col));
+        updates.push({ row, col, value: "" });
+      }
+      lines.push(cells.join("\t"));
+    }
+
+    copyToClipboard(lines.join("\n"));
+    setCsvData(updateCells(csvData, updates));
+  }, [selection, csvData, getCellValue, copyToClipboard]);
+
+  // ペースト処理（複数セル対応、内部クリップボードを使用）
+  const handlePasteCell = useCallback(() => {
+    if (!selection || !csvData || !internalClipboard) return;
+    const norm = normalizeSelection(selection);
+    const lines = internalClipboard.split("\n");
+    const updates: Array<{ row: number; col: number; value: string }> = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const row = norm.start.row + i;
+      // ヘッダー行（row === -1）は許可、データ行は範囲内のみ
+      if (row !== -1 && row >= csvData.rows.length) break;
+
+      const cells = lines[i].split("\t");
+      for (let j = 0; j < cells.length; j++) {
+        const col = norm.start.col + j;
+        if (col >= csvData.headers.length) break;
+        updates.push({ row, col, value: cells[j] });
+      }
+    }
+
+    if (updates.length > 0) {
+      setCsvData(updateCells(csvData, updates));
+    }
+    // フォーカスを維持
+    requestAnimationFrame(() => {
+      refocusSelectedCell();
+    });
+  }, [selection, csvData, internalClipboard, refocusSelectedCell]);
+
+  // Ctrl+D: 下方向に複製（Excel準拠）
+  // - 単一セル選択時: 上のセルの値を選択中のセルにコピー
+  // - 複数セル選択時: 最上行の値を下の行すべてにコピー
+  const handleFillDown = useCallback(() => {
+    if (!selection || !csvData) return;
+    const norm = normalizeSelection(selection);
+    const updates: Array<{ row: number; col: number; value: string }> = [];
+
+    const isSingleCell = norm.start.row === norm.end.row && norm.start.col === norm.end.col;
+
+    if (isSingleCell) {
+      // 単一セル選択: 上のセルからコピー
+      const sourceRow = norm.start.row - 1;
+      // ヘッダー行(-1)の上や、データの最初の行(0)で上がヘッダー(-1)の場合も許可
+      if (sourceRow >= -1) {
+        for (let col = norm.start.col; col <= norm.end.col; col++) {
+          const sourceValue = getCellValue(sourceRow, col);
+          updates.push({ row: norm.start.row, col, value: sourceValue });
+        }
+      }
+    } else {
+      // 複数セル選択: 最上行の値を下の行にコピー
+      for (let col = norm.start.col; col <= norm.end.col; col++) {
+        const sourceValue = getCellValue(norm.start.row, col);
+        for (let row = norm.start.row + 1; row <= norm.end.row; row++) {
+          updates.push({ row, col, value: sourceValue });
+        }
+      }
+    }
+
+    if (updates.length > 0) {
+      setCsvData(updateCells(csvData, updates));
+    }
+  }, [selection, csvData, getCellValue]);
+
+  // Ctrl+R: 右方向に複製（Excel準拠）
+  // - 単一セル選択時: 左のセルの値を選択中のセルにコピー
+  // - 複数セル選択時: 最左列の値を右の列すべてにコピー
+  const handleFillRight = useCallback(() => {
+    if (!selection || !csvData) return;
+    const norm = normalizeSelection(selection);
+    const updates: Array<{ row: number; col: number; value: string }> = [];
+
+    const isSingleCell = norm.start.row === norm.end.row && norm.start.col === norm.end.col;
+
+    if (isSingleCell) {
+      // 単一セル選択: 左のセルからコピー
+      const sourceCol = norm.start.col - 1;
+      if (sourceCol >= 0) {
+        for (let row = norm.start.row; row <= norm.end.row; row++) {
+          const sourceValue = getCellValue(row, sourceCol);
+          updates.push({ row, col: norm.start.col, value: sourceValue });
+        }
+      }
+    } else {
+      // 複数セル選択: 最左列の値を右の列にコピー
+      for (let row = norm.start.row; row <= norm.end.row; row++) {
+        const sourceValue = getCellValue(row, norm.start.col);
+        for (let col = norm.start.col + 1; col <= norm.end.col; col++) {
+          updates.push({ row, col, value: sourceValue });
+        }
+      }
+    }
+
+    if (updates.length > 0) {
+      setCsvData(updateCells(csvData, updates));
+    }
+  }, [selection, csvData, getCellValue]);
+
+  // 選択範囲の削除
+  const handleDeleteSelection = useCallback(() => {
+    if (!selection || !csvData) return;
+    const norm = normalizeSelection(selection);
+    const updates: Array<{ row: number; col: number; value: string }> = [];
+
+    for (let row = norm.start.row; row <= norm.end.row; row++) {
+      for (let col = norm.start.col; col <= norm.end.col; col++) {
+        updates.push({ row, col, value: "" });
+      }
+    }
+
+    if (updates.length > 0) {
+      setCsvData(updateCells(csvData, updates));
+    }
+  }, [selection, csvData]);
 
   // ネイティブペーストイベントのハンドラ（外部からのペースト対応）
   const handleNativePaste = useCallback(
     (e: ClipboardEvent) => {
       // 編集中でなく、セルが選択されている場合のみ処理
-      if (editingCell || !selectedCell || !csvData) return;
+      if (editingCell || !selection || !csvData) return;
 
       // テーブルコンテナ内でのみ処理
       if (!tableContainerRef.current?.contains(document.activeElement)) return;
@@ -418,23 +552,37 @@ export default function CsvEditorPage() {
       e.preventDefault();
       const text = e.clipboardData?.getData("text/plain");
       if (text) {
-        handleCellChange(selectedCell.row, selectedCell.col, text);
-        // 内部クリップボードも更新
+        // 内部クリップボードを更新してからペースト処理を実行
         setInternalClipboard(text);
+
+        // ペースト処理（複数セル対応）
+        const norm = normalizeSelection(selection);
+        const lines = text.split("\n");
+        const updates: Array<{ row: number; col: number; value: string }> = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const row = norm.start.row + i;
+          if (row !== -1 && row >= csvData.rows.length) break;
+
+          const cells = lines[i].split("\t");
+          for (let j = 0; j < cells.length; j++) {
+            const col = norm.start.col + j;
+            if (col >= csvData.headers.length) break;
+            updates.push({ row, col, value: cells[j] });
+          }
+        }
+
+        if (updates.length > 0) {
+          setCsvData(updateCells(csvData, updates));
+        }
+
         // フォーカスを維持
         requestAnimationFrame(() => {
-          if (tableContainerRef.current) {
-            const cell = tableContainerRef.current.querySelector(
-              `[data-row="${selectedCell.row}"][data-col="${selectedCell.col}"]`
-            ) as HTMLElement | null;
-            if (cell) {
-              cell.focus();
-            }
-          }
+          refocusSelectedCell();
         });
       }
     },
-    [editingCell, selectedCell, csvData, handleCellChange]
+    [editingCell, selection, csvData, refocusSelectedCell]
   );
 
   // ペーストイベントのリスナー登録
@@ -458,48 +606,91 @@ export default function CsvEditorPage() {
       const isMac = /mac/i.test(platform);
       const isModifierKey = isMac ? e.metaKey : e.ctrlKey;
 
+      // Ctrl+D: 下方向に複製
+      if (isModifierKey && (e.key === "d" || e.key === "D") && !editingCell) {
+        e.preventDefault();
+        handleFillDown();
+        return;
+      }
+
+      // Ctrl+R: 右方向に複製
+      if (isModifierKey && (e.key === "r" || e.key === "R") && !editingCell) {
+        e.preventDefault();
+        handleFillRight();
+        return;
+      }
+
       // コピー・切り取り・ペースト
       if (isModifierKey && !editingCell) {
         if (e.key === "c" || e.key === "C") {
           e.preventDefault();
-          handleCopy(row, col);
+          handleCopy();
           return;
         }
         if (e.key === "x" || e.key === "X") {
           e.preventDefault();
-          handleCut(row, col);
+          handleCut();
           return;
         }
         if (e.key === "v" || e.key === "V") {
           e.preventDefault();
-          handlePasteCell(row, col);
+          handlePasteCell();
           return;
         }
       }
 
+      // Shift+矢印キーの場合は選択範囲の終点を基準にする
+      const endRow = selection?.end.row ?? row;
+      const endCol = selection?.end.col ?? col;
+
       switch (e.key) {
         case "ArrowUp":
           e.preventDefault();
-          if (row > -1) {
-            setSelectedCell({ row: row - 1, col });
+          if (e.shiftKey) {
+            // Shift+矢印: 選択範囲を拡張（終点を基準）
+            if (endRow > -1) {
+              handleExtendSelection(endRow - 1, endCol);
+            }
+          } else {
+            if (row > -1) {
+              handleSelectCell(row - 1, col);
+            }
           }
           break;
         case "ArrowDown":
           e.preventDefault();
-          if (row < maxRow) {
-            setSelectedCell({ row: row + 1, col });
+          if (e.shiftKey) {
+            if (endRow < maxRow) {
+              handleExtendSelection(endRow + 1, endCol);
+            }
+          } else {
+            if (row < maxRow) {
+              handleSelectCell(row + 1, col);
+            }
           }
           break;
         case "ArrowLeft":
           e.preventDefault();
-          if (col > 0) {
-            setSelectedCell({ row, col: col - 1 });
+          if (e.shiftKey) {
+            if (endCol > 0) {
+              handleExtendSelection(endRow, endCol - 1);
+            }
+          } else {
+            if (col > 0) {
+              handleSelectCell(row, col - 1);
+            }
           }
           break;
         case "ArrowRight":
           e.preventDefault();
-          if (col < maxCol) {
-            setSelectedCell({ row, col: col + 1 });
+          if (e.shiftKey) {
+            if (endCol < maxCol) {
+              handleExtendSelection(endRow, endCol + 1);
+            }
+          } else {
+            if (col < maxCol) {
+              handleSelectCell(row, col + 1);
+            }
           }
           break;
         case "Enter":
@@ -511,16 +702,16 @@ export default function CsvEditorPage() {
           if (e.shiftKey) {
             // 前のセルへ
             if (col > 0) {
-              setSelectedCell({ row, col: col - 1 });
+              handleSelectCell(row, col - 1);
             } else if (row > -1) {
-              setSelectedCell({ row: row - 1, col: maxCol });
+              handleSelectCell(row - 1, maxCol);
             }
           } else {
             // 次のセルへ
             if (col < maxCol) {
-              setSelectedCell({ row, col: col + 1 });
+              handleSelectCell(row, col + 1);
             } else if (row < maxRow) {
-              setSelectedCell({ row: row + 1, col: 0 });
+              handleSelectCell(row + 1, 0);
             }
           }
           break;
@@ -528,7 +719,7 @@ export default function CsvEditorPage() {
         case "Backspace":
           if (!editingCell) {
             e.preventDefault();
-            handleCellChange(row, col, "");
+            handleDeleteSelection();
           }
           break;
         default:
@@ -539,7 +730,7 @@ export default function CsvEditorPage() {
           break;
       }
     },
-    [csvData, editingCell, handleCellChange, handleCopy, handleCut, handlePasteCell]
+    [csvData, editingCell, selection, handleCopy, handleCut, handlePasteCell, handleFillDown, handleFillRight, handleDeleteSelection, handleSelectCell, handleExtendSelection]
   );
 
   // 行を追加
@@ -556,9 +747,10 @@ export default function CsvEditorPage() {
     setCsvData(newData);
     // 選択セルを調整
     if (selectedCell.row >= newData.rows.length) {
-      setSelectedCell({
-        row: Math.max(-1, newData.rows.length - 1),
-        col: selectedCell.col,
+      const newRow = Math.max(-1, newData.rows.length - 1);
+      setSelection({
+        start: { row: newRow, col: selectedCell.col },
+        end: { row: newRow, col: selectedCell.col },
       });
     }
   }, [csvData, selectedCell]);
@@ -577,9 +769,10 @@ export default function CsvEditorPage() {
     setCsvData(newData);
     // 選択セルを調整
     if (selectedCell.col >= newData.headers.length) {
-      setSelectedCell({
-        row: selectedCell.row,
-        col: Math.max(0, newData.headers.length - 1),
+      const newCol = Math.max(0, newData.headers.length - 1);
+      setSelection({
+        start: { row: selectedCell.row, col: newCol },
+        end: { row: selectedCell.row, col: newCol },
       });
     }
   }, [csvData, selectedCell]);
@@ -870,6 +1063,7 @@ export default function CsvEditorPage() {
                       <div className="space-y-1 text-xs">
                         <p className="font-semibold">{t("keyboard.title")}</p>
                         <p>{t("keyboard.arrows")}</p>
+                        <p>{t("keyboard.shiftArrows")}</p>
                         <p>{t("keyboard.enter")}</p>
                         <p>{t("keyboard.tab")}</p>
                         <p>{t("keyboard.shiftTab")}</p>
@@ -877,6 +1071,8 @@ export default function CsvEditorPage() {
                         <p>{t("keyboard.copy")}</p>
                         <p>{t("keyboard.cut")}</p>
                         <p>{t("keyboard.paste")}</p>
+                        <p>{t("keyboard.fillDown")}</p>
+                        <p>{t("keyboard.fillRight")}</p>
                       </div>
                     </TooltipContent>
                   </Tooltip>
@@ -992,11 +1188,12 @@ export default function CsvEditorPage() {
                 <CsvTable
                   data={csvData}
                   editingCell={editingCell}
-                  selectedCell={selectedCell}
+                  selection={selection}
                   onCellChange={handleCellChange}
                   onStartEdit={handleStartEdit}
                   onEndEdit={handleEndEdit}
                   onSelectCell={handleSelectCell}
+                  onExtendSelection={handleExtendSelection}
                   onKeyNavigation={handleKeyNavigation}
                   onColumnTypeChange={handleColumnTypeChange}
                   translations={{

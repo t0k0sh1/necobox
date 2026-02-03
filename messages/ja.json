@@ -485,13 +485,16 @@
     "keyboard": {
       "title": "キーボード操作",
       "arrows": "↑↓←→: セル移動",
+      "shiftArrows": "Shift+↑↓←→: 選択範囲を拡張",
       "enter": "Enter: 編集開始/確定",
       "tab": "Tab: 次のセルへ",
       "shiftTab": "Shift+Tab: 前のセルへ",
       "escape": "Escape: 編集キャンセル",
       "copy": "Ctrl/Cmd+C: コピー",
       "cut": "Ctrl/Cmd+X: 切り取り",
-      "paste": "Ctrl/Cmd+V: 貼り付け"
+      "paste": "Ctrl/Cmd+V: 貼り付け",
+      "fillDown": "Ctrl/Cmd+D: 下方向に複製",
+      "fillRight": "Ctrl/Cmd+R: 右方向に複製"
     },
     "error": {
       "parseError": "CSVの解析に失敗しました",

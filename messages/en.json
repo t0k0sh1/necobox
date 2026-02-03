@@ -485,13 +485,16 @@
     "keyboard": {
       "title": "Keyboard Shortcuts",
       "arrows": "↑↓←→: Move cell",
+      "shiftArrows": "Shift+↑↓←→: Extend selection",
       "enter": "Enter: Start/confirm edit",
       "tab": "Tab: Next cell",
       "shiftTab": "Shift+Tab: Previous cell",
       "escape": "Escape: Cancel edit",
       "copy": "Ctrl/Cmd+C: Copy",
       "cut": "Ctrl/Cmd+X: Cut",
-      "paste": "Ctrl/Cmd+V: Paste"
+      "paste": "Ctrl/Cmd+V: Paste",
+      "fillDown": "Ctrl/Cmd+D: Fill down",
+      "fillRight": "Ctrl/Cmd+R: Fill right"
     },
     "error": {
       "parseError": "Failed to parse CSV",
