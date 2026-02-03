@@ -11,8 +11,8 @@ export type ColumnType = "auto" | "string" | "number";
 // サポートするエンコーディング（入力用：自動検出対応）
 export type EncodingType = "utf-8" | "utf-8-bom" | "shift_jis" | "euc-jp";
 
-// 出力用エンコーディング（Shift_JIS/EUC-JPはencoding-japaneseで対応）
-export type OutputEncodingType = "utf-8" | "utf-8-bom" | "shift_jis" | "euc-jp";
+// 出力用エンコーディング（入力用と同一、Shift_JIS/EUC-JPはencoding-japaneseで対応）
+export type OutputEncodingType = EncodingType;
 
 export const ENCODING_LABELS: Record<EncodingType, string> = {
   "utf-8": "UTF-8",
@@ -223,7 +223,7 @@ export function detectEncoding(buffer: ArrayBuffer): EncodingType {
  */
 export function encodeWithEncoding(
   text: string,
-  encoding: EncodingType | OutputEncodingType
+  encoding: EncodingType
 ): Uint8Array {
   if (encoding === "utf-8") {
     const encoder = new TextEncoder();
@@ -492,6 +492,23 @@ export const FILE_EXTENSION_LABELS: Record<FileExtension, string> = {
 };
 
 /**
+ * エンコーディングに対応するcharset文字列を取得
+ */
+function getCharset(encoding: EncodingType): string {
+  switch (encoding) {
+    case "utf-8":
+    case "utf-8-bom":
+      return "utf-8";
+    case "shift_jis":
+      return "shift_jis";
+    case "euc-jp":
+      return "euc-jp";
+    default:
+      return "utf-8";
+  }
+}
+
+/**
  * CSVデータをファイルとしてダウンロード
  */
 export function downloadCSV(
@@ -502,13 +519,14 @@ export function downloadCSV(
 ): void {
   const opts = { ...DEFAULT_CSV_OPTIONS, ...options };
   const csvContent = stringifyCSV(data, opts);
+  const charset = getCharset(opts.encoding);
 
-  // MIMEタイプを拡張子に応じて設定
-  let mimeType = "text/csv;charset=utf-8";
+  // MIMEタイプを拡張子とエンコーディングに応じて設定
+  let mimeType = `text/csv;charset=${charset}`;
   if (extension === ".tsv") {
-    mimeType = "text/tab-separated-values;charset=utf-8";
+    mimeType = `text/tab-separated-values;charset=${charset}`;
   } else if (extension === ".txt") {
-    mimeType = "text/plain;charset=utf-8";
+    mimeType = `text/plain;charset=${charset}`;
   }
 
   // エンコード
