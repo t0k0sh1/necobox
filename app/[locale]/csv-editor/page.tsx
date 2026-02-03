@@ -178,8 +178,12 @@ export default function CsvEditorPage() {
         if (inputEncoding === "auto") {
           encoding = detectEncoding(buffer);
           setDetectedEncoding(encoding);
+          // 検出したエンコーディングを出力エンコーディングにも自動設定
+          setOutputEncoding(encoding);
         } else {
           encoding = inputEncoding;
+          // 手動指定したエンコーディングを出力エンコーディングにも自動設定
+          setOutputEncoding(encoding);
         }
 
         // デコード
