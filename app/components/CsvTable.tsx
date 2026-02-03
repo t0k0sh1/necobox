@@ -58,7 +58,7 @@ export function CsvTable({
   // textareaRefはヘッダーセルとデータセルの両方で共有される。
   // 同時に編集できるセルは1つだけなので、Reactは常に編集中のセルの
   // textareaへの参照を保持する。
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
 
   // ドラッグ選択の状態
@@ -78,9 +78,9 @@ export function CsvTable({
 
   // 編集中のセルにフォーカス
   useEffect(() => {
-    if (editingCell && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+    if (editingCell && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.select();
     }
   }, [editingCell]);
 
@@ -401,7 +401,7 @@ export function CsvTable({
                   <div className={`relative ${isCellEditing(-1, col) ? 'min-h-6' : header.includes('\n') ? 'min-h-6' : 'h-6'}`}>
                     {isCellEditing(-1, col) ? (
                       <textarea
-                        ref={inputRef}
+                        ref={textareaRef}
                         value={getCellValue(-1, col)}
                         onChange={(e) => handleInputChange(e, -1, col)}
                         onKeyDown={(e) => handleCellKeyDown(e, -1, col)}
@@ -512,7 +512,7 @@ export function CsvTable({
                     <div className={`relative ${isCellEditing(rowIndex, col) ? 'min-h-6' : cell.includes('\n') ? 'min-h-6' : 'h-6'}`}>
                       {isCellEditing(rowIndex, col) ? (
                         <textarea
-                          ref={inputRef}
+                          ref={textareaRef}
                           value={getCellValue(rowIndex, col)}
                           onChange={(e) => handleInputChange(e, rowIndex, col)}
                           onKeyDown={(e) => handleCellKeyDown(e, rowIndex, col)}

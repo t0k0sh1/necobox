@@ -885,8 +885,13 @@ function parseTsvWithQuotes(text: string): string[][] {
       }
     } else {
       if (char === '"') {
-        // クォート開始
-        inQuotes = true;
+        if (currentField === "") {
+          // クォート開始（フィールド先頭のダブルクォートのみをクォート開始として扱う）
+          inQuotes = true;
+        } else {
+          // フィールド中のダブルクォートはリテラルとして扱う
+          currentField += '"';
+        }
         i++;
       } else if (char === "\t") {
         // フィールド区切り
