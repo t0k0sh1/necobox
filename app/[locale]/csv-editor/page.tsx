@@ -596,7 +596,12 @@ export default function CsvEditorPage() {
     };
 
     // プレフィックス・サフィックスを含めた最終ファイル名を生成
-    const finalFilename = `${filenamePrefix}${exportFilename}${filenameSuffix}`;
+    // ファイルシステムで無効な文字をサニタイズ
+    const sanitizeFilename = (name: string): string => {
+      // Windows/Mac/Linuxで無効な文字を除去: / \ : * ? " < > |
+      return name.replace(/[/\\:*?"<>|]/g, "");
+    };
+    const finalFilename = sanitizeFilename(`${filenamePrefix}${exportFilename}${filenameSuffix}`);
     downloadCSV(csvData, finalFilename, options, fileExtension);
   }, [csvData, exportFilename, filenamePrefix, filenameSuffix, getDelimiter, outputEncoding, exportWithHeader, quoteStyle, fileExtension]);
 
@@ -1100,6 +1105,12 @@ export default function CsvEditorPage() {
                         <button
                           type="button"
                           onClick={() => setFilenamePrefix("")}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setFilenamePrefix("");
+                            }
+                          }}
                           className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
                           aria-label={t("export.clearPrefix")}
                         >
@@ -1120,6 +1131,12 @@ export default function CsvEditorPage() {
                         <button
                           type="button"
                           onClick={() => setExportFilename("")}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setExportFilename("");
+                            }
+                          }}
                           className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
                           aria-label={t("export.clearFilename")}
                         >
@@ -1140,6 +1157,12 @@ export default function CsvEditorPage() {
                         <button
                           type="button"
                           onClick={() => setFilenameSuffix("")}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setFilenameSuffix("");
+                            }
+                          }}
                           className="absolute right-1.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
                           aria-label={t("export.clearSuffix")}
                         >
