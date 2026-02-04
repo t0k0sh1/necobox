@@ -55,6 +55,27 @@ export {
 // 選択範囲
 export { normalizeSelection, isCellInSelection } from "./csv";
 
+// フィルター・ソート
+export {
+  applyFilters,
+  applySort,
+  computeDisplayIndices,
+  toggleSort,
+  displayToDataIndex,
+  dataToDisplayIndex,
+  INITIAL_SORT_STATE,
+  NUMBER_FILTER_OPERATORS,
+} from "./csv";
+
+export type {
+  StringFilter,
+  NumberFilter,
+  ColumnFilter,
+  FilterState,
+  SortState,
+  DisplayRowIndices,
+} from "./csv";
+
 // エンコーディング
 export { detectEncoding, decodeWithEncoding, encodeWithEncoding } from "./encoding";
 

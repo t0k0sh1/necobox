@@ -504,6 +504,22 @@
       "emptyFile": "ファイルが空です",
       "invalidFile": "無効なファイル形式です"
     },
-    "emptyState": "CSVファイルをアップロードするか、新規作成してください"
+    "emptyState": "CSVファイルをアップロードするか、新規作成してください",
+    "filter": {
+      "placeholder": "フィルター値を入力",
+      "clear": "クリア",
+      "clearAll": "フィルターをクリア",
+      "showingRows": "{filtered} / {total} 件表示",
+      "operatorEquals": "等しい (=)",
+      "operatorNotEquals": "等しくない (≠)",
+      "operatorGreater": "より大きい (>)",
+      "operatorLess": "より小さい (<)",
+      "operatorGreaterOrEquals": "以上 (≥)",
+      "operatorLessOrEquals": "以下 (≤)"
+    },
+    "sort": {
+      "ascending": "昇順",
+      "descending": "降順"
+    }
   }
 }
