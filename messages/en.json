@@ -449,6 +449,7 @@
     "toolbar": {
       "addRow": "Add Row",
       "deleteRow": "Delete Row",
+      "deleteRowsCount": "Delete Row ({count})",
       "addColumn": "Add Column",
       "deleteColumn": "Delete Column",
       "clear": "Clear",

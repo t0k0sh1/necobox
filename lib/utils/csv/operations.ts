@@ -71,17 +71,15 @@ export function removeRow(data: CsvData, index: number): CsvData {
  * @param indices 削除する行のインデックス配列
  */
 export function removeRows(data: CsvData, indices: number[]): CsvData {
-  // 重複を除去し降順にソート（後ろから削除でインデックスずれ防止）
-  const uniqueIndices = [...new Set(indices)]
-    .filter((i) => i >= 0 && i < data.rows.length)
-    .sort((a, b) => b - a);
+  // 重複を除去し、有効なインデックスのみをフィルタリング
+  const toDelete = new Set(
+    indices.filter((i) => i >= 0 && i < data.rows.length)
+  );
 
-  if (uniqueIndices.length === 0) return data;
+  if (toDelete.size === 0) return data;
 
-  const newRows = [...data.rows];
-  for (const index of uniqueIndices) {
-    newRows.splice(index, 1);
-  }
+  // O(n)のfilterで削除（spliceループよりパフォーマンスが良い）
+  const newRows = data.rows.filter((_, i) => !toDelete.has(i));
   return { ...data, rows: newRows };
 }
 

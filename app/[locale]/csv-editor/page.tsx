@@ -1160,7 +1160,7 @@ export default function CsvEditorPage() {
                 >
                   <Minus className="w-4 h-4 mr-1" />
                   {rowSelection
-                    ? `${t("toolbar.deleteRow")} (${Math.abs(rowSelection.endRow - rowSelection.startRow) + 1})`
+                    ? t("toolbar.deleteRowsCount", { count: Math.abs(rowSelection.endRow - rowSelection.startRow) + 1 })
                     : t("toolbar.deleteRow")}
                 </Button>
 

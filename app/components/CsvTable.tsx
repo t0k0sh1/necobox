@@ -571,9 +571,19 @@ export function CsvTable({
                     ? "bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100"
                     : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                 }`}
+                role="button"
+                tabIndex={0}
+                aria-pressed={isRowSelected(rowIndex)}
+                aria-label={`${translations.row} ${rowIndex + 1}`}
                 onClick={(e) => handleRowNumberClick(e, rowIndex)}
                 onMouseDown={(e) => handleRowNumberMouseDown(e, rowIndex)}
                 onMouseEnter={() => handleRowNumberMouseEnter(rowIndex)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectRow(rowIndex);
+                  }
+                }}
               >
                 {rowIndex + 1}
               </td>
@@ -606,7 +616,7 @@ export function CsvTable({
                     tabIndex={isActive ? 0 : -1}
                     role="gridcell"
                     aria-label={`${translations.row} ${rowIndex + 1}, ${translations.column} ${col + 1}: ${cell}`}
-                    aria-selected={isSelected}
+                    aria-selected={isSelected || rowIsSelected}
                   >
                     <div className={`relative ${isCellEditing(rowIndex, col) ? 'min-h-6' : cell.includes('\n') ? 'min-h-6' : 'h-6'}`}>
                       {isCellEditing(rowIndex, col) ? (
