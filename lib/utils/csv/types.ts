@@ -55,6 +55,12 @@ export interface SelectionRange {
   end: CellPosition; // 選択終了点
 }
 
+// 行選択の範囲
+export interface RowSelectionRange {
+  startRow: number; // アンカー行（選択開始点）
+  endRow: number; // フォーカス行（選択終了点）
+}
+
 export const DEFAULT_CSV_OPTIONS: CsvOptions = {
   delimiter: ",",
   hasHeader: true,

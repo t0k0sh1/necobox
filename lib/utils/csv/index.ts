@@ -12,6 +12,7 @@ export type {
   CsvOptions,
   CellPosition,
   SelectionRange,
+  RowSelectionRange,
   FileExtension,
 } from "./types";
 
@@ -38,6 +39,7 @@ export {
   createEmptyCsvData,
   addRow,
   removeRow,
+  removeRows,
   addColumn,
   removeColumn,
   updateCell,

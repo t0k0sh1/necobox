@@ -12,6 +12,7 @@ import {
   type CellPosition,
   type ColumnType,
   type CsvData,
+  type RowSelectionRange,
   type SelectionRange,
 } from "@/lib/utils/csv-parser";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
@@ -20,11 +21,14 @@ interface CsvTableProps {
   data: CsvData;
   editingCell: CellPosition | null;
   selection: SelectionRange | null;
+  rowSelection: RowSelectionRange | null;
   onCellChange: (row: number, col: number, value: string) => void;
   onStartEdit: (row: number, col: number) => void;
   onEndEdit: () => void;
   onSelectCell: (row: number, col: number) => void;
   onExtendSelection: (row: number, col: number) => void;
+  onSelectRow: (row: number) => void;
+  onExtendRowSelection: (row: number) => void;
   onKeyNavigation: (e: React.KeyboardEvent, row: number, col: number) => void;
   onColumnTypeChange?: (col: number, columnType: ColumnType) => void;
   translations: {
@@ -46,11 +50,14 @@ export function CsvTable({
   data,
   editingCell,
   selection,
+  rowSelection,
   onCellChange,
   onStartEdit,
   onEndEdit,
   onSelectCell,
   onExtendSelection,
+  onSelectRow,
+  onExtendRowSelection,
   onKeyNavigation,
   onColumnTypeChange,
   translations,
@@ -67,6 +74,11 @@ export function CsvTable({
   // 冗長な onExtendSelection 呼び出しを防ぐため、最後のセル位置を記録
   const lastCellRef = useRef<{ row: number; col: number } | null>(null);
 
+  // 行番号ドラッグ選択の状態
+  const isRowDraggingRef = useRef(false);
+  const justFinishedRowDraggingRef = useRef(false);
+  const lastRowRef = useRef<number | null>(null);
+
   // フォーカス用：選択範囲の終端（カーソル位置）
   const selectedCell = selection ? selection.end : null;
 
@@ -75,6 +87,14 @@ export function CsvTable({
     () => (selection ? normalizeSelection(selection) : null),
     [selection]
   );
+
+  // 正規化された行選択範囲をキャッシュ
+  const normalizedRowSelection = useMemo(() => {
+    if (!rowSelection) return null;
+    const minRow = Math.min(rowSelection.startRow, rowSelection.endRow);
+    const maxRow = Math.max(rowSelection.startRow, rowSelection.endRow);
+    return { minRow, maxRow };
+  }, [rowSelection]);
 
   // 編集中のセルにフォーカス
   useEffect(() => {
@@ -191,6 +211,13 @@ export function CsvTable({
       }
       isDraggingRef.current = false;
       lastCellRef.current = null; // ドラッグ終了時にリセット
+
+      // 行番号ドラッグ終了
+      if (isRowDraggingRef.current) {
+        justFinishedRowDraggingRef.current = true;
+      }
+      isRowDraggingRef.current = false;
+      lastRowRef.current = null;
     };
 
     document.addEventListener("mouseup", handleMouseUp);
@@ -198,6 +225,65 @@ export function CsvTable({
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, []);
+
+  // 行番号クリック
+  const handleRowNumberClick = useCallback(
+    (e: React.MouseEvent, row: number) => {
+      // ドラッグ操作の直後は click イベントを無視
+      if (justFinishedRowDraggingRef.current) {
+        justFinishedRowDraggingRef.current = false;
+        return;
+      }
+
+      if (e.shiftKey && rowSelection) {
+        // Shift+クリック: 選択範囲を拡張
+        onExtendRowSelection(row);
+      } else {
+        // 通常クリック: 単一行選択
+        onSelectRow(row);
+      }
+    },
+    [onSelectRow, onExtendRowSelection, rowSelection]
+  );
+
+  // 行番号ドラッグ開始
+  const handleRowNumberMouseDown = useCallback(
+    (e: React.MouseEvent, row: number) => {
+      // 左クリックのみ
+      if (e.button !== 0) return;
+      // Shift+クリックはhandleRowNumberClickで処理
+      if (e.shiftKey) return;
+
+      e.preventDefault(); // テキスト選択を防止
+      isRowDraggingRef.current = true;
+      justFinishedRowDraggingRef.current = false;
+      lastRowRef.current = row;
+      onSelectRow(row);
+    },
+    [onSelectRow]
+  );
+
+  // 行番号mouseenter（ドラッグ中）
+  const handleRowNumberMouseEnter = useCallback(
+    (row: number) => {
+      if (isRowDraggingRef.current) {
+        if (lastRowRef.current !== row) {
+          lastRowRef.current = row;
+          onExtendRowSelection(row);
+        }
+      }
+    },
+    [onExtendRowSelection]
+  );
+
+  // 行が選択されているかどうか
+  const isRowSelected = useCallback(
+    (row: number): boolean => {
+      if (!normalizedRowSelection) return false;
+      return row >= normalizedRowSelection.minRow && row <= normalizedRowSelection.maxRow;
+    },
+    [normalizedRowSelection]
+  );
 
   // セルのキーダウン処理
   const handleCellKeyDown = useCallback(
@@ -478,7 +564,17 @@ export function CsvTable({
               }`}
             >
               {/* 行番号 */}
-              <td className="sticky left-0 z-10 bg-gray-100 dark:bg-gray-800 border-b border-r px-2 py-1 text-xs text-gray-500 dark:text-gray-400 text-center font-mono">
+              <td
+                data-row-number={rowIndex}
+                className={`sticky left-0 z-10 border-b border-r px-2 py-1 text-xs text-center font-mono cursor-pointer select-none transition-colors ${
+                  isRowSelected(rowIndex)
+                    ? "bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                }`}
+                onClick={(e) => handleRowNumberClick(e, rowIndex)}
+                onMouseDown={(e) => handleRowNumberMouseDown(e, rowIndex)}
+                onMouseEnter={() => handleRowNumberMouseEnter(rowIndex)}
+              >
                 {rowIndex + 1}
               </td>
               {row.map((cell, col) => {
@@ -486,6 +582,7 @@ export function CsvTable({
                 const isActive = isActiveCell(rowIndex, col);
                 const isSelected = isCellSelected(rowIndex, col);
                 const isSelectedNotActive = isInSelectionButNotActive(rowIndex, col);
+                const rowIsSelected = isRowSelected(rowIndex);
                 return (
                   <td
                     key={col}
@@ -497,7 +594,9 @@ export function CsvTable({
                         ? "bg-blue-100 dark:bg-blue-900/30 ring-2 ring-inset ring-blue-500"
                         : isSelectedNotActive
                           ? "bg-blue-50 dark:bg-blue-900/20"
-                          : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                          : rowIsSelected
+                            ? "bg-blue-50 dark:bg-blue-900/20"
+                            : "hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}
                     onClick={(e) => handleCellClick(e, rowIndex, col)}
                     onDoubleClick={() => handleCellDoubleClick(rowIndex, col)}

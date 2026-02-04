@@ -10,6 +10,7 @@ import {
   addRow,
   addColumn,
   removeRow,
+  removeRows,
   removeColumn,
   updateCell,
   updateCells,
@@ -377,6 +378,92 @@ describe("csv-parser", () => {
       const result = removeRow(data, 5);
 
       expect(result).toBe(data);
+    });
+  });
+
+  describe("removeRows", () => {
+    it("複数の行を一括削除する", () => {
+      const data: CsvData = {
+        headers: ["a"],
+        rows: [["1"], ["2"], ["3"], ["4"], ["5"]],
+        hasHeader: true,
+        columnTypes: ["string"],
+      };
+      const result = removeRows(data, [1, 3]);
+
+      expect(result.rows).toEqual([["1"], ["3"], ["5"]]);
+    });
+
+    it("逆順のインデックスでも正しく削除する", () => {
+      const data: CsvData = {
+        headers: ["a"],
+        rows: [["1"], ["2"], ["3"], ["4"]],
+        hasHeader: true,
+        columnTypes: ["string"],
+      };
+      const result = removeRows(data, [3, 1, 0]);
+
+      expect(result.rows).toEqual([["3"]]);
+    });
+
+    it("重複したインデックスを正しく処理する", () => {
+      const data: CsvData = {
+        headers: ["a"],
+        rows: [["1"], ["2"], ["3"]],
+        hasHeader: true,
+        columnTypes: ["string"],
+      };
+      const result = removeRows(data, [1, 1, 1]);
+
+      expect(result.rows).toEqual([["1"], ["3"]]);
+    });
+
+    it("空のインデックス配列の場合は変更しない", () => {
+      const data: CsvData = {
+        headers: ["a"],
+        rows: [["1"], ["2"]],
+        hasHeader: true,
+        columnTypes: ["string"],
+      };
+      const result = removeRows(data, []);
+
+      expect(result).toBe(data);
+    });
+
+    it("範囲外のインデックスを無視する", () => {
+      const data: CsvData = {
+        headers: ["a"],
+        rows: [["1"], ["2"], ["3"]],
+        hasHeader: true,
+        columnTypes: ["string"],
+      };
+      const result = removeRows(data, [-1, 1, 10, 100]);
+
+      expect(result.rows).toEqual([["1"], ["3"]]);
+    });
+
+    it("連続した行を削除する", () => {
+      const data: CsvData = {
+        headers: ["a"],
+        rows: [["1"], ["2"], ["3"], ["4"], ["5"]],
+        hasHeader: true,
+        columnTypes: ["string"],
+      };
+      const result = removeRows(data, [1, 2, 3]);
+
+      expect(result.rows).toEqual([["1"], ["5"]]);
+    });
+
+    it("全ての行を削除する", () => {
+      const data: CsvData = {
+        headers: ["a"],
+        rows: [["1"], ["2"], ["3"]],
+        hasHeader: true,
+        columnTypes: ["string"],
+      };
+      const result = removeRows(data, [0, 1, 2]);
+
+      expect(result.rows).toEqual([]);
     });
   });
 
