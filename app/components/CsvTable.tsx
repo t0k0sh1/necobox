@@ -10,12 +10,18 @@ import {
 import {
   normalizeSelection,
   type CellPosition,
+  type ColumnFilter,
   type ColumnType,
   type CsvData,
+  type DisplayRowIndices,
+  type FilterState,
   type RowSelectionRange,
   type SelectionRange,
+  type SortState,
 } from "@/lib/utils/csv-parser";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { CsvFilterDropdown } from "./CsvFilterDropdown";
 
 interface CsvTableProps {
   data: CsvData;
@@ -31,6 +37,12 @@ interface CsvTableProps {
   onExtendRowSelection: (row: number) => void;
   onKeyNavigation: (e: React.KeyboardEvent, row: number, col: number) => void;
   onColumnTypeChange?: (col: number, columnType: ColumnType) => void;
+  // フィルター・ソート関連
+  displayRowIndices?: DisplayRowIndices;
+  filterState?: FilterState;
+  sortState?: SortState;
+  onSort?: (columnIndex: number) => void;
+  onFilterChange?: (columnIndex: number, filter: ColumnFilter | null) => void;
   translations: {
     header: string;
     row: string;
@@ -41,6 +53,18 @@ interface CsvTableProps {
     columnTypeString?: string;
     columnTypeNumber?: string;
     columnTypeHeader?: string;
+    // フィルター関連
+    filterPlaceholder?: string;
+    filterClear?: string;
+    operatorEquals?: string;
+    operatorNotEquals?: string;
+    operatorGreater?: string;
+    operatorLess?: string;
+    operatorGreaterOrEquals?: string;
+    operatorLessOrEquals?: string;
+    // ソート関連
+    sortAscending?: string;
+    sortDescending?: string;
   };
 }
 
@@ -60,6 +84,11 @@ export function CsvTable({
   onExtendRowSelection,
   onKeyNavigation,
   onColumnTypeChange,
+  displayRowIndices,
+  filterState,
+  sortState,
+  onSort,
+  onFilterChange,
   translations,
 }: CsvTableProps) {
   // textareaRefはヘッダーセルとデータセルの両方で共有される。
@@ -421,6 +450,39 @@ export function CsvTable({
     }
   };
 
+  // 表示する行のインデックス（フィルター・ソート適用後）
+  const rowsToDisplay = useMemo(() => {
+    if (displayRowIndices) {
+      return displayRowIndices;
+    }
+    // displayRowIndices が未指定の場合は全行を表示
+    return data.rows.map((_, index) => index);
+  }, [displayRowIndices, data.rows]);
+
+  // ヘッダークリックでソート（編集中でない場合）
+  const handleHeaderClick = useCallback(
+    (e: React.MouseEvent, col: number) => {
+      // フィルターボタンのクリックは別途処理されるので、ここではソート
+      if (onSort && !editingCell) {
+        // Shift+クリックは選択拡張なのでソートしない
+        if (!e.shiftKey) {
+          onSort(col);
+        }
+      }
+    },
+    [onSort, editingCell]
+  );
+
+  // フィルター変更ハンドラ
+  const handleFilterChange = useCallback(
+    (columnIndex: number, filter: ColumnFilter | null) => {
+      if (onFilterChange) {
+        onFilterChange(columnIndex, filter);
+      }
+    },
+    [onFilterChange]
+  );
+
   // データがない場合
   if (data.headers.length === 0) {
     return (
@@ -461,6 +523,9 @@ export function CsvTable({
               const isActive = isActiveCell(-1, col);
               const isSelected = isCellSelected(-1, col);
               const isSelectedNotActive = isInSelectionButNotActive(-1, col);
+              const isSortedColumn = sortState?.columnIndex === col;
+              const sortDirection = isSortedColumn ? sortState?.direction : null;
+              const columnFilter = filterState?.get(col);
               return (
                 <th
                   key={col}
@@ -483,6 +548,7 @@ export function CsvTable({
                   role="columnheader"
                   aria-label={`${translations.column} ${col + 1}: ${header}`}
                   aria-selected={isSelected}
+                  aria-sort={sortDirection === "asc" ? "ascending" : sortDirection === "desc" ? "descending" : "none"}
                 >
                   <div className={`relative ${isCellEditing(-1, col) ? 'min-h-6' : header.includes('\n') ? 'min-h-6' : 'h-6'}`}>
                     {isCellEditing(-1, col) ? (
@@ -497,15 +563,74 @@ export function CsvTable({
                         aria-label={translations.editCell}
                       />
                     ) : (
-                      <span
-                        className={`block leading-6 ${
-                          header.includes('\n')
-                            ? 'whitespace-pre-wrap line-clamp-2'
-                            : 'truncate'
-                        }`}
-                      >
-                        {header || "\u00A0"}
-                      </span>
+                      <div className="flex items-center justify-between gap-1">
+                        <span
+                          className={`flex-1 leading-6 ${
+                            header.includes('\n')
+                              ? 'whitespace-pre-wrap line-clamp-2'
+                              : 'truncate'
+                          }`}
+                        >
+                          {header || "\u00A0"}
+                        </span>
+                        <div
+                          className="flex items-center gap-0.5 shrink-0"
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onClick={(e) => e.stopPropagation()}
+                          onDoubleClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
+                          {/* ソートボタン */}
+                          {onSort && (
+                            <button
+                              type="button"
+                              className={`p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors ${
+                                sortDirection
+                                  ? "text-blue-600 dark:text-blue-400"
+                                  : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSort(col);
+                              }}
+                              aria-label={
+                                sortDirection === "asc"
+                                  ? translations.sortAscending || "Ascending"
+                                  : sortDirection === "desc"
+                                    ? translations.sortDescending || "Descending"
+                                    : "Sort"
+                              }
+                            >
+                              {sortDirection === "asc" ? (
+                                <ArrowUp className="w-3.5 h-3.5" />
+                              ) : sortDirection === "desc" ? (
+                                <ArrowDown className="w-3.5 h-3.5" />
+                              ) : (
+                                <ArrowUpDown className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          )}
+                          {/* フィルターボタン */}
+                          {onFilterChange && (
+                            <CsvFilterDropdown
+                              columnIndex={col}
+                              columnType={data.columnTypes[col] || "auto"}
+                              currentFilter={columnFilter}
+                              onFilterChange={handleFilterChange}
+                              translations={{
+                                filterPlaceholder: translations.filterPlaceholder || "Filter...",
+                                filterClear: translations.filterClear || "Clear",
+                                operatorEquals: translations.operatorEquals || "Equals (=)",
+                                operatorNotEquals: translations.operatorNotEquals || "Not equals (≠)",
+                                operatorGreater: translations.operatorGreater || "Greater (>)",
+                                operatorLess: translations.operatorLess || "Less (<)",
+                                operatorGreaterOrEquals: translations.operatorGreaterOrEquals || "Greater or equals (≥)",
+                                operatorLessOrEquals: translations.operatorLessOrEquals || "Less or equals (≤)",
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </th>
@@ -554,49 +679,52 @@ export function CsvTable({
 
         {/* データ行 */}
         <tbody>
-          {data.rows.map((row, rowIndex) => (
+          {rowsToDisplay.map((dataRowIndex, displayIndex) => {
+            const row = data.rows[dataRowIndex];
+            if (!row) return null;
+            return (
             <tr
-              key={rowIndex}
+              key={dataRowIndex}
               className={`${
-                rowIndex % 2 === 0
+                displayIndex % 2 === 0
                   ? "bg-white dark:bg-gray-950"
                   : "bg-gray-50 dark:bg-gray-900"
               }`}
             >
-              {/* 行番号 */}
+              {/* 行番号（元のデータの行番号を表示） */}
               <td
-                data-row-number={rowIndex}
+                data-row-number={dataRowIndex}
                 className={`sticky left-0 z-10 border-b border-r px-2 py-1 text-xs text-center font-mono cursor-pointer select-none transition-colors ${
-                  isRowSelected(rowIndex)
+                  isRowSelected(dataRowIndex)
                     ? "bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100"
                     : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                 }`}
                 role="button"
                 tabIndex={0}
-                aria-pressed={isRowSelected(rowIndex)}
-                aria-label={`${translations.row} ${rowIndex + 1}`}
-                onClick={(e) => handleRowNumberClick(e, rowIndex)}
-                onMouseDown={(e) => handleRowNumberMouseDown(e, rowIndex)}
-                onMouseEnter={() => handleRowNumberMouseEnter(rowIndex)}
+                aria-pressed={isRowSelected(dataRowIndex)}
+                aria-label={`${translations.row} ${dataRowIndex + 1}`}
+                onClick={(e) => handleRowNumberClick(e, dataRowIndex)}
+                onMouseDown={(e) => handleRowNumberMouseDown(e, dataRowIndex)}
+                onMouseEnter={() => handleRowNumberMouseEnter(dataRowIndex)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    onSelectRow(rowIndex);
+                    onSelectRow(dataRowIndex);
                   }
                 }}
               >
-                {rowIndex + 1}
+                {dataRowIndex + 1}
               </td>
               {row.map((cell, col) => {
                 const isNumberColumn = data.columnTypes[col] === "number";
-                const isActive = isActiveCell(rowIndex, col);
-                const isSelected = isCellSelected(rowIndex, col);
-                const isSelectedNotActive = isInSelectionButNotActive(rowIndex, col);
-                const rowIsSelected = isRowSelected(rowIndex);
+                const isActive = isActiveCell(dataRowIndex, col);
+                const isSelected = isCellSelected(dataRowIndex, col);
+                const isSelectedNotActive = isInSelectionButNotActive(dataRowIndex, col);
+                const rowIsSelected = isRowSelected(dataRowIndex);
                 return (
                   <td
                     key={col}
-                    data-row={rowIndex}
+                    data-row={dataRowIndex}
                     data-col={col}
                     style={{ width: CELL_MIN_WIDTH, minWidth: CELL_MIN_WIDTH }}
                     className={`border-b border-r px-2 py-1 text-sm cursor-pointer transition-colors select-none ${
@@ -608,25 +736,25 @@ export function CsvTable({
                             ? "bg-blue-50 dark:bg-blue-900/20"
                             : "hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}
-                    onClick={(e) => handleCellClick(e, rowIndex, col)}
-                    onDoubleClick={() => handleCellDoubleClick(rowIndex, col)}
-                    onMouseDown={(e) => handleMouseDown(e, rowIndex, col)}
-                    onMouseEnter={() => handleMouseEnter(rowIndex, col)}
-                    onKeyDown={(e) => handleCellKeyDown(e, rowIndex, col)}
+                    onClick={(e) => handleCellClick(e, dataRowIndex, col)}
+                    onDoubleClick={() => handleCellDoubleClick(dataRowIndex, col)}
+                    onMouseDown={(e) => handleMouseDown(e, dataRowIndex, col)}
+                    onMouseEnter={() => handleMouseEnter(dataRowIndex, col)}
+                    onKeyDown={(e) => handleCellKeyDown(e, dataRowIndex, col)}
                     tabIndex={isActive ? 0 : -1}
                     role="gridcell"
-                    aria-label={`${translations.row} ${rowIndex + 1}, ${translations.column} ${col + 1}: ${cell}`}
+                    aria-label={`${translations.row} ${dataRowIndex + 1}, ${translations.column} ${col + 1}: ${cell}`}
                     aria-selected={isSelected || rowIsSelected}
                   >
-                    <div className={`relative ${isCellEditing(rowIndex, col) ? 'min-h-6' : cell.includes('\n') ? 'min-h-6' : 'h-6'}`}>
-                      {isCellEditing(rowIndex, col) ? (
+                    <div className={`relative ${isCellEditing(dataRowIndex, col) ? 'min-h-6' : cell.includes('\n') ? 'min-h-6' : 'h-6'}`}>
+                      {isCellEditing(dataRowIndex, col) ? (
                         <textarea
                           ref={textareaRef}
-                          value={getCellValue(rowIndex, col)}
-                          onChange={(e) => handleInputChange(e, rowIndex, col)}
-                          onKeyDown={(e) => handleCellKeyDown(e, rowIndex, col)}
+                          value={getCellValue(dataRowIndex, col)}
+                          onChange={(e) => handleInputChange(e, dataRowIndex, col)}
+                          onKeyDown={(e) => handleCellKeyDown(e, dataRowIndex, col)}
                           onBlur={onEndEdit}
-                          rows={getTextareaRows(getCellValue(rowIndex, col))}
+                          rows={getTextareaRows(getCellValue(dataRowIndex, col))}
                           className={`w-full px-1 py-0 text-sm bg-white dark:bg-gray-900 border border-blue-500 rounded outline-none resize-none leading-6 ${
                             isNumberColumn ? "text-right" : ""
                           }`}
@@ -648,7 +776,8 @@ export function CsvTable({
                 );
               })}
             </tr>
-          ))}
+          );
+          })}
         </tbody>
       </table>
     </div>

@@ -28,6 +28,7 @@ import {
 import {
   addColumn,
   addRow,
+  computeDisplayIndices,
   createEmptyCsvData,
   decodeWithEncoding,
   detectDelimiter,
@@ -35,6 +36,7 @@ import {
   downloadCSV,
   ENCODING_LABELS,
   FILE_EXTENSION_LABELS,
+  INITIAL_SORT_STATE,
   normalizeSelection,
   OUTPUT_ENCODING_LABELS,
   parseClipboardText,
@@ -44,24 +46,30 @@ import {
   removeColumn,
   removeRow,
   removeRows,
+  toggleSort,
   updateCell,
   updateCells,
   updateColumnType,
   type CellPosition,
+  type ColumnFilter,
   type ColumnType,
   type CsvData,
   type CsvOptions,
+  type DisplayRowIndices,
   type EncodingType,
   type FileExtension,
+  type FilterState,
   type OutputEncodingType,
   type QuoteStyle,
   type RowSelectionRange,
   type SelectionRange,
+  type SortState,
 } from "@/lib/utils/csv-parser";
 import {
   ChevronDown,
   Download,
   FileSpreadsheet,
+  FilterX,
   HelpCircle,
   Keyboard,
   Minus,
@@ -72,7 +80,7 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type DelimiterType = "," | "\t" | ";" | "|" | "custom";
 
@@ -110,6 +118,10 @@ export default function CsvEditorPage() {
   const [editingCell, setEditingCell] = useState<CellPosition | null>(null);
   const [selection, setSelection] = useState<SelectionRange | null>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionRange | null>(null);
+
+  // フィルター・ソート状態
+  const [filterState, setFilterState] = useState<FilterState>(new Map());
+  const [sortState, setSortState] = useState<SortState>(INITIAL_SORT_STATE);
 
   // 単一セル選択のヘルパー（後方互換性のため）
   const selectedCell = selection ? selection.start : null;
@@ -173,6 +185,9 @@ export default function CsvEditorPage() {
         setSelection(null);
         setRowSelection(null);
         setEditingCell(null);
+        // フィルター・ソートをリセット
+        setFilterState(new Map());
+        setSortState(INITIAL_SORT_STATE);
       } catch (err) {
         setError(t("error.parseError"));
         console.error("CSV parse error:", err);
@@ -262,6 +277,9 @@ export default function CsvEditorPage() {
     setEditingCell(null);
     setError(null);
     setExportFilename("data");
+    // フィルター・ソートをリセット
+    setFilterState(new Map());
+    setSortState(INITIAL_SORT_STATE);
   }, [hasHeader, t]);
 
   // クリア
@@ -272,6 +290,9 @@ export default function CsvEditorPage() {
     setEditingCell(null);
     setError(null);
     setExportFilename("data");
+    // フィルター・ソートをリセット
+    setFilterState(new Map());
+    setSortState(INITIAL_SORT_STATE);
   }, []);
 
   // データのみクリア（スキーマ維持）
@@ -748,6 +769,41 @@ export default function CsvEditorPage() {
     },
     [csvData, editingCell, selection, handleCopy, handleCut, handlePasteCell, handleFillDown, handleFillRight, handleDeleteSelection, handleSelectCell, handleExtendSelection]
   );
+
+  // displayRowIndices を計算（フィルター・ソート適用後）
+  const displayRowIndices: DisplayRowIndices = useMemo(() => {
+    if (!csvData) return [];
+    return computeDisplayIndices(csvData, filterState, sortState);
+  }, [csvData, filterState, sortState]);
+
+  // フィルター変更ハンドラ
+  const handleFilterChange = useCallback(
+    (columnIndex: number, filter: ColumnFilter | null) => {
+      setFilterState((prev) => {
+        const next = new Map(prev);
+        if (filter === null) {
+          next.delete(columnIndex);
+        } else {
+          next.set(columnIndex, filter);
+        }
+        return next;
+      });
+    },
+    []
+  );
+
+  // ソートハンドラ
+  const handleSort = useCallback(
+    (columnIndex: number) => {
+      setSortState((prev) => toggleSort(prev, columnIndex));
+    },
+    []
+  );
+
+  // すべてのフィルターをクリア
+  const handleClearAllFilters = useCallback(() => {
+    setFilterState(new Map());
+  }, []);
 
   // 行を追加
   const handleAddRow = useCallback(() => {
@@ -1231,6 +1287,27 @@ export default function CsvEditorPage() {
               </div>
             )}
 
+            {/* フィルター状態表示 */}
+            {csvData && filterState.size > 0 && (
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <span>
+                  {t("filter.showingRows", {
+                    filtered: displayRowIndices.length,
+                    total: csvData.rows.length,
+                  })}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearAllFilters}
+                  className="h-7 px-2 text-xs"
+                >
+                  <FilterX className="w-3.5 h-3.5 mr-1" />
+                  {t("filter.clearAll")}
+                </Button>
+              </div>
+            )}
+
             {/* テーブル表示 */}
             {csvData && (
               <div ref={tableContainerRef}>
@@ -1248,6 +1325,11 @@ export default function CsvEditorPage() {
                   onExtendRowSelection={handleExtendRowSelection}
                   onKeyNavigation={handleKeyNavigation}
                   onColumnTypeChange={handleColumnTypeChange}
+                  displayRowIndices={displayRowIndices}
+                  filterState={filterState}
+                  sortState={sortState}
+                  onSort={handleSort}
+                  onFilterChange={handleFilterChange}
                   translations={{
                     header: t("table.header"),
                     row: t("table.row"),
@@ -1258,6 +1340,16 @@ export default function CsvEditorPage() {
                     columnTypeString: t("columnType.string"),
                     columnTypeNumber: t("columnType.number"),
                     columnTypeHeader: t("table.columnTypeHeader"),
+                    filterPlaceholder: t("filter.placeholder"),
+                    filterClear: t("filter.clear"),
+                    operatorEquals: t("filter.operatorEquals"),
+                    operatorNotEquals: t("filter.operatorNotEquals"),
+                    operatorGreater: t("filter.operatorGreater"),
+                    operatorLess: t("filter.operatorLess"),
+                    operatorGreaterOrEquals: t("filter.operatorGreaterOrEquals"),
+                    operatorLessOrEquals: t("filter.operatorLessOrEquals"),
+                    sortAscending: t("sort.ascending"),
+                    sortDescending: t("sort.descending"),
                   }}
                 />
               </div>

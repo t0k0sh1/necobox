@@ -50,3 +50,24 @@ export {
 
 // 選択範囲
 export { normalizeSelection, isCellInSelection } from "./selection";
+
+// フィルター・ソート
+export {
+  applyFilters,
+  applySort,
+  computeDisplayIndices,
+  toggleSort,
+  displayToDataIndex,
+  dataToDisplayIndex,
+  INITIAL_SORT_STATE,
+  NUMBER_FILTER_OPERATORS,
+} from "./filter-sort";
+
+export type {
+  StringFilter,
+  NumberFilter,
+  ColumnFilter,
+  FilterState,
+  SortState,
+  DisplayRowIndices,
+} from "./filter-sort";

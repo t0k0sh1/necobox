@@ -504,6 +504,22 @@
       "emptyFile": "File is empty",
       "invalidFile": "Invalid file format"
     },
-    "emptyState": "Upload a CSV file or create a new one"
+    "emptyState": "Upload a CSV file or create a new one",
+    "filter": {
+      "placeholder": "Enter filter value",
+      "clear": "Clear",
+      "clearAll": "Clear Filters",
+      "showingRows": "{filtered} / {total} rows shown",
+      "operatorEquals": "Equals (=)",
+      "operatorNotEquals": "Not equals (≠)",
+      "operatorGreater": "Greater than (>)",
+      "operatorLess": "Less than (<)",
+      "operatorGreaterOrEquals": "Greater or equal (≥)",
+      "operatorLessOrEquals": "Less or equal (≤)"
+    },
+    "sort": {
+      "ascending": "Ascending",
+      "descending": "Descending"
+    }
   }
 }
