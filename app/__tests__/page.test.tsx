@@ -27,6 +27,7 @@ describe("Home Page", () => {
     expect(screen.getByText("JWT Decoder")).toBeInTheDocument();
     expect(screen.getByText("Time Zone Converter")).toBeInTheDocument();
     expect(screen.getByText("Image Format Converter")).toBeInTheDocument();
+    expect(screen.getByText("Japanese Era Converter")).toBeInTheDocument();
     expect(screen.getByText("IP/Hostname Info")).toBeInTheDocument();
     expect(screen.getByText("Service Status")).toBeInTheDocument();
     expect(screen.getByText("Text Viewer")).toBeInTheDocument();
@@ -73,11 +74,14 @@ describe("Home Page", () => {
       "href",
       "/csv-editor"
     );
+    expect(
+      screen.getByText("Japanese Era Converter").closest("a")
+    ).toHaveAttribute("href", "/wareki-converter");
   });
 
-  it("renders 11 tool buttons", () => {
+  it("renders 12 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(11);
+    expect(buttons).toHaveLength(12);
   });
 
   it("displays buttons with correct styling", () => {

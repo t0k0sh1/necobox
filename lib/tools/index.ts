@@ -7,6 +7,7 @@
 export type IconName =
   | "Activity"
   | "ArrowRightLeft"
+  | "Calendar"
   | "Clock"
   | "Dices"
   | "Edit"
@@ -77,6 +78,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "Image",
     category: "converters",
     i18nKey: "imageConverter",
+  },
+  {
+    id: "wareki-converter",
+    path: "/wareki-converter",
+    icon: "Calendar",
+    category: "converters",
+    i18nKey: "warekiConverter",
   },
   // Editors (新カテゴリ)
   {
