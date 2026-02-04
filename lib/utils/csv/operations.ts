@@ -66,6 +66,24 @@ export function removeRow(data: CsvData, index: number): CsvData {
 }
 
 /**
+ * 複数行を一括削除
+ * @param data CSVデータ
+ * @param indices 削除する行のインデックス配列
+ */
+export function removeRows(data: CsvData, indices: number[]): CsvData {
+  // 重複を除去し、有効なインデックスのみをフィルタリング
+  const toDelete = new Set(
+    indices.filter((i) => i >= 0 && i < data.rows.length)
+  );
+
+  if (toDelete.size === 0) return data;
+
+  // O(n)のfilterで削除（spliceループよりパフォーマンスが良い）
+  const newRows = data.rows.filter((_, i) => !toDelete.has(i));
+  return { ...data, rows: newRows };
+}
+
+/**
  * 列を追加
  * @param data CSVデータ
  * @param index 挿入位置（省略時は末尾）

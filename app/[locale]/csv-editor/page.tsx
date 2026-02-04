@@ -43,6 +43,7 @@ import {
   redetectColumnTypes,
   removeColumn,
   removeRow,
+  removeRows,
   updateCell,
   updateCells,
   updateColumnType,
@@ -54,6 +55,7 @@ import {
   type FileExtension,
   type OutputEncodingType,
   type QuoteStyle,
+  type RowSelectionRange,
   type SelectionRange,
 } from "@/lib/utils/csv-parser";
 import {
@@ -107,6 +109,7 @@ export default function CsvEditorPage() {
   // 編集状態
   const [editingCell, setEditingCell] = useState<CellPosition | null>(null);
   const [selection, setSelection] = useState<SelectionRange | null>(null);
+  const [rowSelection, setRowSelection] = useState<RowSelectionRange | null>(null);
 
   // 単一セル選択のヘルパー（後方互換性のため）
   const selectedCell = selection ? selection.start : null;
@@ -168,6 +171,7 @@ export default function CsvEditorPage() {
         setCsvData(data);
         setError(null);
         setSelection(null);
+        setRowSelection(null);
         setEditingCell(null);
       } catch (err) {
         setError(t("error.parseError"));
@@ -254,6 +258,7 @@ export default function CsvEditorPage() {
     const newData = createEmptyCsvData(3, 1, hasHeader, t("table.defaultColumnName"));
     setCsvData(newData);
     setSelection(null);
+    setRowSelection(null);
     setEditingCell(null);
     setError(null);
     setExportFilename("data");
@@ -263,6 +268,7 @@ export default function CsvEditorPage() {
   const handleClear = useCallback(() => {
     setCsvData(null);
     setSelection(null);
+    setRowSelection(null);
     setEditingCell(null);
     setError(null);
     setExportFilename("data");
@@ -277,6 +283,7 @@ export default function CsvEditorPage() {
       rows: [],
     });
     setSelection(null);
+    setRowSelection(null);
     setEditingCell(null);
     setError(null);
   }, [csvData]);
@@ -295,6 +302,7 @@ export default function CsvEditorPage() {
   // セル選択（単一セル）
   const handleSelectCell = useCallback((row: number, col: number) => {
     setSelection({ start: { row, col }, end: { row, col } });
+    setRowSelection(null); // 行選択をクリア
     setEditingCell(null);
   }, []);
 
@@ -304,6 +312,24 @@ export default function CsvEditorPage() {
       if (!prev) return { start: { row, col }, end: { row, col } };
       return { ...prev, end: { row, col } };
     });
+    setRowSelection(null); // 行選択をクリア
+    setEditingCell(null);
+  }, []);
+
+  // 行選択（単一行）
+  const handleSelectRow = useCallback((row: number) => {
+    setRowSelection({ startRow: row, endRow: row });
+    setSelection(null); // セル選択をクリア
+    setEditingCell(null);
+  }, []);
+
+  // 行選択範囲の拡張（Shift+クリック/ドラッグ）
+  const handleExtendRowSelection = useCallback((row: number) => {
+    setRowSelection((prev) => {
+      if (!prev) return { startRow: row, endRow: row };
+      return { ...prev, endRow: row };
+    });
+    setSelection(null); // セル選択をクリア
     setEditingCell(null);
   }, []);
 
@@ -730,9 +756,36 @@ export default function CsvEditorPage() {
     setCsvData(newData);
   }, [csvData]);
 
-  // 行を削除
+  // 行を削除（行選択がある場合は複数行削除）
   const handleDeleteRow = useCallback(() => {
-    if (!csvData || !selectedCell || selectedCell.row < 0) return;
+    if (!csvData) return;
+
+    // 行選択がある場合は複数行削除
+    if (rowSelection) {
+      const minRow = Math.min(rowSelection.startRow, rowSelection.endRow);
+      const maxRow = Math.max(rowSelection.startRow, rowSelection.endRow);
+      const indicesToDelete: number[] = [];
+      for (let i = minRow; i <= maxRow; i++) {
+        indicesToDelete.push(i);
+      }
+      const newData = removeRows(csvData, indicesToDelete);
+      setCsvData(newData);
+      // 行選択をクリアし、削除後の位置にセル選択を設定
+      setRowSelection(null);
+      if (newData.rows.length > 0) {
+        const newRow = Math.min(minRow, newData.rows.length - 1);
+        setSelection({
+          start: { row: newRow, col: 0 },
+          end: { row: newRow, col: 0 },
+        });
+      } else {
+        setSelection(null);
+      }
+      return;
+    }
+
+    // セル選択がある場合は単一行削除
+    if (!selectedCell || selectedCell.row < 0) return;
     const newData = removeRow(csvData, selectedCell.row);
     setCsvData(newData);
     // 選択セルを調整
@@ -743,7 +796,7 @@ export default function CsvEditorPage() {
         end: { row: newRow, col: selectedCell.col },
       });
     }
-  }, [csvData, selectedCell]);
+  }, [csvData, selectedCell, rowSelection]);
 
   // 列を追加
   const handleAddColumn = useCallback(() => {
@@ -1100,10 +1153,15 @@ export default function CsvEditorPage() {
                   variant="outline"
                   size="sm"
                   onClick={handleDeleteRow}
-                  disabled={!selectedCell || selectedCell.row < 0}
+                  disabled={
+                    !rowSelection &&
+                    (!selectedCell || selectedCell.row < 0)
+                  }
                 >
                   <Minus className="w-4 h-4 mr-1" />
-                  {t("toolbar.deleteRow")}
+                  {rowSelection
+                    ? t("toolbar.deleteRowsCount", { count: Math.abs(rowSelection.endRow - rowSelection.startRow) + 1 })
+                    : t("toolbar.deleteRow")}
                 </Button>
 
                 {/* 列操作 */}
@@ -1180,11 +1238,14 @@ export default function CsvEditorPage() {
                   data={csvData}
                   editingCell={editingCell}
                   selection={selection}
+                  rowSelection={rowSelection}
                   onCellChange={handleCellChange}
                   onStartEdit={handleStartEdit}
                   onEndEdit={handleEndEdit}
                   onSelectCell={handleSelectCell}
                   onExtendSelection={handleExtendSelection}
+                  onSelectRow={handleSelectRow}
+                  onExtendRowSelection={handleExtendRowSelection}
                   onKeyNavigation={handleKeyNavigation}
                   onColumnTypeChange={handleColumnTypeChange}
                   translations={{
