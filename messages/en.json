@@ -32,6 +32,7 @@
     "imageConverter": "Image Format Converter",
     "textViewer": "Text Viewer",
     "csvEditor": "CSV Editor",
+    "warekiConverter": "Japanese Era Converter",
     "sectionGenerators": "Generators",
     "sectionConverters": "Converters",
     "sectionEditors": "Editors",
@@ -410,6 +411,48 @@
         "5xx": "5xx Server Error",
         "non_standard": "Non-Standard (CDN/Cloud)"
       }
+    }
+  },
+  "warekiConverter": {
+    "title": "Japanese Era Converter",
+    "description": "Convert between Gregorian and Japanese era dates",
+    "breadcrumb": "Japanese Era Converter",
+    "tabs": {
+      "gregorianToWareki": "Gregorian → Japanese Era",
+      "warekiToGregorian": "Japanese Era → Gregorian"
+    },
+    "input": {
+      "year": "Year",
+      "month": "Month",
+      "day": "Day",
+      "era": "Era"
+    },
+    "era": {
+      "meiji": "Meiji",
+      "taisho": "Taisho",
+      "showa": "Showa",
+      "heisei": "Heisei",
+      "reiwa": "Reiwa"
+    },
+    "result": {
+      "gregorian": "Gregorian",
+      "wareki": "Japanese Era",
+      "weekday": "Day of week"
+    },
+    "weekday": {
+      "sunday": "Sunday",
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday"
+    },
+    "error": {
+      "invalidDate": "Invalid date",
+      "dateOutOfRange": "Please enter a date from Meiji era onwards",
+      "eraYearOutOfRange": "{era} {year} does not exist",
+      "invalidEra": "Invalid era"
     }
   },
   "csvEditor": {

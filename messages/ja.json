@@ -32,6 +32,7 @@
     "imageConverter": "画像フォーマット変換",
     "textViewer": "テキストビューア",
     "csvEditor": "CSVエディタ",
+    "warekiConverter": "西暦・和暦変換",
     "sectionGenerators": "生成ツール",
     "sectionConverters": "変換ツール",
     "sectionEditors": "エディタツール",
@@ -410,6 +411,48 @@
         "5xx": "5xx サーバーエラー",
         "non_standard": "非標準（CDN/クラウド）"
       }
+    }
+  },
+  "warekiConverter": {
+    "title": "西暦・和暦変換",
+    "description": "西暦と和暦を相互変換します",
+    "breadcrumb": "西暦・和暦変換",
+    "tabs": {
+      "gregorianToWareki": "西暦 → 和暦",
+      "warekiToGregorian": "和暦 → 西暦"
+    },
+    "input": {
+      "year": "年",
+      "month": "月",
+      "day": "日",
+      "era": "元号"
+    },
+    "era": {
+      "meiji": "明治",
+      "taisho": "大正",
+      "showa": "昭和",
+      "heisei": "平成",
+      "reiwa": "令和"
+    },
+    "result": {
+      "gregorian": "西暦",
+      "wareki": "和暦",
+      "weekday": "曜日"
+    },
+    "weekday": {
+      "sunday": "日曜日",
+      "monday": "月曜日",
+      "tuesday": "火曜日",
+      "wednesday": "水曜日",
+      "thursday": "木曜日",
+      "friday": "金曜日",
+      "saturday": "土曜日"
+    },
+    "error": {
+      "invalidDate": "無効な日付です",
+      "dateOutOfRange": "明治元年以降の日付を入力してください",
+      "eraYearOutOfRange": "{era}{year}年は存在しません",
+      "invalidEra": "無効な元号です"
     }
   },
   "csvEditor": {
