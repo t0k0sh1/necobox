@@ -599,6 +599,7 @@ export function CsvTable({
                           {/* フィルターボタン */}
                           {onFilterChange && (
                             <CsvFilterDropdown
+                              key={`filter-${col}-${columnFilter === undefined}`}
                               columnIndex={col}
                               columnType={data.columnTypes[col] || "auto"}
                               currentFilter={columnFilter}

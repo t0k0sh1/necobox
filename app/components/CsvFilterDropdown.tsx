@@ -22,7 +22,7 @@ import {
   type StringFilter,
 } from "@/lib/utils/csv";
 import { Filter, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 interface CsvFilterDropdownProps {
   columnIndex: number;
@@ -53,6 +53,7 @@ export function CsvFilterDropdown({
   const hasFilter = currentFilter !== undefined;
 
   // ローカル状態（入力中の値を保持）
+  // 初期値は currentFilter から取得。外部からのリセットは key prop でコンポーネントをリマウントして対応
   const [localStringValue, setLocalStringValue] = useState(
     currentFilter?.type === "string" ? currentFilter.value : ""
   );
@@ -62,20 +63,6 @@ export function CsvFilterDropdown({
   const [localNumberInput, setLocalNumberInput] = useState(
     currentFilter?.type === "number" ? String(currentFilter.value) : ""
   );
-
-  // currentFilter が外部から変更されたらローカル状態を同期
-  useEffect(() => {
-    if (currentFilter?.type === "string") {
-      setLocalStringValue(currentFilter.value);
-    } else if (currentFilter?.type === "number") {
-      setLocalOperator(currentFilter.operator);
-      setLocalNumberInput(String(currentFilter.value));
-    } else {
-      setLocalStringValue("");
-      setLocalOperator("=");
-      setLocalNumberInput("");
-    }
-  }, [currentFilter]);
 
   // 演算子のラベルを取得
   const getOperatorLabel = (op: NumberFilter["operator"]): string => {
