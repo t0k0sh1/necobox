@@ -630,18 +630,34 @@ export default function CsvEditorPage() {
     };
   }, [handleNativePaste]);
 
+  // displayRowIndices を計算（フィルター・ソート適用後）
+  const displayRowIndices: DisplayRowIndices = useMemo(() => {
+    if (!csvData) return [];
+    return computeDisplayIndices(csvData, filterState, sortState);
+  }, [csvData, filterState, sortState]);
+
   // キーボードナビゲーション
   const handleKeyNavigation = useCallback(
     (e: React.KeyboardEvent, row: number, col: number) => {
       if (!csvData) return;
 
-      const maxRow = csvData.rows.length - 1;
       const maxCol = csvData.headers.length - 1;
       // Mac検出: userAgentData（新API）を優先し、フォールバックとしてuserAgentを使用
       const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
       const platform = nav.userAgentData?.platform || nav.userAgent || "";
       const isMac = /mac/i.test(platform);
       const isModifierKey = isMac ? e.metaKey : e.ctrlKey;
+
+      // 表示行インデックスベースのナビゲーション用ヘルパー
+      const getDisplayIndex = (dataRow: number): number => {
+        if (dataRow === -1) return -1; // ヘッダー行
+        return displayRowIndices.indexOf(dataRow);
+      };
+      const getDataIndex = (displayIdx: number): number => {
+        if (displayIdx === -1) return -1; // ヘッダー行
+        return displayRowIndices[displayIdx] ?? -1;
+      };
+      const maxDisplayRow = displayRowIndices.length - 1;
 
       // Ctrl+D: 下方向に複製
       if (isModifierKey && (e.key === "d" || e.key === "D") && !editingCell) {
@@ -680,29 +696,65 @@ export default function CsvEditorPage() {
       const endRow = selection?.end.row ?? row;
       const endCol = selection?.end.col ?? col;
 
+      // 表示インデックスを取得
+      const currentDisplayRow = getDisplayIndex(row);
+      const endDisplayRow = getDisplayIndex(endRow);
+
       switch (e.key) {
         case "ArrowUp":
           e.preventDefault();
           if (e.shiftKey) {
             // Shift+矢印: 選択範囲を拡張（終点を基準）
-            if (endRow > -1) {
-              handleExtendSelection(endRow - 1, endCol);
+            if (endRow === -1) {
+              // ヘッダー行からは上に行けない
+            } else if (endDisplayRow > 0) {
+              const prevDataRow = getDataIndex(endDisplayRow - 1);
+              if (prevDataRow !== -1) {
+                handleExtendSelection(prevDataRow, endCol);
+              }
+            } else if (endDisplayRow === 0) {
+              // 最初の表示行からヘッダーへ
+              handleExtendSelection(-1, endCol);
             }
           } else {
-            if (row > -1) {
-              handleSelectCell(row - 1, col);
+            if (row === -1) {
+              // ヘッダー行からは上に行けない
+            } else if (currentDisplayRow > 0) {
+              const prevDataRow = getDataIndex(currentDisplayRow - 1);
+              if (prevDataRow !== -1) {
+                handleSelectCell(prevDataRow, col);
+              }
+            } else if (currentDisplayRow === 0) {
+              // 最初の表示行からヘッダーへ
+              handleSelectCell(-1, col);
             }
           }
           break;
         case "ArrowDown":
           e.preventDefault();
           if (e.shiftKey) {
-            if (endRow < maxRow) {
-              handleExtendSelection(endRow + 1, endCol);
+            if (endRow === -1) {
+              // ヘッダー行から最初の表示行へ
+              if (displayRowIndices.length > 0) {
+                handleExtendSelection(displayRowIndices[0], endCol);
+              }
+            } else if (endDisplayRow < maxDisplayRow) {
+              const nextDataRow = getDataIndex(endDisplayRow + 1);
+              if (nextDataRow !== -1) {
+                handleExtendSelection(nextDataRow, endCol);
+              }
             }
           } else {
-            if (row < maxRow) {
-              handleSelectCell(row + 1, col);
+            if (row === -1) {
+              // ヘッダー行から最初の表示行へ
+              if (displayRowIndices.length > 0) {
+                handleSelectCell(displayRowIndices[0], col);
+              }
+            } else if (currentDisplayRow < maxDisplayRow) {
+              const nextDataRow = getDataIndex(currentDisplayRow + 1);
+              if (nextDataRow !== -1) {
+                handleSelectCell(nextDataRow, col);
+              }
             }
           }
           break;
@@ -740,15 +792,31 @@ export default function CsvEditorPage() {
             // 前のセルへ
             if (col > 0) {
               handleSelectCell(row, col - 1);
-            } else if (row > -1) {
-              handleSelectCell(row - 1, maxCol);
+            } else if (row === -1) {
+              // ヘッダー行の最初の列: 何もしない
+            } else if (currentDisplayRow > 0) {
+              const prevDataRow = getDataIndex(currentDisplayRow - 1);
+              if (prevDataRow !== -1) {
+                handleSelectCell(prevDataRow, maxCol);
+              }
+            } else if (currentDisplayRow === 0) {
+              // 最初の表示行からヘッダーへ
+              handleSelectCell(-1, maxCol);
             }
           } else {
             // 次のセルへ
             if (col < maxCol) {
               handleSelectCell(row, col + 1);
-            } else if (row < maxRow) {
-              handleSelectCell(row + 1, 0);
+            } else if (row === -1) {
+              // ヘッダー行の最後の列から最初の表示行へ
+              if (displayRowIndices.length > 0) {
+                handleSelectCell(displayRowIndices[0], 0);
+              }
+            } else if (currentDisplayRow < maxDisplayRow) {
+              const nextDataRow = getDataIndex(currentDisplayRow + 1);
+              if (nextDataRow !== -1) {
+                handleSelectCell(nextDataRow, 0);
+              }
             }
           }
           break;
@@ -767,14 +835,8 @@ export default function CsvEditorPage() {
           break;
       }
     },
-    [csvData, editingCell, selection, handleCopy, handleCut, handlePasteCell, handleFillDown, handleFillRight, handleDeleteSelection, handleSelectCell, handleExtendSelection]
+    [csvData, editingCell, selection, displayRowIndices, handleCopy, handleCut, handlePasteCell, handleFillDown, handleFillRight, handleDeleteSelection, handleSelectCell, handleExtendSelection]
   );
-
-  // displayRowIndices を計算（フィルター・ソート適用後）
-  const displayRowIndices: DisplayRowIndices = useMemo(() => {
-    if (!csvData) return [];
-    return computeDisplayIndices(csvData, filterState, sortState);
-  }, [csvData, filterState, sortState]);
 
   // フィルター変更ハンドラ
   const handleFilterChange = useCallback(
@@ -864,7 +926,8 @@ export default function CsvEditorPage() {
   // 列を削除
   const handleDeleteColumn = useCallback(() => {
     if (!csvData || !selectedCell || csvData.headers.length <= 1) return;
-    const newData = removeColumn(csvData, selectedCell.col);
+    const deletedCol = selectedCell.col;
+    const newData = removeColumn(csvData, deletedCol);
     setCsvData(newData);
     // 選択セルを調整
     if (selectedCell.col >= newData.headers.length) {
@@ -874,6 +937,29 @@ export default function CsvEditorPage() {
         end: { row: selectedCell.row, col: newCol },
       });
     }
+    // フィルター・ソート状態を更新（削除された列より後のインデックスをシフト）
+    setFilterState((prev) => {
+      const next = new Map<number, ColumnFilter>();
+      for (const [colIndex, filter] of prev) {
+        if (colIndex < deletedCol) {
+          next.set(colIndex, filter);
+        } else if (colIndex > deletedCol) {
+          next.set(colIndex - 1, filter);
+        }
+        // colIndex === deletedCol の場合はフィルターを削除
+      }
+      return next;
+    });
+    // ソート状態を更新
+    setSortState((prev) => {
+      if (prev.columnIndex === null) return prev;
+      if (prev.columnIndex === deletedCol) {
+        return INITIAL_SORT_STATE;
+      } else if (prev.columnIndex > deletedCol) {
+        return { ...prev, columnIndex: prev.columnIndex - 1 };
+      }
+      return prev;
+    });
   }, [csvData, selectedCell]);
 
   // CSVダウンロード

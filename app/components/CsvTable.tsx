@@ -459,20 +459,6 @@ export function CsvTable({
     return data.rows.map((_, index) => index);
   }, [displayRowIndices, data.rows]);
 
-  // ヘッダークリックでソート（編集中でない場合）
-  const handleHeaderClick = useCallback(
-    (e: React.MouseEvent, col: number) => {
-      // フィルターボタンのクリックは別途処理されるので、ここではソート
-      if (onSort && !editingCell) {
-        // Shift+クリックは選択拡張なのでソートしない
-        if (!e.shiftKey) {
-          onSort(col);
-        }
-      }
-    },
-    [onSort, editingCell]
-  );
-
   // フィルター変更ハンドラ
   const handleFilterChange = useCallback(
     (columnIndex: number, filter: ColumnFilter | null) => {

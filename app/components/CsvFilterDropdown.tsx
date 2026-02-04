@@ -22,7 +22,7 @@ import {
   type StringFilter,
 } from "@/lib/utils/csv";
 import { Filter, X } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface CsvFilterDropdownProps {
   columnIndex: number;
@@ -52,15 +52,30 @@ export function CsvFilterDropdown({
   const isNumeric = columnType === "number";
   const hasFilter = currentFilter !== undefined;
 
-  // 文字列フィルターの値
-  const stringValue =
-    currentFilter?.type === "string" ? currentFilter.value : "";
+  // ローカル状態（入力中の値を保持）
+  const [localStringValue, setLocalStringValue] = useState(
+    currentFilter?.type === "string" ? currentFilter.value : ""
+  );
+  const [localOperator, setLocalOperator] = useState<NumberFilter["operator"]>(
+    currentFilter?.type === "number" ? currentFilter.operator : "="
+  );
+  const [localNumberInput, setLocalNumberInput] = useState(
+    currentFilter?.type === "number" ? String(currentFilter.value) : ""
+  );
 
-  // 数値フィルターの値
-  const numberOperator: NumberFilter["operator"] =
-    currentFilter?.type === "number" ? currentFilter.operator : "=";
-  const numberValue =
-    currentFilter?.type === "number" ? String(currentFilter.value) : "";
+  // currentFilter が外部から変更されたらローカル状態を同期
+  useEffect(() => {
+    if (currentFilter?.type === "string") {
+      setLocalStringValue(currentFilter.value);
+    } else if (currentFilter?.type === "number") {
+      setLocalOperator(currentFilter.operator);
+      setLocalNumberInput(String(currentFilter.value));
+    } else {
+      setLocalStringValue("");
+      setLocalOperator("=");
+      setLocalNumberInput("");
+    }
+  }, [currentFilter]);
 
   // 演算子のラベルを取得
   const getOperatorLabel = (op: NumberFilter["operator"]): string => {
@@ -85,6 +100,7 @@ export function CsvFilterDropdown({
   // 文字列フィルターの変更
   const handleStringFilterChange = useCallback(
     (value: string) => {
+      setLocalStringValue(value);
       if (value.trim() === "") {
         onFilterChange(columnIndex, null);
       } else {
@@ -95,40 +111,45 @@ export function CsvFilterDropdown({
     [columnIndex, onFilterChange]
   );
 
-  // 数値フィルターの演算子変更
-  const handleOperatorChange = useCallback(
-    (op: NumberFilter["operator"]) => {
-      const numValue = parseFloat(numberValue);
+  // 数値フィルターの適用（演算子と値が両方有効な場合のみ）
+  const applyNumberFilter = useCallback(
+    (op: NumberFilter["operator"], inputValue: string) => {
+      if (inputValue.trim() === "") {
+        onFilterChange(columnIndex, null);
+        return;
+      }
+      const numValue = parseFloat(inputValue);
       if (!isNaN(numValue)) {
         const filter: NumberFilter = { type: "number", operator: op, value: numValue };
         onFilterChange(columnIndex, filter);
       }
     },
-    [columnIndex, numberValue, onFilterChange]
+    [columnIndex, onFilterChange]
+  );
+
+  // 数値フィルターの演算子変更
+  const handleOperatorChange = useCallback(
+    (op: NumberFilter["operator"]) => {
+      setLocalOperator(op);
+      applyNumberFilter(op, localNumberInput);
+    },
+    [localNumberInput, applyNumberFilter]
   );
 
   // 数値フィルターの値変更
   const handleNumberValueChange = useCallback(
     (value: string) => {
-      if (value.trim() === "") {
-        onFilterChange(columnIndex, null);
-      } else {
-        const numValue = parseFloat(value);
-        if (!isNaN(numValue)) {
-          const filter: NumberFilter = {
-            type: "number",
-            operator: numberOperator,
-            value: numValue,
-          };
-          onFilterChange(columnIndex, filter);
-        }
-      }
+      setLocalNumberInput(value);
+      applyNumberFilter(localOperator, value);
     },
-    [columnIndex, numberOperator, onFilterChange]
+    [localOperator, applyNumberFilter]
   );
 
   // フィルターをクリア
   const handleClear = useCallback(() => {
+    setLocalStringValue("");
+    setLocalOperator("=");
+    setLocalNumberInput("");
     onFilterChange(columnIndex, null);
     setOpen(false);
   }, [columnIndex, onFilterChange]);
@@ -163,7 +184,7 @@ export function CsvFilterDropdown({
             // 数値フィルター
             <div className="space-y-2">
               <Select
-                value={numberOperator}
+                value={localOperator}
                 onValueChange={(v) =>
                   handleOperatorChange(v as NumberFilter["operator"])
                 }
@@ -181,7 +202,7 @@ export function CsvFilterDropdown({
               </Select>
               <Input
                 type="number"
-                value={numberValue}
+                value={localNumberInput}
                 onChange={(e) => handleNumberValueChange(e.target.value)}
                 placeholder={translations.filterPlaceholder}
                 className="h-8 text-sm"
@@ -191,7 +212,7 @@ export function CsvFilterDropdown({
             // 文字列フィルター
             <Input
               type="text"
-              value={stringValue}
+              value={localStringValue}
               onChange={(e) => handleStringFilterChange(e.target.value)}
               placeholder={translations.filterPlaceholder}
               className="h-8 text-sm"
