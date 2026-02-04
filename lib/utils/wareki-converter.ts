@@ -15,7 +15,6 @@ export interface Era {
 // 変換結果
 export interface ConversionResult {
   success: boolean;
-  error?: string;
   errorKey?: string; // 国際化用エラーキー
   errorParams?: Record<string, string | number>; // エラーメッセージのパラメータ
   // 西暦情報
@@ -307,6 +306,10 @@ function getMonthNameEn(month: number): string {
     "November",
     "December",
   ];
+  // 防御的な範囲チェック
+  if (month < 1 || month > 12) {
+    return "";
+  }
   return monthNames[month - 1];
 }
 
@@ -315,6 +318,10 @@ function getMonthNameEn(month: number): string {
  */
 export function getWeekdayNameJa(weekday: number): string {
   const weekdayNames = ["日", "月", "火", "水", "木", "金", "土"];
+  // 防御的な範囲チェック
+  if (weekday < 0 || weekday > 6) {
+    return "";
+  }
   return weekdayNames[weekday];
 }
 
@@ -331,5 +338,9 @@ export function getWeekdayNameEn(weekday: number): string {
     "Friday",
     "Saturday",
   ];
+  // 防御的な範囲チェック
+  if (weekday < 0 || weekday > 6) {
+    return "";
+  }
   return weekdayNames[weekday];
 }

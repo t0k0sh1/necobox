@@ -197,6 +197,11 @@ describe("wareki-converter", () => {
       expect(getWeekdayNameJa(3)).toBe("水");
       expect(getWeekdayNameJa(6)).toBe("土");
     });
+
+    it("範囲外の値は空文字を返す", () => {
+      expect(getWeekdayNameJa(-1)).toBe("");
+      expect(getWeekdayNameJa(7)).toBe("");
+    });
   });
 
   describe("getWeekdayNameEn", () => {
@@ -205,6 +210,11 @@ describe("wareki-converter", () => {
       expect(getWeekdayNameEn(1)).toBe("Monday");
       expect(getWeekdayNameEn(3)).toBe("Wednesday");
       expect(getWeekdayNameEn(6)).toBe("Saturday");
+    });
+
+    it("範囲外の値は空文字を返す", () => {
+      expect(getWeekdayNameEn(-1)).toBe("");
+      expect(getWeekdayNameEn(7)).toBe("");
     });
   });
 });

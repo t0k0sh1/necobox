@@ -21,17 +21,25 @@ import { useState } from "react";
 // 初期値を取得するヘルパー関数
 function getInitialDate() {
   const now = new Date();
-  // 令和の開始年 (2019年)
-  const reiwaStartYear = 2019;
   const currentYear = now.getFullYear();
-  // 現在の令和年を計算
-  const warekiYear = currentYear - reiwaStartYear + 1;
+  const currentMonth = now.getMonth() + 1;
+  const currentDay = now.getDate();
+
+  // gregorianToWareki を使用して動的に和暦年と元号を取得
+  const conversionResult = gregorianToWareki(currentYear, currentMonth, currentDay);
+  const warekiYear = conversionResult.success && conversionResult.wareki
+    ? conversionResult.wareki.year
+    : 1;
+  const eraName = conversionResult.success && conversionResult.wareki
+    ? conversionResult.wareki.era.name
+    : "令和";
 
   return {
     year: String(currentYear),
-    month: String(now.getMonth() + 1),
-    day: String(now.getDate()),
+    month: String(currentMonth),
+    day: String(currentDay),
     warekiYear: String(warekiYear),
+    eraName,
   };
 }
 
@@ -51,7 +59,7 @@ export default function WarekiConverterPage() {
   const [gDay, setGDay] = useState<string>(() => getInitialDate().day);
 
   // 和暦→西暦 入力 (遅延初期化)
-  const [selectedEra, setSelectedEra] = useState<string>("令和");
+  const [selectedEra, setSelectedEra] = useState<string>(() => getInitialDate().eraName);
   const [wYear, setWYear] = useState<string>(() => getInitialDate().warekiYear);
   const [wMonth, setWMonth] = useState<string>(() => getInitialDate().month);
   const [wDay, setWDay] = useState<string>(() => getInitialDate().day);
