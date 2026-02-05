@@ -52,12 +52,11 @@ describe("age-calculator", () => {
       expect(days).toBeGreaterThan(300);
     });
 
-    it("誕生日当日は1年後の誕生日までの日数を返す", () => {
+    it("誕生日当日は次の誕生日まで0日を返す", () => {
       const today = new Date(2025, 5, 15); // 2025年6月15日
       const days = calculateDaysUntilNextBirthday(6, 15, today);
-      // 翌年の6月15日まで365日か366日
-      expect(days).toBeGreaterThanOrEqual(365);
-      expect(days).toBeLessThanOrEqual(366);
+      // 誕生日当日は0日
+      expect(days).toBe(0);
     });
 
     it("2月29日生まれで閏年でない場合は3月1日として計算", () => {

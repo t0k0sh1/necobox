@@ -11,7 +11,7 @@ import {
   type AgeCalculationResult,
 } from "@/lib/utils/age-calculator";
 import { getEras, type Era } from "@/lib/utils/wareki-converter";
-import { Calculator, Copy } from "lucide-react";
+import { Copy } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useMemo } from "react";
 
@@ -74,15 +74,6 @@ export default function AgeCalculatorPage() {
 
   // アクティブなタブに応じた結果を取得
   const result = activeTab === "gregorian" ? gregorianResult : warekiResult;
-
-  // 手動計算ボタン用のハンドラー（フォーム送信時に使用）
-  const handleGregorianCalculate = () => {
-    // useMemo で既に計算済みなので何もしない
-  };
-
-  const handleWarekiCalculate = () => {
-    // useMemo で既に計算済みなので何もしない
-  };
 
   // コピー
   const handleCopy = async () => {
@@ -201,14 +192,6 @@ export default function AgeCalculatorPage() {
                   />
                 </div>
               </div>
-
-              <Button
-                onClick={handleGregorianCalculate}
-                className="w-full gap-2"
-              >
-                <Calculator className="w-4 h-4" />
-                {t("calculate")}
-              </Button>
             </TabsContent>
 
             {/* 和暦入力 */}
@@ -269,11 +252,6 @@ export default function AgeCalculatorPage() {
                   />
                 </div>
               </div>
-
-              <Button onClick={handleWarekiCalculate} className="w-full gap-2">
-                <Calculator className="w-4 h-4" />
-                {t("calculate")}
-              </Button>
             </TabsContent>
           </Tabs>
 

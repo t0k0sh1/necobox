@@ -90,7 +90,7 @@ export function calculateDaysUntilNextBirthday(
   }
   
   // 今年の誕生日がすでに過ぎている場合は来年の誕生日を計算
-  if (nextBirthday <= today) {
+  if (nextBirthday < today) {
     nextBirthday = new Date(thisYear + 1, birthMonth - 1, birthDay);
     // 来年の誕生日が2月29日の場合も閏年チェック
     if (birthMonth === 2 && birthDay === 29) {
@@ -214,7 +214,7 @@ export function calculateAgeFromGregorian(
     }
   }
   
-  const isPast = birthdayThisYear <= today;
+  const isPast = birthdayThisYear < today;
 
   // 今年の誕生日を迎えた時の年齢
   const ageThisYear = thisYear - year;
@@ -319,7 +319,7 @@ export function calculateAgeFromWareki(
     }
   }
   
-  const isPast = birthdayThisYear <= today;
+  const isPast = birthdayThisYear < today;
 
   // 今年の誕生日を迎えた時の年齢
   const ageThisYear = thisYear - gregorianYear;

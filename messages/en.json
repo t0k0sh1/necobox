@@ -471,7 +471,6 @@
       "day": "Day",
       "era": "Era"
     },
-    "calculate": "Calculate",
     "result": {
       "birthDate": "Birth Date",
       "currentAge": "Current Age",
