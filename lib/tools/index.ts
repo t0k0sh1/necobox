@@ -8,6 +8,7 @@ export type IconName =
   | "Activity"
   | "ArrowRightLeft"
   | "Braces"
+  | "Cake"
   | "Calendar"
   | "Clock"
   | "Dices"
@@ -86,6 +87,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "Calendar",
     category: "converters",
     i18nKey: "warekiConverter",
+  },
+  {
+    id: "age-calculator",
+    path: "/age-calculator",
+    icon: "Cake",
+    category: "converters",
+    i18nKey: "ageCalculator",
   },
   // Editors (新カテゴリ)
   {
