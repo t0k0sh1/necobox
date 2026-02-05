@@ -34,6 +34,7 @@
     "csvEditor": "CSVエディタ",
     "jsonEditor": "JSONエディタ",
     "warekiConverter": "西暦・和暦変換",
+    "ageCalculator": "年齢計算",
     "sectionGenerators": "生成ツール",
     "sectionConverters": "変換ツール",
     "sectionEditors": "エディタツール",
@@ -452,6 +453,37 @@
     "error": {
       "invalidDate": "無効な日付です",
       "dateOutOfRange": "明治元年以降の日付を入力してください",
+      "eraYearOutOfRange": "{era}{year}年は存在しません",
+      "invalidEra": "無効な元号です"
+    }
+  },
+  "ageCalculator": {
+    "title": "年齢計算",
+    "description": "生年月日から今日時点の年齢や今年の誕生日を迎えた時の年齢を計算",
+    "breadcrumb": "年齢計算",
+    "tabs": {
+      "gregorian": "西暦",
+      "wareki": "和暦"
+    },
+    "input": {
+      "year": "年",
+      "month": "月",
+      "day": "日",
+      "era": "元号"
+    },
+    "calculate": "計算",
+    "result": {
+      "birthDate": "生年月日",
+      "currentAge": "今日時点の年齢",
+      "ageThisYear": "今年の誕生日を迎えた時の年齢",
+      "daysUntilBirthday": "次の誕生日まで",
+      "birthdayPassed": "誕生日は過ぎました",
+      "birthdayUpcoming": "誕生日はまだです"
+    },
+    "error": {
+      "invalidDate": "無効な日付です",
+      "dateOutOfRange": "明治元年以降の日付を入力してください",
+      "futureDateError": "未来の日付は指定できません",
       "eraYearOutOfRange": "{era}{year}年は存在しません",
       "invalidEra": "無効な元号です"
     }
