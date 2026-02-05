@@ -7,6 +7,7 @@
  */
 export interface ValidationError {
   message: string;
+  type?: "emptyInput" | "syntaxError";
   line?: number;
   column?: number;
 }
@@ -16,6 +17,8 @@ export interface ValidationError {
  */
 export interface ValidationWarning {
   message: string;
+  type?: "duplicateKey";
+  key?: string;
   line?: number;
   column?: number;
 }

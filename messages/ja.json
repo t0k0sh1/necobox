@@ -596,6 +596,7 @@
       "duplicateKey": "重複するキー \"{key}\""
     },
     "toolbar": {
+      "upload": "アップロード",
       "copy": "コピー",
       "download": "ダウンロード",
       "clear": "クリア"

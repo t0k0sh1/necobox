@@ -596,6 +596,7 @@
       "duplicateKey": "Duplicate key \"{key}\""
     },
     "toolbar": {
+      "upload": "Upload",
       "copy": "Copy",
       "download": "Download",
       "clear": "Clear"

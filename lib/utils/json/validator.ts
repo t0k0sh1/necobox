@@ -15,6 +15,7 @@ export function validateJson(input: string): ValidationResult {
       valid: false,
       error: {
         message: "Empty input",
+        type: "emptyInput",
       },
     };
   }
@@ -89,6 +90,8 @@ function findDuplicateKeys(input: string): ValidationWarning[] {
           if (existing) {
             warnings.push({
               message: `Duplicate key "${currentKey}"`,
+              type: "duplicateKey",
+              key: currentKey,
               line: stringStartLine,
               column: stringStartColumn,
             });

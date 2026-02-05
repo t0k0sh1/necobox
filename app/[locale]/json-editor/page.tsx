@@ -115,14 +115,20 @@ export default function JsonEditorPage() {
   }, []);
 
   // ファイル読み込み
-  const handleFileRead = useCallback((file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      setInput(text);
-    };
-    reader.readAsText(file);
-  }, []);
+  const handleFileRead = useCallback(
+    (file: File) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        setInput(text);
+      };
+      reader.onerror = () => {
+        window.alert(t("error.invalidFile"));
+      };
+      reader.readAsText(file);
+    },
+    [t]
+  );
 
   // ファイル選択
   const handleFileSelect = useCallback(
@@ -132,12 +138,13 @@ export default function JsonEditorPage() {
 
       // ファイルサイズチェック（10MB以下）
       if (file.size > 10 * 1024 * 1024) {
+        window.alert(t("error.fileTooLarge"));
         return;
       }
 
       handleFileRead(file);
     },
-    [handleFileRead]
+    [handleFileRead, t]
   );
 
   // ドラッグ&ドロップハンドラ
@@ -332,7 +339,7 @@ export default function JsonEditorPage() {
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="w-4 h-4 mr-1" />
-                Upload
+                {t("toolbar.upload")}
               </Button>
               <Button
                 variant="outline"
@@ -406,22 +413,30 @@ export default function JsonEditorPage() {
               {validationWarnings.length > 0 && (
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-md p-3">
                   <ul className="space-y-1">
-                    {validationWarnings.map((warning, index) => (
-                      <li
-                        key={index}
-                        className="text-sm text-yellow-700 dark:text-yellow-300 flex items-start gap-2"
-                      >
-                        <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                        <span>
-                          {warning.line
-                            ? t("validation.warningAt", {
-                                line: warning.line,
-                                message: warning.message,
-                              })
-                            : warning.message}
-                        </span>
-                      </li>
-                    ))}
+                    {validationWarnings.map((warning, index) => {
+                      // 警告メッセージの国際化
+                      const warningMessage =
+                        warning.type === "duplicateKey" && warning.key
+                          ? t("validation.duplicateKey", { key: warning.key })
+                          : warning.message;
+
+                      return (
+                        <li
+                          key={index}
+                          className="text-sm text-yellow-700 dark:text-yellow-300 flex items-start gap-2"
+                        >
+                          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          <span>
+                            {warning.line
+                              ? t("validation.warningAt", {
+                                  line: warning.line,
+                                  message: warningMessage,
+                                })
+                              : warningMessage}
+                          </span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               )}
