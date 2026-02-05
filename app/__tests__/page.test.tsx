@@ -28,6 +28,7 @@ describe("Home Page", () => {
     expect(screen.getByText("Time Zone Converter")).toBeInTheDocument();
     expect(screen.getByText("Image Format Converter")).toBeInTheDocument();
     expect(screen.getByText("Japanese Era Converter")).toBeInTheDocument();
+    expect(screen.getByText("Age Calculator")).toBeInTheDocument();
     expect(screen.getByText("IP/Hostname Info")).toBeInTheDocument();
     expect(screen.getByText("Service Status")).toBeInTheDocument();
     expect(screen.getByText("Text Viewer")).toBeInTheDocument();
@@ -78,15 +79,19 @@ describe("Home Page", () => {
     expect(
       screen.getByText("Japanese Era Converter").closest("a")
     ).toHaveAttribute("href", "/wareki-converter");
+    expect(screen.getByText("Age Calculator").closest("a")).toHaveAttribute(
+      "href",
+      "/age-calculator"
+    );
     expect(screen.getByText("JSON Editor").closest("a")).toHaveAttribute(
       "href",
       "/json-editor"
     );
   });
 
-  it("renders 13 tool buttons", () => {
+  it("renders 14 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(13);
+    expect(buttons).toHaveLength(14);
   });
 
   it("displays buttons with correct styling", () => {
