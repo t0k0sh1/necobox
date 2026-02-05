@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { ChevronDownIcon } from "lucide-react";
 import {
   Popover,
+  PopoverAnchor,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
@@ -48,38 +49,40 @@ export function Combobox({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <div className={cn("relative", className)}>
-        <input
-          id={id}
-          type={type}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-          disabled={disabled}
-          min={min}
-          max={max}
-          className={cn(
-            "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 pr-8 text-base shadow-xs transition-[color,box-shadow] outline-none",
-            "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
-            "placeholder:text-muted-foreground",
-            "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
-            "disabled:cursor-not-allowed disabled:opacity-50",
-            "md:text-sm",
-            inputClassName
-          )}
-        />
-        <PopoverTrigger asChild disabled={disabled}>
-          <button
-            type="button"
-            className="absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground hover:text-foreground disabled:opacity-50"
+      <PopoverAnchor asChild>
+        <div className={cn("relative", className)}>
+          <input
+            id={id}
+            type={type}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
             disabled={disabled}
-          >
-            <ChevronDownIcon className="h-4 w-4" />
-          </button>
-        </PopoverTrigger>
-      </div>
+            min={min}
+            max={max}
+            className={cn(
+              "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 pr-8 text-base shadow-xs transition-[color,box-shadow] outline-none",
+              "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
+              "placeholder:text-muted-foreground",
+              "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+              "md:text-sm",
+              inputClassName
+            )}
+          />
+          <PopoverTrigger asChild disabled={disabled}>
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground hover:text-foreground disabled:opacity-50"
+              disabled={disabled}
+            >
+              <ChevronDownIcon className="h-4 w-4" />
+            </button>
+          </PopoverTrigger>
+        </div>
+      </PopoverAnchor>
       <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] p-1 max-h-60 overflow-y-auto"
+        className="w-[var(--radix-popover-anchor-width)] p-1 max-h-60 overflow-y-auto"
         align="start"
       >
         {options.map((option) => (
