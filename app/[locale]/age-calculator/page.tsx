@@ -2,16 +2,17 @@
 
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  GregorianDateInput,
+  WarekiDateInput,
+} from "@/components/date-input";
 import {
   calculateAgeFromGregorian,
   calculateAgeFromWareki,
   MONTH_NAMES_EN,
   type AgeCalculationResult,
 } from "@/lib/utils/age-calculator";
-import { getEras, type Era } from "@/lib/utils/wareki-converter";
 import { Copy } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useMemo } from "react";
@@ -36,9 +37,6 @@ export default function AgeCalculatorPage() {
   const [wYear, setWYear] = useState<string>("");
   const [wMonth, setWMonth] = useState<string>("");
   const [wDay, setWDay] = useState<string>("");
-
-  // 元号一覧（不変データのため useMemo でメモ化）
-  const eras = useMemo<Era[]>(() => getEras(), []);
 
   // 結果・エラー
   const [copied, setCopied] = useState(false);
@@ -139,106 +137,36 @@ export default function AgeCalculatorPage() {
 
             {/* 西暦入力 */}
             <TabsContent value="gregorian" className="space-y-4 mt-4">
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Label htmlFor="g-year">{t("input.year")}</Label>
-                  <Input
-                    id="g-year"
-                    type="number"
-                    placeholder="1990"
-                    value={gYear}
-                    onChange={(e) => setGYear(e.target.value)}
-                    min="1868"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="g-month">{t("input.month")}</Label>
-                  <Input
-                    id="g-month"
-                    type="number"
-                    placeholder="1"
-                    value={gMonth}
-                    onChange={(e) => setGMonth(e.target.value)}
-                    min="1"
-                    max="12"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="g-day">{t("input.day")}</Label>
-                  <Input
-                    id="g-day"
-                    type="number"
-                    placeholder="1"
-                    value={gDay}
-                    onChange={(e) => setGDay(e.target.value)}
-                    min="1"
-                    max="31"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
+              <GregorianDateInput
+                year={gYear}
+                month={gMonth}
+                day={gDay}
+                onYearChange={setGYear}
+                onMonthChange={setGMonth}
+                onDayChange={setGDay}
+                yearLabel={t("input.year")}
+                monthLabel={t("input.month")}
+                dayLabel={t("input.day")}
+              />
             </TabsContent>
 
             {/* 和暦入力 */}
             <TabsContent value="wareki" className="space-y-4 mt-4">
-              <div>
-                <Label htmlFor="era-select">{t("input.era")}</Label>
-                <select
-                  id="era-select"
-                  value={selectedEra}
-                  onChange={(e) => setSelectedEra(e.target.value)}
-                  className="w-full mt-1 px-3 py-2 border rounded-md bg-white dark:bg-black text-gray-900 dark:text-gray-100"
-                >
-                  {eras.map((era) => (
-                    <option key={era.abbr} value={era.name}>
-                      {locale === "ja" ? era.name : era.nameEn}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Label htmlFor="w-year">{t("input.year")}</Label>
-                  <Input
-                    id="w-year"
-                    type="number"
-                    placeholder="1"
-                    value={wYear}
-                    onChange={(e) => setWYear(e.target.value)}
-                    min="1"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="w-month">{t("input.month")}</Label>
-                  <Input
-                    id="w-month"
-                    type="number"
-                    placeholder="1"
-                    value={wMonth}
-                    onChange={(e) => setWMonth(e.target.value)}
-                    min="1"
-                    max="12"
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="w-day">{t("input.day")}</Label>
-                  <Input
-                    id="w-day"
-                    type="number"
-                    placeholder="1"
-                    value={wDay}
-                    onChange={(e) => setWDay(e.target.value)}
-                    min="1"
-                    max="31"
-                    className="mt-1"
-                  />
-                </div>
-              </div>
+              <WarekiDateInput
+                selectedEra={selectedEra}
+                year={wYear}
+                month={wMonth}
+                day={wDay}
+                onEraChange={setSelectedEra}
+                onYearChange={setWYear}
+                onMonthChange={setWMonth}
+                onDayChange={setWDay}
+                eraLabel={t("input.era")}
+                yearLabel={t("input.year")}
+                monthLabel={t("input.month")}
+                dayLabel={t("input.day")}
+                locale={locale}
+              />
             </TabsContent>
           </Tabs>
 
