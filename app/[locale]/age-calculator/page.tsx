@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   calculateAgeFromGregorian,
   calculateAgeFromWareki,
+  MONTH_NAMES_EN,
   type AgeCalculationResult,
 } from "@/lib/utils/age-calculator";
 import { getEras, type Era } from "@/lib/utils/wareki-converter";
@@ -36,8 +37,8 @@ export default function AgeCalculatorPage() {
   const [wMonth, setWMonth] = useState<string>("");
   const [wDay, setWDay] = useState<string>("");
 
-  // 元号一覧
-  const [eras] = useState<Era[]>(getEras());
+  // 元号一覧（不変データのため useMemo でメモ化）
+  const eras = useMemo<Era[]>(() => getEras(), []);
 
   // 結果・エラー
   const [copied, setCopied] = useState(false);
@@ -108,21 +109,7 @@ export default function AgeCalculatorPage() {
     if (locale === "ja") {
       return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
     }
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+    return `${MONTH_NAMES_EN[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
   };
 
   return (

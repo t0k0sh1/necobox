@@ -59,6 +59,13 @@ describe("age-calculator", () => {
       expect(days).toBe(0);
     });
 
+    it("誕生日当日で時刻成分がある場合も0日を返す", () => {
+      const today = new Date(2025, 5, 15, 23, 59, 59); // 2025年6月15日 23:59:59
+      const days = calculateDaysUntilNextBirthday(6, 15, today);
+      // 誕生日当日は時刻に関係なく0日
+      expect(days).toBe(0);
+    });
+
     it("2月29日生まれで閏年でない場合は3月1日として計算", () => {
       const today = new Date(2025, 0, 1); // 2025年1月1日（閏年でない）
       const days = calculateDaysUntilNextBirthday(2, 29, today);
@@ -93,6 +100,16 @@ describe("age-calculator", () => {
       expect(result.success).toBe(true);
       expect(result.birthdayThisYear?.isPast).toBe(false);
       expect(result.daysUntilNextBirthday).toBeGreaterThan(0);
+    });
+
+    it("日付比較時に時刻成分が無視される（誕生日当日で時刻が深夜でない場合も正しく判定）", () => {
+      // 誕生日当日の正午に確認しても、isPastはfalseになるべき
+      const today = new Date(2025, 5, 15, 12, 30, 0); // 2025年6月15日 12:30:00
+      const result = calculateAgeFromGregorian(1990, 6, 15, today); // 6月15日生まれ
+
+      expect(result.success).toBe(true);
+      // 誕生日当日はまだ過ぎていない（時刻成分は無視される）
+      expect(result.birthdayThisYear?.isPast).toBe(false);
     });
 
     it("無効な日付はエラーを返す", () => {

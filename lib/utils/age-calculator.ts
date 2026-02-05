@@ -6,6 +6,31 @@
 
 import { ERAS, getEraByName, isValidDate, type Era } from "./wareki-converter";
 
+/**
+ * 月の英語名（共有定数）
+ */
+export const MONTH_NAMES_EN = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+/**
+ * 日付から時刻成分を除去して正規化（日付のみの比較用）
+ */
+function normalizeDate(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 // 年齢計算結果
 export interface AgeCalculationResult {
   success: boolean;
@@ -76,7 +101,9 @@ export function calculateDaysUntilNextBirthday(
   birthDay: number,
   today: Date = new Date()
 ): number {
-  const thisYear = today.getFullYear();
+  // 日付のみで比較するため時刻成分を除去
+  const todayNormalized = normalizeDate(today);
+  const thisYear = todayNormalized.getFullYear();
   
   // 今年の誕生日
   let nextBirthday = new Date(thisYear, birthMonth - 1, birthDay);
@@ -90,7 +117,7 @@ export function calculateDaysUntilNextBirthday(
   }
   
   // 今年の誕生日がすでに過ぎている場合は来年の誕生日を計算
-  if (nextBirthday < today) {
+  if (nextBirthday.getTime() < todayNormalized.getTime()) {
     nextBirthday = new Date(thisYear + 1, birthMonth - 1, birthDay);
     // 来年の誕生日が2月29日の場合も閏年チェック
     if (birthMonth === 2 && birthDay === 29) {
@@ -102,7 +129,7 @@ export function calculateDaysUntilNextBirthday(
   }
   
   // 日数を計算
-  const diffTime = nextBirthday.getTime() - today.getTime();
+  const diffTime = nextBirthday.getTime() - todayNormalized.getTime();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
@@ -121,25 +148,11 @@ function getEraForDate(date: Date): Era | undefined {
 /**
  * 月の英語名を取得
  */
-function getMonthNameEn(month: number): string {
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+export function getMonthNameEn(month: number): string {
   if (month < 1 || month > 12) {
     return "";
   }
-  return monthNames[month - 1];
+  return MONTH_NAMES_EN[month - 1];
 }
 
 /**
@@ -214,7 +227,9 @@ export function calculateAgeFromGregorian(
     }
   }
   
-  const isPast = birthdayThisYear < today;
+  // 「過去かどうか」の判定は日付のみを比較する（時刻成分は無視）
+  const todayDateOnly = normalizeDate(today);
+  const isPast = birthdayThisYear.getTime() < todayDateOnly.getTime();
 
   // 今年の誕生日を迎えた時の年齢
   const ageThisYear = thisYear - year;
@@ -319,7 +334,9 @@ export function calculateAgeFromWareki(
     }
   }
   
-  const isPast = birthdayThisYear < today;
+  // 「過去かどうか」の判定は日付のみを比較する（時刻成分は無視）
+  const todayDateOnly = normalizeDate(today);
+  const isPast = birthdayThisYear.getTime() < todayDateOnly.getTime();
 
   // 今年の誕生日を迎えた時の年齢
   const ageThisYear = thisYear - gregorianYear;
