@@ -13,6 +13,7 @@ import {
 import {
   Activity,
   ArrowRightLeft,
+  Braces,
   Calendar,
   Clock,
   Dices,
@@ -33,6 +34,7 @@ import { useTranslations } from "next-intl";
 const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   Activity,
   ArrowRightLeft,
+  Braces,
   Calendar,
   Clock,
   Dices,

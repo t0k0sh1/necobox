@@ -31,6 +31,7 @@ describe("Home Page", () => {
     expect(screen.getByText("IP/Hostname Info")).toBeInTheDocument();
     expect(screen.getByText("Service Status")).toBeInTheDocument();
     expect(screen.getByText("Text Viewer")).toBeInTheDocument();
+    expect(screen.getByText("JSON Editor")).toBeInTheDocument();
   });
 
   it("has correct links for each tool", () => {
@@ -77,11 +78,15 @@ describe("Home Page", () => {
     expect(
       screen.getByText("Japanese Era Converter").closest("a")
     ).toHaveAttribute("href", "/wareki-converter");
+    expect(screen.getByText("JSON Editor").closest("a")).toHaveAttribute(
+      "href",
+      "/json-editor"
+    );
   });
 
-  it("renders 12 tool buttons", () => {
+  it("renders 13 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(12);
+    expect(buttons).toHaveLength(13);
   });
 
   it("displays buttons with correct styling", () => {
