@@ -32,6 +32,7 @@
     "imageConverter": "Image Format Converter",
     "textViewer": "Text Viewer",
     "csvEditor": "CSV Editor",
+    "jsonEditor": "JSON Editor",
     "warekiConverter": "Japanese Era Converter",
     "sectionGenerators": "Generators",
     "sectionConverters": "Converters",
@@ -563,6 +564,47 @@
     "sort": {
       "ascending": "Ascending",
       "descending": "Descending"
+    }
+  },
+  "jsonEditor": {
+    "title": "JSON Editor",
+    "description": "Format (prettify/minify) and validate JSON",
+    "breadcrumb": "JSON Editor",
+    "input": {
+      "label": "JSON Input",
+      "placeholder": "Enter JSON here...",
+      "dragDrop": "Drag and drop JSON file"
+    },
+    "format": {
+      "label": "Format",
+      "pretty": "Pretty",
+      "minify": "Minify"
+    },
+    "indent": {
+      "label": "Indent",
+      "twoSpaces": "2 spaces",
+      "fourSpaces": "4 spaces",
+      "tab": "Tab"
+    },
+    "validation": {
+      "valid": "Valid JSON",
+      "validWithWarnings": "Valid JSON with warnings",
+      "invalid": "Invalid JSON",
+      "errorAt": "Line {line}, Column {column}: {message}",
+      "errorMessage": "{message}",
+      "warningAt": "Line {line}: {message}",
+      "duplicateKey": "Duplicate key \"{key}\""
+    },
+    "toolbar": {
+      "copy": "Copy",
+      "download": "Download",
+      "clear": "Clear"
+    },
+    "error": {
+      "emptyInput": "Please enter JSON",
+      "invalidJson": "Invalid JSON format",
+      "fileTooLarge": "File size is too large",
+      "invalidFile": "Not a JSON file"
     }
   }
 }

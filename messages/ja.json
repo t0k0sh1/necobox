@@ -32,6 +32,7 @@
     "imageConverter": "画像フォーマット変換",
     "textViewer": "テキストビューア",
     "csvEditor": "CSVエディタ",
+    "jsonEditor": "JSONエディタ",
     "warekiConverter": "西暦・和暦変換",
     "sectionGenerators": "生成ツール",
     "sectionConverters": "変換ツール",
@@ -563,6 +564,47 @@
     "sort": {
       "ascending": "昇順",
       "descending": "降順"
+    }
+  },
+  "jsonEditor": {
+    "title": "JSONエディタ",
+    "description": "JSONのフォーマット（整形・圧縮）とバリデーション",
+    "breadcrumb": "JSONエディタ",
+    "input": {
+      "label": "JSON入力",
+      "placeholder": "JSONを入力してください...",
+      "dragDrop": "JSONファイルをドラッグ&ドロップ"
+    },
+    "format": {
+      "label": "表示形式",
+      "pretty": "見やすい形式",
+      "minify": "1行表示"
+    },
+    "indent": {
+      "label": "インデント",
+      "twoSpaces": "2スペース",
+      "fourSpaces": "4スペース",
+      "tab": "タブ"
+    },
+    "validation": {
+      "valid": "有効なJSONです",
+      "validWithWarnings": "有効なJSONですが、警告があります",
+      "invalid": "無効なJSON",
+      "errorAt": "行 {line}, 列 {column}: {message}",
+      "errorMessage": "{message}",
+      "warningAt": "行 {line}: {message}",
+      "duplicateKey": "重複するキー \"{key}\""
+    },
+    "toolbar": {
+      "copy": "コピー",
+      "download": "ダウンロード",
+      "clear": "クリア"
+    },
+    "error": {
+      "emptyInput": "JSONを入力してください",
+      "invalidJson": "無効なJSON形式です",
+      "fileTooLarge": "ファイルサイズが大きすぎます",
+      "invalidFile": "JSONファイルではありません"
     }
   }
 }

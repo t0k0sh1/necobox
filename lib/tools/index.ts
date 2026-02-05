@@ -7,6 +7,7 @@
 export type IconName =
   | "Activity"
   | "ArrowRightLeft"
+  | "Braces"
   | "Calendar"
   | "Clock"
   | "Dices"
@@ -93,6 +94,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "FileSpreadsheet",
     category: "editors",
     i18nKey: "csvEditor",
+  },
+  {
+    id: "json-editor",
+    path: "/json-editor",
+    icon: "Braces",
+    category: "editors",
+    i18nKey: "jsonEditor",
   },
   // Analyzers
   {
