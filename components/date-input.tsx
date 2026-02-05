@@ -9,7 +9,16 @@ import { getEras, type Era } from "@/lib/utils/wareki-converter";
 const MIN_GREGORIAN_YEAR = 1868;
 const MAX_GREGORIAN_YEAR = 2050;
 
-// 現在の元号の未来の年数バッファ（何年先まで選択可能にするか）
+/**
+ * 現在の元号に対して、何年先まで選択可能にするかのバッファ。
+ *
+ * 注意:
+ * - この値は「現在の元号が少なくともこの年数は続く」と仮定して UI 上の選択範囲を広げるためのものです。
+ * - 将来、元号がこのバッファ年数よりも早く切り替わった場合、
+ *   実際には存在しない「元号＋年」の組み合わせが UI 上で選択できてしまう可能性があります。
+ * - 厳密な元号の有効範囲チェックは、別途バリデーション（例: サーバーサイドや保存時の検証）で行ってください。
+ * - 新しい元号が告示された際や要件が変わった際には、この値と関連ロジックの見直しが必要です。
+ */
 const FUTURE_YEARS_BUFFER = 30;
 
 // 月の範囲
@@ -23,7 +32,8 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => ({
  */
 function getDaysInMonth(year: number, month: number): number {
   if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
-    return 31;
+    // 無効な入力時は保守的なデフォルト値を返し、存在しない日付（例: 2月31日）の選択を防ぐ
+    return 28;
   }
   return new Date(year, month, 0).getDate();
 }
@@ -276,7 +286,11 @@ export function WarekiDateInput({
             placeholder="1"
             type="number"
             min={1}
-            max={warekiYearOptions.length}
+            max={
+              warekiYearOptions.length > 0
+                ? Number(warekiYearOptions[warekiYearOptions.length - 1].value)
+                : undefined
+            }
             className="mt-1"
           />
         </div>
