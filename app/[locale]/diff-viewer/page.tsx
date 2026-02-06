@@ -127,7 +127,15 @@ export default function DiffViewerPage() {
 
           {/* 差分表示 */}
           {result ? (
-            <DiffDisplay result={result} mode={viewMode} />
+            <DiffDisplay
+              result={result}
+              mode={viewMode}
+              labels={{
+                before: t("before"),
+                after: t("after"),
+                noDifferences: t("noDifferences"),
+              }}
+            />
           ) : (
             <div className="border rounded-md p-8 text-center text-gray-500 text-sm">
               {t("emptyState")}

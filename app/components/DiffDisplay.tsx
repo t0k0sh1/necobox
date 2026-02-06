@@ -5,19 +5,26 @@ import { formatUnifiedDiff } from "@/lib/utils/diff-viewer";
 
 export type DiffViewMode = "side-by-side" | "inline" | "unified";
 
+interface DiffLabels {
+  before: string;
+  after: string;
+  noDifferences: string;
+}
+
 interface DiffDisplayProps {
   result: DiffResult;
   mode: DiffViewMode;
+  labels: DiffLabels;
 }
 
-export function DiffDisplay({ result, mode }: DiffDisplayProps) {
+export function DiffDisplay({ result, mode, labels }: DiffDisplayProps) {
   switch (mode) {
     case "side-by-side":
-      return <SideBySideView lines={result.lines} />;
+      return <SideBySideView lines={result.lines} labels={labels} />;
     case "inline":
       return <InlineView lines={result.lines} />;
     case "unified":
-      return <UnifiedView result={result} />;
+      return <UnifiedView result={result} noDifferencesLabel={labels.noDifferences} />;
   }
 }
 
@@ -63,7 +70,7 @@ function LineContent({ line }: { line: DiffLine }) {
 }
 
 // サイドバイサイド表示
-function SideBySideView({ lines }: { lines: DiffLine[] }) {
+function SideBySideView({ lines, labels }: { lines: DiffLine[]; labels: DiffLabels }) {
   // removed/added をペアにして左右に配置
   const pairs: { left: DiffLine | null; right: DiffLine | null }[] = [];
   let i = 0;
@@ -93,10 +100,10 @@ function SideBySideView({ lines }: { lines: DiffLine[] }) {
     <div className="grid grid-cols-2 gap-0 border rounded-md overflow-hidden font-mono text-sm">
       {/* 左列ヘッダー */}
       <div className="bg-red-50 dark:bg-red-900/10 border-b border-r px-2 py-1 text-xs text-gray-500">
-        Before
+        {labels.before}
       </div>
       <div className="bg-green-50 dark:bg-green-900/10 border-b px-2 py-1 text-xs text-gray-500">
-        After
+        {labels.after}
       </div>
 
       {pairs.map((pair, idx) => (
@@ -165,13 +172,13 @@ function InlineView({ lines }: { lines: DiffLine[] }) {
 }
 
 // 統一形式表示
-function UnifiedView({ result }: { result: DiffResult }) {
+function UnifiedView({ result, noDifferencesLabel }: { result: DiffResult; noDifferencesLabel: string }) {
   const unified = formatUnifiedDiff(result);
 
   if (!unified) {
     return (
       <div className="border rounded-md p-4 text-center text-gray-500 text-sm font-mono">
-        No differences
+        {noDifferencesLabel}
       </div>
     );
   }

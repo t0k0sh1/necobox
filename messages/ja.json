@@ -780,7 +780,8 @@
       "inline": "インライン",
       "unified": "統一形式"
     },
-    "emptyState": "差分を表示するには両方のフィールドにテキストを入力してください"
+    "emptyState": "差分を表示するには両方のフィールドにテキストを入力してください",
+    "noDifferences": "差分なし"
   },
   "jsonEditor": {
     "title": "JSONエディタ",

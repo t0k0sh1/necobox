@@ -780,7 +780,8 @@
       "inline": "Inline",
       "unified": "Unified"
     },
-    "emptyState": "Enter text in both fields to see the diff"
+    "emptyState": "Enter text in both fields to see the diff",
+    "noDifferences": "No differences"
   },
   "jsonEditor": {
     "title": "JSON Editor",

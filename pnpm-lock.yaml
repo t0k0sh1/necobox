@@ -123,9 +123,6 @@ importers:
       '@types/archiver':
         specifier: ^7.0.0
         version: 7.0.0
-      '@types/diff':
-        specifier: ^8.0.0
-        version: 8.0.0
       '@types/encoding-japanese':
         specifier: ^2.2.1
         version: 2.2.1
@@ -2060,10 +2057,6 @@ packages:
 
   '@types/babel__traverse@7.28.0':
     resolution: {integrity: sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==}
-
-  '@types/diff@8.0.0':
-    resolution: {integrity: sha512-o7jqJM04gfaYrdCecCVMbZhNdG6T1MHg/oQoRFdERLV+4d+V7FijhiEAbFu0Usww84Yijk9yH58U4Jk4HbtzZw==}
-    deprecated: This is a stub types definition. diff provides its own type definitions, so you do not need this installed.
 
   '@types/encoding-japanese@2.2.1':
     resolution: {integrity: sha512-6jjepuTusvySxMLP7W6usamlbgf0F4sIDvm7EzYePjLHY7zWUv4yz2PLUnu0vuNVtXOTLu2cRdFcDg40J5Owsw==}
@@ -6613,10 +6606,6 @@ snapshots:
   '@types/babel__traverse@7.28.0':
     dependencies:
       '@babel/types': 7.28.6
-
-  '@types/diff@8.0.0':
-    dependencies:
-      diff: 8.0.3
 
   '@types/encoding-japanese@2.2.1': {}
 
