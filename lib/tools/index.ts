@@ -15,6 +15,7 @@ export type IconName =
   | "Clock"
   | "Dices"
   | "Edit"
+  | "Eye"
   | "FileSpreadsheet"
   | "FileText"
   | "Globe"
@@ -22,6 +23,7 @@ export type IconName =
   | "Key"
   | "Lock"
   | "Search"
+  | "Shield"
   | "Sparkles"
   | "Type";
 
@@ -33,7 +35,14 @@ export interface ToolDefinition {
   i18nKey: string;
 }
 
-export type ToolCategory = "generators" | "converters" | "editors" | "analyzers";
+export type ToolCategory =
+  | "generators"
+  | "converters"
+  | "editors"
+  | "tasks"
+  | "network"
+  | "viewers"
+  | "references";
 
 export const TOOL_CATEGORIES: Record<
   ToolCategory,
@@ -42,11 +51,14 @@ export const TOOL_CATEGORIES: Record<
   generators: { icon: "Sparkles", i18nKey: "sectionGenerators" },
   converters: { icon: "ArrowRightLeft", i18nKey: "sectionConverters" },
   editors: { icon: "Edit", i18nKey: "sectionEditors" },
-  analyzers: { icon: "Search", i18nKey: "sectionAnalyzers" },
+  tasks: { icon: "CheckSquare", i18nKey: "sectionTasks" },
+  network: { icon: "Shield", i18nKey: "sectionNetwork" },
+  viewers: { icon: "Eye", i18nKey: "sectionViewers" },
+  references: { icon: "BookOpen", i18nKey: "sectionReferences" },
 };
 
 export const TOOLS: ToolDefinition[] = [
-  // Generators
+  // Generators（ランダム生成）
   {
     id: "random",
     path: "/random",
@@ -68,7 +80,7 @@ export const TOOLS: ToolDefinition[] = [
     category: "generators",
     i18nKey: "dummyTextGenerator",
   },
-  // Converters
+  // Converters（変換・計算）
   {
     id: "time-zone-converter",
     path: "/time-zone-converter",
@@ -97,7 +109,7 @@ export const TOOLS: ToolDefinition[] = [
     category: "converters",
     i18nKey: "ageCalculator",
   },
-  // Editors (新カテゴリ)
+  // Editors（データエディタ）
   {
     id: "csv-editor",
     path: "/csv-editor",
@@ -112,55 +124,58 @@ export const TOOLS: ToolDefinition[] = [
     category: "editors",
     i18nKey: "jsonEditor",
   },
+  // Tasks（タスク管理）
   {
     id: "matrix-todo",
     path: "/matrix-todo",
     icon: "CheckSquare",
-    category: "editors",
+    category: "tasks",
     i18nKey: "matrixTodo",
   },
-  // Analyzers
-  {
-    id: "jwt-decoder",
-    path: "/jwt-decoder",
-    icon: "Key",
-    category: "analyzers",
-    i18nKey: "jwtDecoder",
-  },
+  // Network（ネットワーク・セキュリティ）
   {
     id: "show-gip",
     path: "/show-gip",
     icon: "Globe",
-    category: "analyzers",
+    category: "network",
     i18nKey: "showGlobalIP",
   },
   {
     id: "ip-info",
     path: "/ip-info",
     icon: "Search",
-    category: "analyzers",
+    category: "network",
     i18nKey: "ipInfo",
+  },
+  {
+    id: "jwt-decoder",
+    path: "/jwt-decoder",
+    icon: "Key",
+    category: "network",
+    i18nKey: "jwtDecoder",
+  },
+  // Viewers（ビューア）
+  {
+    id: "text-viewer",
+    path: "/text-viewer",
+    icon: "FileText",
+    category: "viewers",
+    i18nKey: "textViewer",
+  },
+  // References（リファレンス）
+  {
+    id: "cheatsheets",
+    path: "/cheatsheets",
+    icon: "BookOpen",
+    category: "references",
+    i18nKey: "cheatsheets",
   },
   {
     id: "service-status",
     path: "/service-status",
     icon: "Activity",
-    category: "analyzers",
+    category: "references",
     i18nKey: "serviceStatus",
-  },
-  {
-    id: "text-viewer",
-    path: "/text-viewer",
-    icon: "FileText",
-    category: "analyzers",
-    i18nKey: "textViewer",
-  },
-  {
-    id: "cheatsheets",
-    path: "/cheatsheets",
-    icon: "BookOpen",
-    category: "analyzers",
-    i18nKey: "cheatsheets",
   },
 ];
 
@@ -172,7 +187,10 @@ export function getToolsByCategory(): Record<ToolCategory, ToolDefinition[]> {
     generators: [],
     converters: [],
     editors: [],
-    analyzers: [],
+    tasks: [],
+    network: [],
+    viewers: [],
+    references: [],
   };
 
   for (const tool of TOOLS) {
@@ -189,5 +207,8 @@ export const CATEGORY_ORDER: ToolCategory[] = [
   "generators",
   "converters",
   "editors",
-  "analyzers",
+  "tasks",
+  "network",
+  "viewers",
+  "references",
 ];

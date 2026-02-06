@@ -39,10 +39,17 @@
     "warekiConverter": "Japanese Era Converter",
     "ageCalculator": "Age Calculator",
     "cheatsheets": "Cheatsheets",
-    "sectionGenerators": "Generators",
-    "sectionConverters": "Converters",
-    "sectionEditors": "Editors",
-    "sectionAnalyzers": "Analyzers & Info"
+    "sectionGenerators": "Random Generation",
+    "sectionConverters": "Conversion & Calculation",
+    "sectionEditors": "Data Editors",
+    "sectionTasks": "Task Management",
+    "sectionNetwork": "Network & Security",
+    "sectionViewers": "Viewers",
+    "sectionReferences": "References",
+    "sectionPinned": "Pinned",
+    "sectionRecent": "Recently Used",
+    "pinTool": "Pin",
+    "unpinTool": "Unpin"
   },
   "passwordGenerator": {
     "title": "Password Generator",
