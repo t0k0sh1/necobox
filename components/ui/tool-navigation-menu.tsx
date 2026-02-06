@@ -21,6 +21,7 @@ import {
 import {
   Activity,
   ArrowRightLeft,
+  BookOpen,
   Braces,
   Cake,
   Calendar,
@@ -45,6 +46,7 @@ import { useState } from "react";
 const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   Activity,
   ArrowRightLeft,
+  BookOpen,
   Braces,
   Cake,
   Calendar,
