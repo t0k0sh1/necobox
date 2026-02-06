@@ -47,6 +47,11 @@
   "pnpm": {
     "overrides": {
       "diff": "^8.0.3"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@playwright/test"
+      ]
     }
   },
   "devDependencies": {
