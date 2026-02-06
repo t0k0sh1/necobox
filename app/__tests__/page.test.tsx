@@ -56,6 +56,9 @@ describe("Home Page", () => {
     expect(screen.getByText("Text Viewer")).toBeInTheDocument();
     expect(screen.getByText("JSON Editor")).toBeInTheDocument();
     expect(screen.getByText("ToDo")).toBeInTheDocument();
+    expect(screen.getByText("Color Converter")).toBeInTheDocument();
+    expect(screen.getByText("Regex Tester")).toBeInTheDocument();
+    expect(screen.getByText("Diff Viewer")).toBeInTheDocument();
     expect(screen.getByText("Cheatsheets")).toBeInTheDocument();
   });
 
@@ -121,14 +124,14 @@ describe("Home Page", () => {
     );
   });
 
-  it("renders 16 tool links", () => {
+  it("renders 19 tool links", () => {
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(16);
+    expect(links).toHaveLength(19);
   });
 
-  it("renders 16 pin toggle buttons", () => {
+  it("renders 19 pin toggle buttons", () => {
     const pinButtons = screen.getAllByRole("button");
-    expect(pinButtons).toHaveLength(16);
+    expect(pinButtons).toHaveLength(19);
   });
 
   it("renders 7 category sections", () => {
