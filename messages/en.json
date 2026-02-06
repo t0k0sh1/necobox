@@ -41,6 +41,12 @@
     "colorConverter": "Color Converter",
     "regexTester": "Regex Tester",
     "diffViewer": "Diff Viewer",
+    "urlEncoder": "URL Encoder/Decoder",
+    "base64Converter": "Base64 Converter",
+    "unixTimestamp": "Unix Timestamp Converter",
+    "uuidGenerator": "UUID/ULID Generator",
+    "hashGenerator": "Hash Generator",
+    "cronTester": "Cron Expression Tester",
     "cheatsheets": "Cheatsheets",
     "sectionGenerators": "Random Generation",
     "sectionConverters": "Conversion & Calculation",
@@ -782,6 +788,188 @@
     },
     "emptyState": "Enter text in both fields to see the diff",
     "noDifferences": "No differences"
+  },
+  "urlEncoder": {
+    "title": "URL Encoder/Decoder",
+    "description": "Encode and decode URLs with query parameter parsing",
+    "breadcrumb": "URL Encoder/Decoder",
+    "inputText": "Input Text",
+    "inputPlaceholder": "Enter text to encode...",
+    "encodedText": "Encoded Text",
+    "encodedPlaceholder": "Enter URL-encoded text to decode...",
+    "mode": "Encoding Mode",
+    "modeComponent": "encodeURIComponent",
+    "modeComponentDesc": "Encodes all special characters (recommended for query values)",
+    "modeUri": "encodeURI",
+    "modeUriDesc": "Preserves URL structure characters (:, /, ?, #, etc.)",
+    "encode": "Encode",
+    "decode": "Decode",
+    "queryParams": "Query Parameters",
+    "queryParamsUrl": "URL",
+    "queryParamsUrlPlaceholder": "Enter URL to parse query parameters...",
+    "key": "Key",
+    "value": "Value",
+    "addParam": "Add Parameter",
+    "removeParam": "Remove",
+    "buildUrl": "Built URL",
+    "noParams": "No query parameters found",
+    "error": {
+      "decodeFailed": "Failed to decode: invalid URL encoding",
+      "invalidUrl": "Invalid URL format"
+    }
+  },
+  "base64Converter": {
+    "title": "Base64 Converter",
+    "description": "Encode and decode Base64 with file support",
+    "breadcrumb": "Base64 Converter",
+    "tabs": {
+      "text": "Text",
+      "file": "File"
+    },
+    "inputText": "Input Text",
+    "inputPlaceholder": "Enter text to encode...",
+    "encodedText": "Base64 Encoded",
+    "encodedPlaceholder": "Enter Base64 to decode...",
+    "encode": "Encode",
+    "decode": "Decode",
+    "fileUpload": "Upload File",
+    "fileUploadDescription": "Drag and drop a file or click to select (max 10MB)",
+    "fileSelected": "File selected: {name} ({size})",
+    "dataUri": "Data URI",
+    "dataUriInclude": "Include Data URI prefix",
+    "mimeType": "MIME Type",
+    "error": {
+      "invalidBase64": "Invalid Base64 string",
+      "fileTooLarge": "File size exceeds 10MB limit",
+      "encodeFailed": "Failed to encode",
+      "decodeFailed": "Failed to decode"
+    }
+  },
+  "unixTimestamp": {
+    "title": "Unix Timestamp Converter",
+    "description": "Convert between Unix timestamps and human-readable dates",
+    "breadcrumb": "Unix Timestamp Converter",
+    "currentTimestamp": "Current Timestamp",
+    "seconds": "Seconds",
+    "milliseconds": "Milliseconds",
+    "timestampToDate": "Timestamp → Date",
+    "dateToTimestamp": "Date → Timestamp",
+    "timestampInput": "Timestamp",
+    "timestampPlaceholder": "Enter Unix timestamp...",
+    "unit": "Unit",
+    "timezone": "Timezone",
+    "utc": "UTC",
+    "local": "Local",
+    "result": "Result",
+    "localTime": "Local Time",
+    "utcTime": "UTC Time",
+    "iso8601": "ISO 8601",
+    "relative": "Relative",
+    "dateInput": "Date & Time",
+    "error": {
+      "invalidTimestamp": "Invalid timestamp",
+      "invalidDate": "Invalid date"
+    }
+  },
+  "uuidGenerator": {
+    "title": "UUID/ULID Generator",
+    "description": "Generate UUID v4, UUID v7, ULID, and Nanoid",
+    "breadcrumb": "UUID/ULID Generator",
+    "tabs": {
+      "uuidV4": "UUID v4",
+      "uuidV7": "UUID v7",
+      "ulid": "ULID",
+      "nanoid": "Nanoid"
+    },
+    "count": "Count",
+    "nanoidLength": "Length",
+    "generated": "Generated IDs",
+    "copyAll": "Copy All",
+    "error": {
+      "invalidCount": "Count must be between 1 and 100",
+      "invalidLength": "Length must be between 1 and 256",
+      "generateFailed": "Failed to generate"
+    }
+  },
+  "hashGenerator": {
+    "title": "Hash Generator",
+    "description": "Calculate MD5, SHA-1, SHA-256, and SHA-512 hashes",
+    "breadcrumb": "Hash Generator",
+    "tabs": {
+      "text": "Text",
+      "file": "File"
+    },
+    "inputText": "Input Text",
+    "inputPlaceholder": "Enter text to hash...",
+    "fileUpload": "Upload File",
+    "fileUploadDescription": "Drag and drop a file or click to select (max 10MB)",
+    "fileSelected": "File selected: {name} ({size})",
+    "results": "Hash Results",
+    "algorithm": "Algorithm",
+    "hashValue": "Hash Value",
+    "uppercase": "Uppercase",
+    "compare": "Compare",
+    "compareHash": "Compare Hash",
+    "comparePlaceholder": "Enter expected hash to compare...",
+    "match": "Match",
+    "noMatch": "No Match",
+    "md5Warning": "MD5 is cryptographically broken and should not be used for security purposes",
+    "sha1Warning": "SHA-1 is considered weak for security purposes",
+    "error": {
+      "fileTooLarge": "File size exceeds 10MB limit",
+      "hashFailed": "Failed to calculate hash"
+    }
+  },
+  "cronTester": {
+    "title": "Cron Expression Tester",
+    "description": "Validate cron expressions and preview next execution times",
+    "breadcrumb": "Cron Expression Tester",
+    "expression": "Cron Expression",
+    "expressionPlaceholder": "* * * * *",
+    "expressionPlaceholderAws": "* * * * ? *",
+    "format": {
+      "label": "Format",
+      "standard": "Standard (5-field)",
+      "aws": "AWS EventBridge (6-field)"
+    },
+    "fields": {
+      "minute": "Minute",
+      "hour": "Hour",
+      "dayOfMonth": "Day of Month",
+      "month": "Month",
+      "dayOfWeek": "Day of Week",
+      "year": "Year"
+    },
+    "fieldHelp": {
+      "minute": "0-59",
+      "hour": "0-23",
+      "dayOfMonth": "1-31 or ?",
+      "month": "1-12",
+      "dayOfWeek": "SUN-SAT or ?",
+      "dayOfMonthStandard": "1-31",
+      "dayOfWeekStandard": "0-7 (0 and 7 are Sunday)",
+      "year": "* or 1970-2199"
+    },
+    "descriptionLabel": "Description",
+    "nextExecutions": "Next Executions",
+    "nextCount": "Show next",
+    "times": "times",
+    "presets": "Presets",
+    "preset": {
+      "everyMinute": "Every Minute",
+      "everyHour": "Every Hour",
+      "everyDay": "Every Day at Midnight",
+      "everyWeekMonday": "Every Monday at 9:00",
+      "everyMonth": "1st of Every Month",
+      "everyWeekday": "Weekdays at 9:00"
+    },
+    "valid": "Valid expression",
+    "invalid": "Invalid expression",
+    "awsNote": "Either day-of-month or day-of-week must be '?'",
+    "error": {
+      "invalidExpression": "Invalid cron expression",
+      "parseFailed": "Failed to parse cron expression"
+    }
   },
   "jsonEditor": {
     "title": "JSON Editor",

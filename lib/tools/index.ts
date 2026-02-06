@@ -11,22 +11,28 @@ export type IconName =
   | "Braces"
   | "Cake"
   | "Calendar"
+  | "CalendarClock"
   | "CheckSquare"
   | "Clock"
   | "Dices"
   | "Edit"
   | "Eye"
+  | "FileCode"
   | "FileSpreadsheet"
   | "FileText"
+  | "Fingerprint"
   | "GitCompare"
   | "Globe"
+  | "Hash"
   | "Image"
   | "Key"
+  | "Link"
   | "Lock"
   | "Palette"
   | "Search"
   | "Shield"
   | "Sparkles"
+  | "Timer"
   | "Type";
 
 export interface ToolDefinition {
@@ -82,7 +88,35 @@ export const TOOLS: ToolDefinition[] = [
     category: "generators",
     i18nKey: "dummyTextGenerator",
   },
+  {
+    id: "uuid-generator",
+    path: "/uuid-generator",
+    icon: "Fingerprint",
+    category: "generators",
+    i18nKey: "uuidGenerator",
+  },
   // Converters（変換・計算）
+  {
+    id: "url-encoder",
+    path: "/url-encoder",
+    icon: "Link",
+    category: "converters",
+    i18nKey: "urlEncoder",
+  },
+  {
+    id: "base64-converter",
+    path: "/base64-converter",
+    icon: "FileCode",
+    category: "converters",
+    i18nKey: "base64Converter",
+  },
+  {
+    id: "unix-timestamp",
+    path: "/unix-timestamp",
+    icon: "Timer",
+    category: "converters",
+    i18nKey: "unixTimestamp",
+  },
   {
     id: "color-converter",
     path: "/color-converter",
@@ -127,6 +161,13 @@ export const TOOLS: ToolDefinition[] = [
     i18nKey: "regexTester",
   },
   {
+    id: "cron-tester",
+    path: "/cron-tester",
+    icon: "CalendarClock",
+    category: "editors",
+    i18nKey: "cronTester",
+  },
+  {
     id: "csv-editor",
     path: "/csv-editor",
     icon: "FileSpreadsheet",
@@ -169,6 +210,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "Key",
     category: "network",
     i18nKey: "jwtDecoder",
+  },
+  {
+    id: "hash-generator",
+    path: "/hash-generator",
+    icon: "Hash",
+    category: "network",
+    i18nKey: "hashGenerator",
   },
   // Viewers（ビューア）
   {

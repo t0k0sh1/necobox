@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ToolNavigationMenu } from "../ui/tool-navigation-menu";
+import { TOOLS } from "@/lib/tools";
 
 // Mock usePathname from i18n/routing
 jest.mock("@/i18n/routing", () => ({
@@ -128,13 +129,13 @@ describe("ToolNavigationMenu", () => {
     expect(screen.getByText("References")).toBeInTheDocument();
   });
 
-  it("メニューを開くと19個のツールリンクが表示される", () => {
+  it("メニューを開くと全ツールリンクが表示される", () => {
     render(<ToolNavigationMenu />);
 
     fireEvent.click(screen.getByLabelText("Tools"));
 
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(19);
+    expect(links).toHaveLength(TOOLS.length);
   });
 
   it("ツールリンクに正しいhrefが設定される", () => {

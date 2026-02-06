@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import Home from "../[locale]/page";
+import { TOOLS } from "@/lib/tools";
 
 // localStorage モック
 const localStorageMock = (() => {
@@ -124,14 +125,14 @@ describe("Home Page", () => {
     );
   });
 
-  it("renders 19 tool links", () => {
+  it("renders all tool links", () => {
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(19);
+    expect(links).toHaveLength(TOOLS.length);
   });
 
-  it("renders 19 pin toggle buttons", () => {
+  it("renders all pin toggle buttons", () => {
     const pinButtons = screen.getAllByRole("button");
-    expect(pinButtons).toHaveLength(19);
+    expect(pinButtons).toHaveLength(TOOLS.length);
   });
 
   it("renders 7 category sections", () => {

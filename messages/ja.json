@@ -41,6 +41,12 @@
     "colorConverter": "カラーコード変換",
     "regexTester": "正規表現テスター",
     "diffViewer": "diff ビューア",
+    "urlEncoder": "URLエンコード/デコード",
+    "base64Converter": "Base64変換",
+    "unixTimestamp": "Unixタイムスタンプ変換",
+    "uuidGenerator": "UUID/ULIDジェネレーター",
+    "hashGenerator": "ハッシュ計算",
+    "cronTester": "Cron式テスター",
     "cheatsheets": "チートシート集",
     "sectionGenerators": "ランダム生成",
     "sectionConverters": "変換・計算",
@@ -782,6 +788,188 @@
     },
     "emptyState": "差分を表示するには両方のフィールドにテキストを入力してください",
     "noDifferences": "差分なし"
+  },
+  "urlEncoder": {
+    "title": "URLエンコード/デコード",
+    "description": "URLのエンコード・デコードとクエリパラメータ解析",
+    "breadcrumb": "URLエンコード/デコード",
+    "inputText": "入力テキスト",
+    "inputPlaceholder": "エンコードするテキストを入力...",
+    "encodedText": "エンコード済みテキスト",
+    "encodedPlaceholder": "デコードするURLエンコード済みテキストを入力...",
+    "mode": "エンコードモード",
+    "modeComponent": "encodeURIComponent",
+    "modeComponentDesc": "すべての特殊文字をエンコード（クエリ値に推奨）",
+    "modeUri": "encodeURI",
+    "modeUriDesc": "URL構造文字を保持（:, /, ?, # など）",
+    "encode": "エンコード",
+    "decode": "デコード",
+    "queryParams": "クエリパラメータ",
+    "queryParamsUrl": "URL",
+    "queryParamsUrlPlaceholder": "クエリパラメータを解析するURLを入力...",
+    "key": "キー",
+    "value": "値",
+    "addParam": "パラメータを追加",
+    "removeParam": "削除",
+    "buildUrl": "構築されたURL",
+    "noParams": "クエリパラメータが見つかりません",
+    "error": {
+      "decodeFailed": "デコード失敗: 無効なURLエンコーディング",
+      "invalidUrl": "無効なURL形式"
+    }
+  },
+  "base64Converter": {
+    "title": "Base64変換",
+    "description": "テキストとファイルのBase64エンコード・デコード",
+    "breadcrumb": "Base64変換",
+    "tabs": {
+      "text": "テキスト",
+      "file": "ファイル"
+    },
+    "inputText": "入力テキスト",
+    "inputPlaceholder": "エンコードするテキストを入力...",
+    "encodedText": "Base64エンコード済み",
+    "encodedPlaceholder": "デコードするBase64を入力...",
+    "encode": "エンコード",
+    "decode": "デコード",
+    "fileUpload": "ファイルをアップロード",
+    "fileUploadDescription": "ファイルをドラッグ&ドロップまたはクリックして選択（最大10MB）",
+    "fileSelected": "選択中: {name} ({size})",
+    "dataUri": "Data URI",
+    "dataUriInclude": "Data URIプレフィックスを含める",
+    "mimeType": "MIMEタイプ",
+    "error": {
+      "invalidBase64": "無効なBase64文字列",
+      "fileTooLarge": "ファイルサイズが10MBを超えています",
+      "encodeFailed": "エンコードに失敗しました",
+      "decodeFailed": "デコードに失敗しました"
+    }
+  },
+  "unixTimestamp": {
+    "title": "Unixタイムスタンプ変換",
+    "description": "Unixタイムスタンプと日時の相互変換",
+    "breadcrumb": "Unixタイムスタンプ変換",
+    "currentTimestamp": "現在のタイムスタンプ",
+    "seconds": "秒",
+    "milliseconds": "ミリ秒",
+    "timestampToDate": "タイムスタンプ → 日時",
+    "dateToTimestamp": "日時 → タイムスタンプ",
+    "timestampInput": "タイムスタンプ",
+    "timestampPlaceholder": "Unixタイムスタンプを入力...",
+    "unit": "単位",
+    "timezone": "タイムゾーン",
+    "utc": "UTC",
+    "local": "ローカル",
+    "result": "結果",
+    "localTime": "ローカル時刻",
+    "utcTime": "UTC時刻",
+    "iso8601": "ISO 8601",
+    "relative": "相対時間",
+    "dateInput": "日時",
+    "error": {
+      "invalidTimestamp": "無効なタイムスタンプ",
+      "invalidDate": "無効な日時"
+    }
+  },
+  "uuidGenerator": {
+    "title": "UUID/ULIDジェネレーター",
+    "description": "UUID v4、UUID v7、ULID、Nanoidを生成",
+    "breadcrumb": "UUID/ULIDジェネレーター",
+    "tabs": {
+      "uuidV4": "UUID v4",
+      "uuidV7": "UUID v7",
+      "ulid": "ULID",
+      "nanoid": "Nanoid"
+    },
+    "count": "生成数",
+    "nanoidLength": "長さ",
+    "generated": "生成されたID",
+    "copyAll": "すべてコピー",
+    "error": {
+      "invalidCount": "生成数は1～100の間で指定してください",
+      "invalidLength": "長さは1～256の間で指定してください",
+      "generateFailed": "生成に失敗しました"
+    }
+  },
+  "hashGenerator": {
+    "title": "ハッシュ計算",
+    "description": "MD5、SHA-1、SHA-256、SHA-512のハッシュ値を計算",
+    "breadcrumb": "ハッシュ計算",
+    "tabs": {
+      "text": "テキスト",
+      "file": "ファイル"
+    },
+    "inputText": "入力テキスト",
+    "inputPlaceholder": "ハッシュ計算するテキストを入力...",
+    "fileUpload": "ファイルをアップロード",
+    "fileUploadDescription": "ファイルをドラッグ&ドロップまたはクリックして選択（最大10MB）",
+    "fileSelected": "選択中: {name} ({size})",
+    "results": "ハッシュ結果",
+    "algorithm": "アルゴリズム",
+    "hashValue": "ハッシュ値",
+    "uppercase": "大文字",
+    "compare": "比較",
+    "compareHash": "ハッシュ比較",
+    "comparePlaceholder": "比較するハッシュ値を入力...",
+    "match": "一致",
+    "noMatch": "不一致",
+    "md5Warning": "MD5は暗号学的に安全ではないため、セキュリティ目的での使用は推奨されません",
+    "sha1Warning": "SHA-1はセキュリティ目的では脆弱とされています",
+    "error": {
+      "fileTooLarge": "ファイルサイズが10MBを超えています",
+      "hashFailed": "ハッシュ計算に失敗しました"
+    }
+  },
+  "cronTester": {
+    "title": "Cron式テスター",
+    "description": "Cron式のバリデーションと次回実行時刻のプレビュー",
+    "breadcrumb": "Cron式テスター",
+    "expression": "Cron式",
+    "expressionPlaceholder": "* * * * *",
+    "expressionPlaceholderAws": "* * * * ? *",
+    "format": {
+      "label": "フォーマット",
+      "standard": "標準（5フィールド）",
+      "aws": "AWS EventBridge（6フィールド）"
+    },
+    "fields": {
+      "minute": "分",
+      "hour": "時",
+      "dayOfMonth": "日",
+      "month": "月",
+      "dayOfWeek": "曜日",
+      "year": "年"
+    },
+    "fieldHelp": {
+      "minute": "0-59",
+      "hour": "0-23",
+      "dayOfMonth": "1-31 または ?",
+      "month": "1-12",
+      "dayOfWeek": "SUN-SAT または ?",
+      "dayOfMonthStandard": "1-31",
+      "dayOfWeekStandard": "0-7（0と7は日曜日）",
+      "year": "* または 1970-2199"
+    },
+    "descriptionLabel": "説明",
+    "nextExecutions": "次回実行時刻",
+    "nextCount": "表示件数",
+    "times": "件",
+    "presets": "プリセット",
+    "preset": {
+      "everyMinute": "毎分",
+      "everyHour": "毎時",
+      "everyDay": "毎日0時",
+      "everyWeekMonday": "毎週月曜9時",
+      "everyMonth": "毎月1日",
+      "everyWeekday": "平日9時"
+    },
+    "valid": "有効な式",
+    "invalid": "無効な式",
+    "awsNote": "日と曜日のどちらか一方を '?' にしてください",
+    "error": {
+      "invalidExpression": "無効なCron式",
+      "parseFailed": "Cron式の解析に失敗しました"
+    }
   },
   "jsonEditor": {
     "title": "JSONエディタ",
