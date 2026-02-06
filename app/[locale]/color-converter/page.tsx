@@ -305,17 +305,14 @@ export default function ColorConverterPage() {
                 <ColorSwatch
                   label={t("analogous") + " 1"}
                   hex={hslToHex(analogous[0])}
-                  hsl={analogous[0]}
                 />
                 <ColorSwatch
                   label={t("complementary")}
                   hex={hslToHex(complementary)}
-                  hsl={complementary}
                 />
                 <ColorSwatch
                   label={t("analogous") + " 2"}
                   hex={hslToHex(analogous[1])}
-                  hsl={analogous[1]}
                 />
               </div>
             </div>
