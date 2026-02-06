@@ -33,6 +33,7 @@
     "textViewer": "Text Viewer",
     "csvEditor": "CSV Editor",
     "jsonEditor": "JSON Editor",
+    "matrixTodo": "Matrix ToDo",
     "warekiConverter": "Japanese Era Converter",
     "ageCalculator": "Age Calculator",
     "sectionGenerators": "Generators",
@@ -595,6 +596,90 @@
     "sort": {
       "ascending": "Ascending",
       "descending": "Descending"
+    }
+  },
+  "matrixTodo": {
+    "title": "Matrix ToDo",
+    "description": "Visually manage tasks on a 4-quadrant matrix",
+    "breadcrumb": "Matrix ToDo",
+    "preset": {
+      "label": "Preset",
+      "eisenhower": "Eisenhower Matrix",
+      "effectDifficulty": "Effect × Difficulty",
+      "importanceUrgency": "Importance × Urgency",
+      "importanceDifficulty": "Importance × Difficulty",
+      "custom": "Custom"
+    },
+    "axis": {
+      "xAxis": "X-Axis",
+      "yAxis": "Y-Axis"
+    },
+    "quadrant": {
+      "topLeft": "Top Left",
+      "topRight": "Top Right",
+      "bottomLeft": "Bottom Left",
+      "bottomRight": "Bottom Right"
+    },
+    "eisenhower": {
+      "xAxis": "Urgency",
+      "yAxis": "Importance",
+      "topLeft": "Schedule",
+      "topRight": "Do First",
+      "bottomLeft": "Eliminate",
+      "bottomRight": "Delegate"
+    },
+    "effectDifficulty": {
+      "xAxis": "Difficulty",
+      "yAxis": "Effect",
+      "topLeft": "Top Priority",
+      "topRight": "Plan Carefully",
+      "bottomLeft": "Postpone",
+      "bottomRight": "Reconsider"
+    },
+    "importanceUrgency": {
+      "xAxis": "Urgency",
+      "yAxis": "Importance",
+      "topLeft": "Schedule",
+      "topRight": "Top Priority",
+      "bottomLeft": "Postpone",
+      "bottomRight": "Delegate"
+    },
+    "importanceDifficulty": {
+      "xAxis": "Difficulty",
+      "yAxis": "Importance",
+      "topLeft": "Do Now",
+      "topRight": "Plan Carefully",
+      "bottomLeft": "Fill Time",
+      "bottomRight": "Eliminate"
+    },
+    "task": {
+      "title": "Title",
+      "titlePlaceholder": "Enter task name",
+      "category": "Category",
+      "categoryPlaceholder": "Enter category",
+      "deadline": "Deadline",
+      "noDeadline": "No deadline",
+      "overdue": "Overdue",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "daysLater": "In {days} days",
+      "add": "Add",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "description": "Description",
+      "descriptionPlaceholder": "Enter description"
+    },
+    "clearAll": "Clear All",
+    "clearAllConfirm": "Delete all tasks?",
+    "clearAllDescription": "This action cannot be undone. All tasks will be permanently deleted.",
+    "cancel": "Cancel",
+    "confirm": "Delete",
+    "clickToAdd": "Click to add a task",
+    "doubleClickToEdit": "Double-click to edit",
+    "sidebar": {
+      "title": "Task List",
+      "empty": "No tasks"
     }
   },
   "jsonEditor": {

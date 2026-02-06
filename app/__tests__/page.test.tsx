@@ -33,6 +33,7 @@ describe("Home Page", () => {
     expect(screen.getByText("Service Status")).toBeInTheDocument();
     expect(screen.getByText("Text Viewer")).toBeInTheDocument();
     expect(screen.getByText("JSON Editor")).toBeInTheDocument();
+    expect(screen.getByText("Matrix ToDo")).toBeInTheDocument();
   });
 
   it("has correct links for each tool", () => {
@@ -87,11 +88,15 @@ describe("Home Page", () => {
       "href",
       "/json-editor"
     );
+    expect(screen.getByText("Matrix ToDo").closest("a")).toHaveAttribute(
+      "href",
+      "/matrix-todo"
+    );
   });
 
-  it("renders 14 tool buttons", () => {
+  it("renders 15 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(14);
+    expect(buttons).toHaveLength(15);
   });
 
   it("displays buttons with correct styling", () => {
