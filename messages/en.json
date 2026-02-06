@@ -35,6 +35,7 @@
     "jsonEditor": "JSON Editor",
     "matrixTodo": "Matrix ToDo",
     "warekiConverter": "Japanese Era Converter",
+    "ageCalculator": "Age Calculator",
     "sectionGenerators": "Generators",
     "sectionConverters": "Converters",
     "sectionEditors": "Editors",
@@ -453,6 +454,36 @@
     "error": {
       "invalidDate": "Invalid date",
       "dateOutOfRange": "Please enter a date from Meiji era onwards",
+      "eraYearOutOfRange": "{era} {year} does not exist",
+      "invalidEra": "Invalid era"
+    }
+  },
+  "ageCalculator": {
+    "title": "Age Calculator",
+    "description": "Calculate your current age and age at this year's birthday from your birthdate",
+    "breadcrumb": "Age Calculator",
+    "tabs": {
+      "gregorian": "Gregorian",
+      "wareki": "Japanese Era"
+    },
+    "input": {
+      "year": "Year",
+      "month": "Month",
+      "day": "Day",
+      "era": "Era"
+    },
+    "result": {
+      "birthDate": "Birth Date",
+      "currentAge": "Current Age",
+      "ageThisYear": "Age at This Year's Birthday",
+      "daysUntilBirthday": "Days Until Next Birthday",
+      "birthdayPassed": "Birthday has passed",
+      "birthdayUpcoming": "Birthday is upcoming"
+    },
+    "error": {
+      "invalidDate": "Invalid date",
+      "dateOutOfRange": "Please enter a date from Meiji era onwards",
+      "futureDateError": "Future dates are not allowed",
       "eraYearOutOfRange": "{era} {year} does not exist",
       "invalidEra": "Invalid era"
     }
