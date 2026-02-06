@@ -342,12 +342,10 @@ describe("Service Status Page", () => {
     render(<ServiceStatusPage />);
 
     await waitFor(() => {
-      const homeLink = screen.getByRole("link", { name: "Home" });
-      expect(homeLink).toBeInTheDocument();
+      const breadcrumbNav = screen.getByRole("navigation", { name: "Breadcrumb" });
+      expect(breadcrumbNav).toBeInTheDocument();
+      expect(breadcrumbNav).toHaveTextContent("Service Status");
     });
-
-    const statusLinks = screen.getAllByRole("link", { name: "Service Status" });
-    expect(statusLinks.length).toBeGreaterThan(0);
   });
 
   it("displays flag icon when scheduled maintenance is present", async () => {
