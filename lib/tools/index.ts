@@ -10,6 +10,7 @@ export type IconName =
   | "Braces"
   | "Cake"
   | "Calendar"
+  | "CheckSquare"
   | "Clock"
   | "Dices"
   | "Edit"
@@ -18,7 +19,6 @@ export type IconName =
   | "Globe"
   | "Image"
   | "Key"
-  | "LayoutGrid"
   | "Lock"
   | "Search"
   | "Sparkles"
@@ -114,7 +114,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     id: "matrix-todo",
     path: "/matrix-todo",
-    icon: "LayoutGrid",
+    icon: "CheckSquare",
     category: "editors",
     i18nKey: "matrixTodo",
   },
