@@ -35,6 +35,30 @@ export interface ConversionResult {
   };
 }
 
+// 月の英語名
+export const MONTH_NAMES_EN = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+// 月の英語名を取得
+export function getMonthNameEn(month: number): string {
+  if (month < 1 || month > 12) {
+    return "";
+  }
+  return MONTH_NAMES_EN[month - 1];
+}
+
 // 元号データ (新しい順)
 export const ERAS: Era[] = [
   {
@@ -286,31 +310,6 @@ export function warekiToGregorian(
       formattedEn: `${era.nameEn} ${year}, ${getMonthNameEn(month)} ${day}`,
     },
   };
-}
-
-/**
- * 月の英語名を取得
- */
-function getMonthNameEn(month: number): string {
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  // 防御的な範囲チェック
-  if (month < 1 || month > 12) {
-    return "";
-  }
-  return monthNames[month - 1];
 }
 
 /**

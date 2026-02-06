@@ -1,6 +1,5 @@
 import {
   countLength,
-  shuffleString,
   generateDummyTexts,
 } from "../dummy-text";
 
@@ -45,30 +44,6 @@ describe("countLength", () => {
     it("counts Japanese characters as 3 bytes each (UTF-8)", () => {
       expect(countLength("あ", "bytes")).toBe(3);
     });
-  });
-});
-
-describe("shuffleString", () => {
-  it("returns a string of the same length", () => {
-    const input = "abcdef";
-    const result = shuffleString(input);
-    expect(result.length).toBe(input.length);
-  });
-
-  it("contains all original characters", () => {
-    const input = "abcdef";
-    const result = shuffleString(input);
-    const sortedInput = input.split("").sort().join("");
-    const sortedResult = result.split("").sort().join("");
-    expect(sortedResult).toBe(sortedInput);
-  });
-
-  it("handles empty string", () => {
-    expect(shuffleString("")).toBe("");
-  });
-
-  it("handles single character", () => {
-    expect(shuffleString("a")).toBe("a");
   });
 });
 

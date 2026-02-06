@@ -47,10 +47,14 @@
   "pnpm": {
     "overrides": {
       "diff": "^8.0.3"
+    },
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@playwright/test"
+      ]
     }
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
