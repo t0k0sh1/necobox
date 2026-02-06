@@ -10,7 +10,9 @@ export function useToolPins() {
   const [isInitialized, setIsInitialized] = useState(false);
   const initializedRef = useRef(false);
 
-  // クライアントサイドでのみ初期化
+  // クライアントサイドでのみ localStorage から初期値を復元する。
+  // SSR では localStorage にアクセスできないため、マウント後の effect で setState する必要がある。
+  // initializedRef で二重実行を防止しており、初回マウント時のみ実行される。
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
@@ -19,8 +21,8 @@ export function useToolPins() {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        /* eslint-disable react-hooks/set-state-in-effect */
         if (Array.isArray(parsed)) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- 初回マウント時の localStorage 復元
           setPinnedToolIds(parsed);
         }
       }
@@ -28,7 +30,6 @@ export function useToolPins() {
       // パースエラーは無視
     }
     setIsInitialized(true);
-    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   // 状態変更時に localStorage に保存

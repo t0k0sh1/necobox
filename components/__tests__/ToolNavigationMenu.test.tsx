@@ -124,7 +124,7 @@ describe("ToolNavigationMenu", () => {
     expect(screen.getByText("Data Editors")).toBeInTheDocument();
     expect(screen.getByText("Task Management")).toBeInTheDocument();
     expect(screen.getByText("Network & Security")).toBeInTheDocument();
-    expect(screen.getByText("Viewer")).toBeInTheDocument();
+    expect(screen.getByText("Viewers")).toBeInTheDocument();
     expect(screen.getByText("References")).toBeInTheDocument();
   });
 

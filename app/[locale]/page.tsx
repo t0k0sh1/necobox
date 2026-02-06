@@ -64,6 +64,9 @@ const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   Type,
 };
 
+// ツールID → ToolDefinition のルックアップ（TOOLS は静的なのでモジュールレベルで生成）
+const TOOL_MAP = new Map(TOOLS.map((tool) => [tool.id, tool]));
+
 // カテゴリアイコンのマッピング
 const CATEGORY_ICONS: Record<
   ToolCategory,
@@ -118,7 +121,7 @@ function ToolCard({
         className={`absolute top-1/2 -translate-y-1/2 right-2 p-1 rounded-md transition-opacity ${
           isPinned
             ? "opacity-100 text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300"
-            : "opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+            : "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
         }`}
         aria-label={
           isPinned
@@ -235,9 +238,8 @@ function PinnedSection({
 }: PinnedSectionProps) {
   if (toolIds.length === 0) return null;
 
-  const toolMap = new Map(TOOLS.map((tool) => [tool.id, tool]));
   const tools = toolIds
-    .map((id) => toolMap.get(id))
+    .map((id) => TOOL_MAP.get(id))
     .filter((tool): tool is ToolDefinition => tool !== undefined);
 
   if (tools.length === 0) return null;
@@ -272,9 +274,8 @@ interface RecentSectionProps {
 function RecentSection({ toolIds, t, onRecordUsage }: RecentSectionProps) {
   if (toolIds.length === 0) return null;
 
-  const toolMap = new Map(TOOLS.map((tool) => [tool.id, tool]));
   const tools = toolIds
-    .map((id) => toolMap.get(id))
+    .map((id) => TOOL_MAP.get(id))
     .filter((tool): tool is ToolDefinition => tool !== undefined);
 
   if (tools.length === 0) return null;
