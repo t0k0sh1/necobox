@@ -17,6 +17,7 @@ export type IconName =
   | "Globe"
   | "Image"
   | "Key"
+  | "LayoutGrid"
   | "Lock"
   | "Search"
   | "Sparkles"
@@ -101,6 +102,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "Braces",
     category: "editors",
     i18nKey: "jsonEditor",
+  },
+  {
+    id: "matrix-todo",
+    path: "/matrix-todo",
+    icon: "LayoutGrid",
+    category: "editors",
+    i18nKey: "matrixTodo",
   },
   // Analyzers
   {

@@ -33,6 +33,7 @@
     "textViewer": "テキストビューア",
     "csvEditor": "CSVエディタ",
     "jsonEditor": "JSONエディタ",
+    "matrixTodo": "マトリックスToDo",
     "warekiConverter": "西暦・和暦変換",
     "sectionGenerators": "生成ツール",
     "sectionConverters": "変換ツール",
@@ -564,6 +565,89 @@
     "sort": {
       "ascending": "昇順",
       "descending": "降順"
+    }
+  },
+  "matrixTodo": {
+    "title": "マトリックスToDo",
+    "description": "4象限マトリックスでタスクを視覚的に管理",
+    "breadcrumb": "マトリックスToDo",
+    "preset": {
+      "label": "プリセット",
+      "eisenhower": "アイゼンハワー・マトリックス",
+      "effectDifficulty": "効果×難易度",
+      "importanceUrgency": "重要度×緊急度",
+      "importanceDifficulty": "重要度×難易度",
+      "custom": "カスタム"
+    },
+    "axis": {
+      "xAxis": "横軸",
+      "yAxis": "縦軸"
+    },
+    "quadrant": {
+      "topLeft": "左上",
+      "topRight": "右上",
+      "bottomLeft": "左下",
+      "bottomRight": "右下"
+    },
+    "eisenhower": {
+      "xAxis": "緊急度",
+      "yAxis": "重要度",
+      "topLeft": "計画する",
+      "topRight": "今すぐやる",
+      "bottomLeft": "やらない",
+      "bottomRight": "委任する"
+    },
+    "effectDifficulty": {
+      "xAxis": "難易度",
+      "yAxis": "効果",
+      "topLeft": "最優先",
+      "topRight": "計画的に",
+      "bottomLeft": "後回し",
+      "bottomRight": "再検討"
+    },
+    "importanceUrgency": {
+      "xAxis": "緊急度",
+      "yAxis": "重要度",
+      "topLeft": "計画する",
+      "topRight": "最優先",
+      "bottomLeft": "後回し",
+      "bottomRight": "委任する"
+    },
+    "importanceDifficulty": {
+      "xAxis": "難易度",
+      "yAxis": "重要度",
+      "topLeft": "すぐやる",
+      "topRight": "計画的に",
+      "bottomLeft": "暇な時に",
+      "bottomRight": "やらない"
+    },
+    "task": {
+      "title": "タイトル",
+      "titlePlaceholder": "タスク名を入力",
+      "category": "カテゴリ",
+      "categoryPlaceholder": "カテゴリを入力",
+      "deadline": "期限",
+      "noDeadline": "期限なし",
+      "overdue": "期限切れ",
+      "today": "今日",
+      "tomorrow": "明日",
+      "daysLater": "{days}日後",
+      "add": "追加",
+      "edit": "編集",
+      "delete": "削除",
+      "save": "保存",
+      "description": "説明",
+      "descriptionPlaceholder": "説明を入力"
+    },
+    "clearAll": "全クリア",
+    "clearAllConfirm": "すべてのタスクを削除しますか？",
+    "clearAllDescription": "この操作は取り消せません。すべてのタスクが完全に削除されます。",
+    "cancel": "キャンセル",
+    "confirm": "削除する",
+    "clickToAdd": "クリックしてタスクを追加",
+    "sidebar": {
+      "title": "タスク一覧",
+      "empty": "タスクなし"
     }
   },
   "jsonEditor": {
