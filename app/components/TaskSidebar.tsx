@@ -81,6 +81,8 @@ function SortableTaskItem({ task, existingCategories, onUpdate, onDelete }: Sort
       ref={setNodeRef}
       style={style}
       className="group relative flex items-start gap-1.5 p-2 rounded-md border bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer select-none"
+      aria-label={task.title}
+      aria-describedby={task.description ? `sidebar-task-desc-${task.id}` : undefined}
     >
       {/* ドラッグハンドル */}
       <button
@@ -114,7 +116,7 @@ function SortableTaskItem({ task, existingCategories, onUpdate, onDelete }: Sort
       {/* 説明ツールチップ（ホバー時表示、ドラッグ中は非表示） */}
       {task.description && !isDragging && (
         <div className="hidden group-hover:block absolute left-0 top-full mt-1 z-50 w-full">
-          <div className="rounded-md border bg-popover px-2 py-1.5 shadow-md">
+          <div id={`sidebar-task-desc-${task.id}`} role="tooltip" className="rounded-md border bg-popover px-2 py-1.5 shadow-md">
             <p className="text-xs text-popover-foreground whitespace-pre-wrap break-words line-clamp-5">
               {task.description}
             </p>

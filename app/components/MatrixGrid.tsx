@@ -278,7 +278,10 @@ export function MatrixGrid({
             onBlur={handleQuadrantEditFinish}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleQuadrantEditFinish();
-              if (e.key === "Escape") setEditingQuadrant(null);
+              if (e.key === "Escape") {
+                markPopoverClosed();
+                setEditingQuadrant(null);
+              }
             }}
             className="text-lg text-center bg-white dark:bg-gray-800 border rounded px-2 w-full max-w-[180px] outline-none focus:ring-1 focus:ring-primary"
             autoFocus
@@ -287,7 +290,7 @@ export function MatrixGrid({
           <span
             className="text-lg font-semibold text-muted-foreground/60 cursor-pointer hover:text-foreground transition-colors select-none"
             onDoubleClick={() => handleQuadrantDoubleClick(key, name)}
-            title={t("clickToAdd")}
+            title={t("doubleClickToEdit")}
           >
             {name}
           </span>
@@ -316,7 +319,10 @@ export function MatrixGrid({
                 onBlur={handleAxisEditFinish}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleAxisEditFinish();
-                  if (e.key === "Escape") setEditingAxis(null);
+                  if (e.key === "Escape") {
+                    markPopoverClosed();
+                    setEditingAxis(null);
+                  }
                 }}
                 className="text-xl text-center bg-white dark:bg-gray-800 border rounded px-1 w-full outline-none focus:ring-1 focus:ring-primary"
                 style={{ writingMode: "vertical-rl" }}
@@ -438,7 +444,10 @@ export function MatrixGrid({
                   onBlur={handleAxisEditFinish}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleAxisEditFinish();
-                    if (e.key === "Escape") setEditingAxis(null);
+                    if (e.key === "Escape") {
+                      markPopoverClosed();
+                      setEditingAxis(null);
+                    }
                   }}
                   className="text-xl text-center bg-white dark:bg-gray-800 border rounded px-2 max-w-[200px] outline-none focus:ring-1 focus:ring-primary"
                   autoFocus

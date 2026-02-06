@@ -676,6 +676,7 @@
     "cancel": "キャンセル",
     "confirm": "削除する",
     "clickToAdd": "クリックしてタスクを追加",
+    "doubleClickToEdit": "ダブルクリックして編集",
     "sidebar": {
       "title": "タスク一覧",
       "empty": "タスクなし"

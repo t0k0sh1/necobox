@@ -305,12 +305,46 @@ describe("matrix-todo", () => {
       expect(loaded?.taskOrder).toEqual(["b", "a"]);
     });
 
+    it("descriptionが未定義のデータも読み込める（後方互換性）", () => {
+      const data = {
+        tasks: [
+          {
+            id: "1",
+            title: "テスト",
+            category: "",
+            deadline: null,
+            gridX: 0,
+            gridY: 0,
+            createdAt: "2025-01-01T00:00:00.000Z",
+          },
+        ],
+        config: {
+          preset: "eisenhower" as const,
+          xAxisLabel: "緊急度",
+          yAxisLabel: "重要度",
+          quadrantNames: {
+            topLeft: "計画する",
+            topRight: "今すぐやる",
+            bottomLeft: "やらない",
+            bottomRight: "委任する",
+          },
+        },
+      };
+
+      // description フィールドがないデータでも読み込める
+      saveMatrixData(data);
+      const loaded = loadMatrixData();
+      expect(loaded).not.toBeNull();
+      expect(loaded?.tasks[0].description).toBeUndefined();
+    });
+
     it("taskOrderが未定義のデータも読み込める（後方互換性）", () => {
       const data = {
         tasks: [
           {
             id: "1",
             title: "テスト",
+            description: null,
             category: "",
             deadline: null,
             gridX: 0,

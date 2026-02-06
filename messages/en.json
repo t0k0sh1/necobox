@@ -676,6 +676,7 @@
     "cancel": "Cancel",
     "confirm": "Delete",
     "clickToAdd": "Click to add a task",
+    "doubleClickToEdit": "Double-click to edit",
     "sidebar": {
       "title": "Task List",
       "empty": "No tasks"

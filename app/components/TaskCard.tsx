@@ -73,6 +73,7 @@ export function TaskCard({
       style={style}
       {...attributes}
       {...listeners}
+      tabIndex={0}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => {
         if ((e.key === "Delete" || e.key === "Backspace") && !popoverOpen) {
@@ -81,6 +82,8 @@ export function TaskCard({
         }
       }}
       className="group rounded-md border bg-white dark:bg-gray-900 shadow-sm overflow-visible select-none focus:outline-none focus:ring-2 focus:ring-primary/50"
+      aria-label={task.title}
+      aria-describedby={task.description ? `task-desc-${task.id}` : undefined}
     >
       {/* ヘッダー: カテゴリ + 期限 */}
       <div className="flex items-center justify-between px-2 py-1.5 gap-1">
@@ -111,7 +114,7 @@ export function TaskCard({
       {/* 説明ツールチップ（ホバー時表示、ドラッグ中は非表示） */}
       {task.description && !isDragging && (
         <div className="hidden group-hover:block absolute left-0 top-full mt-1 z-[60] w-full">
-          <div className="rounded-md border bg-popover px-2 py-1.5 shadow-md">
+          <div id={`task-desc-${task.id}`} role="tooltip" className="rounded-md border bg-popover px-2 py-1.5 shadow-md">
             <p className="text-xs text-popover-foreground whitespace-pre-wrap break-words line-clamp-5">
               {task.description}
             </p>
