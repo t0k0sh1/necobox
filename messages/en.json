@@ -18,7 +18,9 @@
     "converting": "Converting...",
     "swap": "Swap",
     "loading": "Loading...",
-    "error": "Error"
+    "error": "Error",
+    "toolMenu": "Tools",
+    "toolMenuDescription": "Navigate to other tools"
   },
   "home": {
     "passwordGenerator": "Password Generator",

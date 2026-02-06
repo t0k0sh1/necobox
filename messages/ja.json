@@ -18,7 +18,9 @@
     "converting": "変換中...",
     "swap": "入れ替え",
     "loading": "読み込み中...",
-    "error": "エラー"
+    "error": "エラー",
+    "toolMenu": "ツール一覧",
+    "toolMenuDescription": "他のツールに移動"
   },
   "home": {
     "passwordGenerator": "パスワード生成",
