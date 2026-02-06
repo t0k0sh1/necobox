@@ -124,14 +124,14 @@ describe("Home Page", () => {
     );
   });
 
-  it("renders 19 tool links", () => {
+  it("renders 25 tool links", () => {
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(19);
+    expect(links).toHaveLength(25);
   });
 
-  it("renders 19 pin toggle buttons", () => {
+  it("renders 25 pin toggle buttons", () => {
     const pinButtons = screen.getAllByRole("button");
-    expect(pinButtons).toHaveLength(19);
+    expect(pinButtons).toHaveLength(25);
   });
 
   it("renders 7 category sections", () => {

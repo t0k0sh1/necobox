@@ -96,6 +96,15 @@ jest.mock("next-intl/navigation", () => ({
   })),
 }));
 
+// Polyfill crypto.subtle for jsdom (Web Crypto API)
+import { webcrypto } from "crypto";
+if (!global.crypto?.subtle) {
+  Object.defineProperty(global, "crypto", {
+    value: webcrypto,
+    writable: true,
+  });
+}
+
 // Mock clipboard API
 Object.defineProperty(navigator, "clipboard", {
   value: {

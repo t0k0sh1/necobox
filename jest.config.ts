@@ -10,10 +10,11 @@ const config: Config = {
   testEnvironment: "jest-environment-jsdom",
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+    "^nanoid$": "<rootDir>/lib/utils/__mocks__/nanoid.ts",
   },
   testPathIgnorePatterns: ["<rootDir>/.next/", "<rootDir>/node_modules/"],
   transformIgnorePatterns: [
-    "node_modules/(?!(next-intl)/)",
+    "node_modules/(?!(next-intl|nanoid|ulid)/)",
   ],
   collectCoverageFrom: [
     "app/**/*.{ts,tsx}",
