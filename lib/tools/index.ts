@@ -18,10 +18,12 @@ export type IconName =
   | "Eye"
   | "FileSpreadsheet"
   | "FileText"
+  | "GitCompare"
   | "Globe"
   | "Image"
   | "Key"
   | "Lock"
+  | "Palette"
   | "Search"
   | "Shield"
   | "Sparkles"
@@ -82,6 +84,13 @@ export const TOOLS: ToolDefinition[] = [
   },
   // Converters（変換・計算）
   {
+    id: "color-converter",
+    path: "/color-converter",
+    icon: "Palette",
+    category: "converters",
+    i18nKey: "colorConverter",
+  },
+  {
     id: "time-zone-converter",
     path: "/time-zone-converter",
     icon: "Clock",
@@ -110,6 +119,13 @@ export const TOOLS: ToolDefinition[] = [
     i18nKey: "ageCalculator",
   },
   // Editors（データエディタ）
+  {
+    id: "regex-tester",
+    path: "/regex-tester",
+    icon: "Search",
+    category: "editors",
+    i18nKey: "regexTester",
+  },
   {
     id: "csv-editor",
     path: "/csv-editor",
@@ -155,6 +171,13 @@ export const TOOLS: ToolDefinition[] = [
     i18nKey: "jwtDecoder",
   },
   // Viewers（ビューア）
+  {
+    id: "diff-viewer",
+    path: "/diff-viewer",
+    icon: "GitCompare",
+    category: "viewers",
+    i18nKey: "diffViewer",
+  },
   {
     id: "text-viewer",
     path: "/text-viewer",
