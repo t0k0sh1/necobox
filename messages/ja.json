@@ -36,6 +36,7 @@
     "matrixTodo": "マトリックスToDo",
     "warekiConverter": "西暦・和暦変換",
     "ageCalculator": "年齢計算",
+    "cheatsheets": "チートシート集",
     "sectionGenerators": "生成ツール",
     "sectionConverters": "変換ツール",
     "sectionEditors": "エディタツール",
@@ -680,6 +681,35 @@
     "sidebar": {
       "title": "タスク一覧",
       "empty": "タスクなし"
+    }
+  },
+  "cheatsheets": {
+    "title": "チートシート集",
+    "description": "開発者向けリファレンスをすばやく参照",
+    "breadcrumb": "チートシート集",
+    "tabs": {
+      "httpStatus": "HTTPステータスコード"
+    },
+    "httpStatus": {
+      "searchPlaceholder": "コード、名前、説明で検索...",
+      "noResults": "一致するステータスコードが見つかりません",
+      "detail": "詳細",
+      "description": "説明",
+      "usageExample": "使用例",
+      "relatedRfc": "関連RFC",
+      "mdnReference": "MDNリファレンス",
+      "viewOnMdn": "MDNで確認",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "copyDetail": "詳細をコピー",
+      "categories": {
+        "1xx": "1xx 情報レスポンス",
+        "2xx": "2xx 成功",
+        "3xx": "3xx リダイレクト",
+        "4xx": "4xx クライアントエラー",
+        "5xx": "5xx サーバーエラー",
+        "non_standard": "非標準（CDN/クラウド）"
+      }
     }
   },
   "jsonEditor": {

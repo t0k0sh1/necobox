@@ -36,6 +36,7 @@
     "matrixTodo": "Matrix ToDo",
     "warekiConverter": "Japanese Era Converter",
     "ageCalculator": "Age Calculator",
+    "cheatsheets": "Cheatsheets",
     "sectionGenerators": "Generators",
     "sectionConverters": "Converters",
     "sectionEditors": "Editors",
@@ -680,6 +681,35 @@
     "sidebar": {
       "title": "Task List",
       "empty": "No tasks"
+    }
+  },
+  "cheatsheets": {
+    "title": "Cheatsheets",
+    "description": "Developer reference cheatsheets for quick lookup",
+    "breadcrumb": "Cheatsheets",
+    "tabs": {
+      "httpStatus": "HTTP Status Codes"
+    },
+    "httpStatus": {
+      "searchPlaceholder": "Search by code, name, or description...",
+      "noResults": "No matching status codes found",
+      "detail": "Detail",
+      "description": "Description",
+      "usageExample": "Usage Example",
+      "relatedRfc": "Related RFC",
+      "mdnReference": "MDN Reference",
+      "viewOnMdn": "View on MDN",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copyDetail": "Copy Detail",
+      "categories": {
+        "1xx": "1xx Informational",
+        "2xx": "2xx Success",
+        "3xx": "3xx Redirection",
+        "4xx": "4xx Client Error",
+        "5xx": "5xx Server Error",
+        "non_standard": "Non-Standard (CDN/Cloud)"
+      }
     }
   },
   "jsonEditor": {

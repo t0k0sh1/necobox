@@ -7,6 +7,7 @@
 export type IconName =
   | "Activity"
   | "ArrowRightLeft"
+  | "BookOpen"
   | "Braces"
   | "Cake"
   | "Calendar"
@@ -153,6 +154,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "FileText",
     category: "analyzers",
     i18nKey: "textViewer",
+  },
+  {
+    id: "cheatsheets",
+    path: "/cheatsheets",
+    icon: "BookOpen",
+    category: "analyzers",
+    i18nKey: "cheatsheets",
   },
 ];
 
