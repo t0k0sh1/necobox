@@ -62,7 +62,10 @@ const CATEGORY_COLORS: Record<
   },
 };
 
-const MDN_BASE_URL = "https://developer.mozilla.org/docs/";
+const MDN_BASE_URLS: Record<string, string> = {
+  en: "https://developer.mozilla.org/en-US/docs/",
+  ja: "https://developer.mozilla.org/ja/docs/",
+};
 
 export function HttpStatusCheatsheet() {
   const t = useTranslations("cheatsheets");
@@ -137,7 +140,7 @@ export function HttpStatusCheatsheet() {
       text += `\n\n${code.rfc}: ${code.rfcUrl || ""}`;
     }
     if (code.mdnPath) {
-      text += `\nMDN: ${MDN_BASE_URL}${code.mdnPath}`;
+      text += `\nMDN: ${MDN_BASE_URLS[locale] || MDN_BASE_URLS.en}${code.mdnPath}`;
     }
 
     await handleCopy(text, `detail-${code.code}`);
@@ -189,6 +192,8 @@ export function HttpStatusCheatsheet() {
             {/* カテゴリヘッダー */}
             <button
               onClick={() => toggleCategory(category)}
+              aria-expanded={!isCollapsed}
+              aria-label={`${t(`httpStatus.categories.${category}` as Parameters<typeof t>[0])} ${isCollapsed ? "expand" : "collapse"}`}
               className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
             >
               <div className="flex items-center gap-2">
@@ -244,6 +249,7 @@ export function HttpStatusCheatsheet() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      aria-label={`${t("httpStatus.copy")} ${code.code} ${code.nameEn}`}
                       className={`h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity ${
                         copiedId === `row-${code.code}`
                           ? "opacity-100 text-green-600 dark:text-green-400"
@@ -348,7 +354,7 @@ export function HttpStatusCheatsheet() {
                     {t("httpStatus.mdnReference")}
                   </h4>
                   <a
-                    href={`${MDN_BASE_URL}${selectedCode.mdnPath}`}
+                    href={`${MDN_BASE_URLS[locale] || MDN_BASE_URLS.en}${selectedCode.mdnPath}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
