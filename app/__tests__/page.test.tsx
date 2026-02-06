@@ -94,9 +94,9 @@ describe("Home Page", () => {
     );
   });
 
-  it("renders 14 tool buttons", () => {
+  it("renders 15 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(14);
+    expect(buttons).toHaveLength(15);
   });
 
   it("displays buttons with correct styling", () => {
