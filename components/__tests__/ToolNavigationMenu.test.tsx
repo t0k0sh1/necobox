@@ -147,4 +147,13 @@ describe("ToolNavigationMenu", () => {
       "/jwt-decoder"
     );
   });
+
+  it("ナビゲーション要素にaria-labelが設定される", () => {
+    render(<ToolNavigationMenu />);
+
+    fireEvent.click(screen.getByLabelText("Tools"));
+
+    const nav = screen.getByRole("navigation");
+    expect(nav).toHaveAttribute("aria-label", "Navigate to other tools");
+  });
 });

@@ -149,7 +149,7 @@ export function ToolNavigationMenu() {
             {tc("toolMenuDescription")}
           </SheetDescription>
         </SheetHeader>
-        <nav className="space-y-4 px-4 pb-4">
+        <nav className="space-y-4 px-4 pb-4" aria-label={tc("toolMenuDescription")}>
           {CATEGORY_ORDER.map((category) => (
             <ToolNavSection
               key={category}
