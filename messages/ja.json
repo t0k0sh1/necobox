@@ -39,10 +39,17 @@
     "warekiConverter": "西暦・和暦変換",
     "ageCalculator": "年齢計算",
     "cheatsheets": "チートシート集",
-    "sectionGenerators": "生成ツール",
-    "sectionConverters": "変換ツール",
-    "sectionEditors": "エディタツール",
-    "sectionAnalyzers": "解析・情報ツール"
+    "sectionGenerators": "ランダム生成",
+    "sectionConverters": "変換・計算",
+    "sectionEditors": "データエディタ",
+    "sectionTasks": "タスク管理",
+    "sectionNetwork": "ネットワーク・セキュリティ",
+    "sectionViewers": "ビューア",
+    "sectionReferences": "リファレンス",
+    "sectionPinned": "ピン留め",
+    "sectionRecent": "最近使ったツール",
+    "pinTool": "ピン留めする",
+    "unpinTool": "ピン留め解除"
   },
   "passwordGenerator": {
     "title": "パスワード生成",

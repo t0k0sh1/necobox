@@ -1,5 +1,23 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import Home from "../[locale]/page";
+
+// localStorage モック
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+  return {
+    getItem: jest.fn((key: string) => store[key] || null),
+    setItem: jest.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: jest.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: jest.fn(() => {
+      store = {};
+    }),
+  };
+})();
+Object.defineProperty(window, "localStorage", { value: localStorageMock });
 
 // Mock next/link
 jest.mock("next/link", () => {
@@ -16,6 +34,10 @@ jest.mock("next/link", () => {
 
 describe("Home Page", () => {
   beforeEach(() => {
+    localStorageMock.clear();
+    localStorageMock.getItem.mockClear();
+    localStorageMock.getItem.mockReturnValue(null);
+    localStorageMock.setItem.mockClear();
     render(<Home />);
   });
 
@@ -99,15 +121,100 @@ describe("Home Page", () => {
     );
   });
 
-  it("renders 16 tool buttons", () => {
-    const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(16);
+  it("renders 16 tool links", () => {
+    const links = screen.getAllByRole("link");
+    expect(links).toHaveLength(16);
   });
 
-  it("displays buttons with correct styling", () => {
-    const buttons = screen.getAllByRole("button");
-    buttons.forEach((button) => {
-      expect(button).toHaveClass("h-32");
+  it("renders 16 pin toggle buttons", () => {
+    const pinButtons = screen.getAllByRole("button");
+    expect(pinButtons).toHaveLength(16);
+  });
+
+  it("renders 7 category sections", () => {
+    expect(screen.getByText("Random Generation")).toBeInTheDocument();
+    expect(screen.getByText("Conversion & Calculation")).toBeInTheDocument();
+    expect(screen.getByText("Data Editors")).toBeInTheDocument();
+    expect(screen.getByText("Task Management")).toBeInTheDocument();
+    expect(screen.getByText("Network & Security")).toBeInTheDocument();
+    expect(screen.getByText("Viewer")).toBeInTheDocument();
+    expect(screen.getByText("References")).toBeInTheDocument();
+  });
+});
+
+describe("Home Page - Pinned Section", () => {
+  beforeEach(() => {
+    localStorageMock.clear();
+    localStorageMock.getItem.mockClear();
+    localStorageMock.setItem.mockClear();
+  });
+
+  it("ピン留めがある場合にセクションを表示する", () => {
+    localStorageMock.getItem.mockImplementation((key: string) => {
+      if (key === "necobox-pinned-tools") {
+        return JSON.stringify(["random"]);
+      }
+      return null;
     });
+
+    render(<Home />);
+    expect(screen.getByText("Pinned")).toBeInTheDocument();
+  });
+
+  it("ピン留めがない場合にセクションを非表示にする", () => {
+    localStorageMock.getItem.mockReturnValue(null);
+
+    render(<Home />);
+    expect(screen.queryByText("Pinned")).not.toBeInTheDocument();
+  });
+});
+
+describe("Home Page - Recent Section", () => {
+  beforeEach(() => {
+    localStorageMock.clear();
+    localStorageMock.getItem.mockClear();
+    localStorageMock.setItem.mockClear();
+  });
+
+  it("使用履歴がある場合にセクションを表示する", () => {
+    localStorageMock.getItem.mockImplementation((key: string) => {
+      if (key === "necobox-recent-tools") {
+        return JSON.stringify(["random"]);
+      }
+      return null;
+    });
+
+    render(<Home />);
+    expect(screen.getByText("Recently Used")).toBeInTheDocument();
+  });
+
+  it("使用履歴がない場合にセクションを非表示にする", () => {
+    localStorageMock.getItem.mockReturnValue(null);
+
+    render(<Home />);
+    expect(screen.queryByText("Recently Used")).not.toBeInTheDocument();
+  });
+});
+
+describe("Home Page - Pin Toggle", () => {
+  beforeEach(() => {
+    localStorageMock.clear();
+    localStorageMock.getItem.mockClear();
+    localStorageMock.getItem.mockReturnValue(null);
+    localStorageMock.setItem.mockClear();
+  });
+
+  it("ピンボタンクリックでピン留めされる", () => {
+    render(<Home />);
+
+    // "Pin" aria-label のボタンを取得（最初のもの）
+    const pinButtons = screen.getAllByLabelText("Pin");
+    fireEvent.click(pinButtons[0]);
+
+    // localStorage にピン留めが保存される
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(
+      "necobox-pinned-tools",
+      expect.any(String)
+    );
   });
 });

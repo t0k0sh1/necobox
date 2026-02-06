@@ -29,6 +29,7 @@ import {
   Clock,
   Dices,
   Edit,
+  Eye,
   FileSpreadsheet,
   FileText,
   Globe,
@@ -37,6 +38,7 @@ import {
   Lock,
   Menu,
   Search,
+  Shield,
   Sparkles,
   Type,
 } from "lucide-react";
@@ -54,6 +56,7 @@ const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   Clock,
   Dices,
   Edit,
+  Eye,
   FileSpreadsheet,
   FileText,
   Globe,
@@ -61,6 +64,7 @@ const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   Key,
   Lock,
   Search,
+  Shield,
   Sparkles,
   Type,
 };
