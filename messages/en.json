@@ -35,7 +35,7 @@
     "textViewer": "Text Viewer",
     "csvEditor": "CSV Editor",
     "jsonEditor": "JSON Editor",
-    "matrixTodo": "Matrix ToDo",
+    "matrixTodo": "ToDo",
     "warekiConverter": "Japanese Era Converter",
     "ageCalculator": "Age Calculator",
     "cheatsheets": "Cheatsheets",
@@ -602,9 +602,9 @@
     }
   },
   "matrixTodo": {
-    "title": "Matrix ToDo",
+    "title": "ToDo",
     "description": "Visually manage tasks on a 4-quadrant matrix",
-    "breadcrumb": "Matrix ToDo",
+    "breadcrumb": "ToDo",
     "preset": {
       "label": "Preset",
       "eisenhower": "Eisenhower Matrix",
