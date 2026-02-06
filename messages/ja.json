@@ -35,7 +35,7 @@
     "textViewer": "テキストビューア",
     "csvEditor": "CSVエディタ",
     "jsonEditor": "JSONエディタ",
-    "matrixTodo": "マトリックスToDo",
+    "matrixTodo": "ToDo",
     "warekiConverter": "西暦・和暦変換",
     "ageCalculator": "年齢計算",
     "sectionGenerators": "生成ツール",
@@ -601,9 +601,9 @@
     }
   },
   "matrixTodo": {
-    "title": "マトリックスToDo",
+    "title": "ToDo",
     "description": "4象限マトリックスでタスクを視覚的に管理",
-    "breadcrumb": "マトリックスToDo",
+    "breadcrumb": "ToDo",
     "preset": {
       "label": "プリセット",
       "eisenhower": "アイゼンハワー・マトリックス",
