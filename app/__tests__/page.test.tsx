@@ -34,6 +34,7 @@ describe("Home Page", () => {
     expect(screen.getByText("Text Viewer")).toBeInTheDocument();
     expect(screen.getByText("JSON Editor")).toBeInTheDocument();
     expect(screen.getByText("ToDo")).toBeInTheDocument();
+    expect(screen.getByText("Cheatsheets")).toBeInTheDocument();
   });
 
   it("has correct links for each tool", () => {
@@ -92,11 +93,15 @@ describe("Home Page", () => {
       "href",
       "/matrix-todo"
     );
+    expect(screen.getByText("Cheatsheets").closest("a")).toHaveAttribute(
+      "href",
+      "/cheatsheets"
+    );
   });
 
-  it("renders 15 tool buttons", () => {
+  it("renders 16 tool buttons", () => {
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(15);
+    expect(buttons).toHaveLength(16);
   });
 
   it("displays buttons with correct styling", () => {
