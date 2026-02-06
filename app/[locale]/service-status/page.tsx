@@ -20,7 +20,6 @@ const CATEGORY_ORDER: ServiceCategory[] = [
 
 export default function ServiceStatusPage() {
   const t = useTranslations("serviceStatus");
-  const tCommon = useTranslations("common");
 
   const [statuses, setStatuses] = useState<ServiceStatusInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,8 +77,7 @@ export default function ServiceStatusPage() {
   }, {} as Record<ServiceCategory, ServiceStatusInfo[]>);
 
   const breadcrumbItems = [
-    { label: tCommon("home"), href: "/" },
-    { label: t("breadcrumb"), href: "/service-status" },
+    { label: t("breadcrumb") },
   ];
 
   return (
