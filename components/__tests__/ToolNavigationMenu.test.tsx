@@ -125,13 +125,13 @@ describe("ToolNavigationMenu", () => {
     expect(screen.getByText("Analyzers & Info")).toBeInTheDocument();
   });
 
-  it("メニューを開くと15個のツールリンクが表示される", () => {
+  it("メニューを開くと16個のツールリンクが表示される", () => {
     render(<ToolNavigationMenu />);
 
     fireEvent.click(screen.getByLabelText("Tools"));
 
     const links = screen.getAllByRole("link");
-    expect(links).toHaveLength(15);
+    expect(links).toHaveLength(16);
   });
 
   it("ツールリンクに正しいhrefが設定される", () => {
