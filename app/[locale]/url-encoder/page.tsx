@@ -68,9 +68,16 @@ export default function UrlEncoderPage() {
     setEncodedText(urlEncode(value, mode));
   };
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleEncodedChange = (value: string) => {
     setEncodedText(value);
-    const { result } = urlDecode(value);
+    setError(null);
+    const { result, error: decodeError } = urlDecode(value);
+    if (decodeError) {
+      setError(t("error.decodeFailed"));
+      return;
+    }
     setInputText(result);
   };
 
@@ -84,6 +91,12 @@ export default function UrlEncoderPage() {
             {t("description")}
           </p>
         </div>
+
+        {error && (
+          <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
+            {error}
+          </p>
+        )}
 
         {/* エンコードモード */}
         <div className="space-y-2">

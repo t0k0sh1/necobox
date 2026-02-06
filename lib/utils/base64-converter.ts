@@ -8,11 +8,13 @@
 export function encodeBase64(text: string): string {
   const encoder = new TextEncoder();
   const bytes = encoder.encode(text);
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
+  const chunkSize = 0x8000;
+  const chunks: string[] = [];
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    chunks.push(String.fromCharCode.apply(null, Array.from(chunk)));
   }
-  return btoa(binary);
+  return btoa(chunks.join(""));
 }
 
 /**
@@ -76,7 +78,8 @@ export function isValidBase64(str: string): boolean {
     // Data URIの場合はBase64部分のみチェック
     const base64Part = str.includes(",") ? str.split(",")[1] : str;
     if (!base64Part) return false;
-    atob(base64Part);
+    const padded = base64Part + "=".repeat((4 - (base64Part.length % 4)) % 4);
+    atob(padded);
     return true;
   } catch {
     return false;

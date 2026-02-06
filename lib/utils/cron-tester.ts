@@ -134,6 +134,9 @@ function awsToStandard(expression: string): string {
   const normDom = dayOfMonth === "?" ? "*" : dayOfMonth;
   let normDow = dayOfWeek === "?" ? "*" : dayOfWeek;
 
+  // AWS数値曜日（1=SUN...7=SAT）→ 標準数値曜日（0=SUN...6=SAT）に変換（名前変換より先に実行）
+  normDow = normDow.replace(/\b([1-7])\b/g, (_, d) => String(parseInt(d) - 1));
+
   // 曜日名を数値に変換（範囲やリストにも対応）
   normDow = normDow.replace(/\b(SUN|MON|TUE|WED|THU|FRI|SAT)\b/g, (m) => AWS_DAY_NAMES[m] || m);
 

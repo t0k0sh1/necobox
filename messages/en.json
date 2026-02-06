@@ -950,7 +950,7 @@
       "dayOfWeekStandard": "0-7 (0 and 7 are Sunday)",
       "year": "* or 1970-2199"
     },
-    "description_label": "Description",
+    "descriptionLabel": "Description",
     "nextExecutions": "Next Executions",
     "nextCount": "Show next",
     "times": "times",

@@ -92,6 +92,13 @@ describe("isValidTimestamp", () => {
     expect(result.valid).toBe(true);
     expect(result.unit).toBe("seconds");
   });
+
+  it("2001年以前のミリ秒タイムスタンプを正しく判定する", () => {
+    // 2000-01-01 = 946684800000ms
+    const result = isValidTimestamp("946684800000");
+    expect(result.valid).toBe(true);
+    expect(result.unit).toBe("milliseconds");
+  });
 });
 
 describe("getCurrentTimestamp", () => {

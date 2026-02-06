@@ -33,12 +33,14 @@ export function dateToTimestamp(date: Date, unit: TimestampUnit): number {
 /**
  * 日付をフォーマットする
  */
-export function formatDate(date: Date): FormattedDate {
+export function formatDate(date: Date, locale?: string): FormattedDate {
   if (isNaN(date.getTime())) {
     return { local: "Invalid Date", utc: "Invalid Date", iso8601: "Invalid Date", relative: "Invalid Date" };
   }
 
-  const local = date.toLocaleString("ja-JP", {
+  const displayLocale = locale || "ja-JP";
+
+  const local = date.toLocaleString(displayLocale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -48,7 +50,7 @@ export function formatDate(date: Date): FormattedDate {
     hour12: false,
   });
 
-  const utc = date.toLocaleString("ja-JP", {
+  const utc = date.toLocaleString(displayLocale, {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -60,7 +62,7 @@ export function formatDate(date: Date): FormattedDate {
   });
 
   const iso8601 = date.toISOString();
-  const relative = getRelativeTime(date);
+  const relative = getRelativeTime(date, locale);
 
   return { local, utc, iso8601, relative };
 }
@@ -68,7 +70,7 @@ export function formatDate(date: Date): FormattedDate {
 /**
  * 相対時間文字列を取得する
  */
-function getRelativeTime(date: Date): string {
+function getRelativeTime(date: Date, locale?: string): string {
   const now = Date.now();
   const diff = now - date.getTime();
   const absDiff = Math.abs(diff);
@@ -80,14 +82,29 @@ function getRelativeTime(date: Date): string {
   const days = Math.floor(hours / 24);
   const years = Math.floor(days / 365);
 
-  let text: string;
-  if (seconds < 60) text = `${seconds}秒`;
-  else if (minutes < 60) text = `${minutes}分`;
-  else if (hours < 24) text = `${hours}時間`;
-  else if (days < 365) text = `${days}日`;
-  else text = `${years}年`;
+  let value: number;
+  let unit: Intl.RelativeTimeFormatUnit;
 
-  return isPast ? `${text}前` : `${text}後`;
+  if (seconds < 60) {
+    value = seconds;
+    unit = "second";
+  } else if (minutes < 60) {
+    value = minutes;
+    unit = "minute";
+  } else if (hours < 24) {
+    value = hours;
+    unit = "hour";
+  } else if (days < 365) {
+    value = days;
+    unit = "day";
+  } else {
+    value = years;
+    unit = "year";
+  }
+
+  const rtf = new Intl.RelativeTimeFormat(locale || undefined, { numeric: "always" });
+  const signedValue = isPast ? -value : value;
+  return rtf.format(signedValue, unit);
 }
 
 /**
@@ -98,12 +115,16 @@ export function isValidTimestamp(value: string): {
   unit: TimestampUnit | null;
 } {
   const num = Number(value);
-  if (isNaN(num) || value.trim() === "") {
+  const trimmed = value.trim();
+  if (isNaN(num) || trimmed === "") {
     return { valid: false, unit: null };
   }
 
-  // ミリ秒の典型的範囲: 1e12以上（2001年以降）
-  if (Math.abs(num) > 1e12) {
+  // 桁数で秒/ミリ秒を推定（12桁以上ならミリ秒）
+  const normalized = trimmed.replace(/^[-+]/, "");
+  const digitsOnly = normalized.replace(/\D/g, "");
+
+  if (digitsOnly.length >= 12) {
     return { valid: true, unit: "milliseconds" };
   }
 

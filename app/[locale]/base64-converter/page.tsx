@@ -46,9 +46,11 @@ export default function Base64ConverterPage() {
     setEncodedText(value);
     setError(null);
     const { result, error: decodeError } = decodeBase64(value);
-    if (!decodeError) {
-      setInputText(result);
+    if (decodeError) {
+      setError(t("error.invalidBase64"));
+      return;
     }
+    setInputText(result);
   };
 
   const handleFileChange = useCallback(

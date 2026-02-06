@@ -950,7 +950,7 @@
       "dayOfWeekStandard": "0-7（0と7は日曜日）",
       "year": "* または 1970-2199"
     },
-    "description_label": "説明",
+    "descriptionLabel": "説明",
     "nextExecutions": "次回実行時刻",
     "nextCount": "表示件数",
     "times": "件",

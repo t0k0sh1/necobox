@@ -208,7 +208,7 @@ export default function CronTesterPage() {
           {description && (
             <div className="bg-muted/50 rounded-md px-3 py-2">
               <span className="text-xs text-muted-foreground">
-                {t("description_label")}
+                {t("descriptionLabel")}
               </span>
               <p className="text-sm font-medium">{description}</p>
             </div>

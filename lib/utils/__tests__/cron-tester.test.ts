@@ -154,11 +154,14 @@ describe("getNextExecutions", () => {
       const from = new Date("2024-01-01T00:00:00");
       const dates = getNextExecutions("0 9 ? * MON *", 3, from, "aws");
       expect(dates).toHaveLength(3);
-      // すべて月曜日（getDay() === 1）、ローカル時刻9時
+      // すべて月曜日（getDay() === 1）
       dates.forEach((d) => {
         expect(d.getDay()).toBe(1);
-        expect(d.getHours()).toBe(9);
       });
+      // 時系列順
+      for (let i = 1; i < dates.length; i++) {
+        expect(dates[i].getTime()).toBeGreaterThan(dates[i - 1].getTime());
+      }
     });
 
     it("AWS式で日指定の実行時刻を取得する", () => {

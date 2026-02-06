@@ -13,7 +13,7 @@ import {
   type TimestampUnit,
 } from "@/lib/utils/unix-timestamp";
 import { Copy, Check } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useState, useEffect, useCallback, useMemo } from "react";
 
 function CopyButton({
@@ -45,6 +45,7 @@ function CopyButton({
 
 export default function UnixTimestampPage() {
   const t = useTranslations("unixTimestamp");
+  const locale = useLocale();
 
   const [currentTs, setCurrentTs] = useState(getCurrentTimestamp("seconds"));
   const [currentTsMs, setCurrentTsMs] = useState(
@@ -75,8 +76,8 @@ export default function UnixTimestampPage() {
     const date = timestampToDate(num, tsUnit);
     if (isNaN(date.getTime())) return null;
 
-    return formatDate(date);
-  }, [tsInput, tsUnit]);
+    return formatDate(date, locale);
+  }, [tsInput, tsUnit, locale]);
 
   // 日時 → タイムスタンプ
   const dateResult = useMemo(() => {
