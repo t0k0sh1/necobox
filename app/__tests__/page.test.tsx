@@ -33,9 +33,8 @@ describe("Home Page", () => {
     expect(screen.getByText("Service Status")).toBeInTheDocument();
     expect(screen.getByText("Text Viewer")).toBeInTheDocument();
     expect(screen.getByText("JSON Editor")).toBeInTheDocument();
-    expect(screen.getByText("Matrix ToDo")).toBeInTheDocument();
-    expect(screen.getByText("Cheatsheets")).toBeInTheDocument();
     expect(screen.getByText("ToDo")).toBeInTheDocument();
+    expect(screen.getByText("Cheatsheets")).toBeInTheDocument();
   });
 
   it("has correct links for each tool", () => {
