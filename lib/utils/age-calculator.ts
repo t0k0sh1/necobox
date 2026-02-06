@@ -4,25 +4,10 @@
  * 西暦・和暦の両方に対応
  */
 
-import { ERAS, getEraByName, isValidDate, type Era } from "./wareki-converter";
+import { ERAS, getEraByName, isValidDate, getMonthNameEn, type Era } from "./wareki-converter";
 
-/**
- * 月の英語名（共有定数）
- */
-export const MONTH_NAMES_EN = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-] as const;
+// re-export: 外部から age-calculator 経由で使用されている
+export { MONTH_NAMES_EN, getMonthNameEn } from "./wareki-converter";
 
 /**
  * 日付から時刻成分を除去して正規化（日付のみの比較用）
@@ -143,16 +128,6 @@ function getEraForDate(date: Date): Era | undefined {
     }
   }
   return undefined;
-}
-
-/**
- * 月の英語名を取得
- */
-export function getMonthNameEn(month: number): string {
-  if (month < 1 || month > 12) {
-    return "";
-  }
-  return MONTH_NAMES_EN[month - 1];
 }
 
 /**

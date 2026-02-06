@@ -2,8 +2,6 @@ import {
   parseCSV,
   stringifyCSV,
   detectDelimiter,
-  detectEncoding,
-  encodeWithEncoding,
   isNumeric,
   detectColumnType,
   createEmptyCsvData,
@@ -16,11 +14,11 @@ import {
   updateCells,
   normalizeSelection,
   isCellInSelection,
-  quoteFieldForClipboard,
-  parseClipboardText,
   type CsvData,
   type SelectionRange,
-} from "../csv-parser";
+} from "../csv";
+import { detectEncoding, encodeWithEncoding } from "../encoding";
+import { quoteFieldForClipboard, parseClipboardText } from "../clipboard";
 
 describe("csv-parser", () => {
   describe("isNumeric", () => {

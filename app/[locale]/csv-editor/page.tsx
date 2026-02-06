@@ -30,18 +30,14 @@ import {
   addRow,
   computeDisplayIndices,
   createEmptyCsvData,
-  decodeWithEncoding,
   detectDelimiter,
-  detectEncoding,
   downloadCSV,
   ENCODING_LABELS,
   FILE_EXTENSION_LABELS,
   INITIAL_SORT_STATE,
   normalizeSelection,
   OUTPUT_ENCODING_LABELS,
-  parseClipboardText,
   parseCSV,
-  quoteFieldForClipboard,
   redetectColumnTypes,
   removeColumn,
   removeRow,
@@ -64,7 +60,9 @@ import {
   type RowSelectionRange,
   type SelectionRange,
   type SortState,
-} from "@/lib/utils/csv-parser";
+} from "@/lib/utils/csv";
+import { detectEncoding, decodeWithEncoding } from "@/lib/utils/encoding";
+import { quoteFieldForClipboard, parseClipboardText } from "@/lib/utils/clipboard";
 import {
   ChevronDown,
   Download,

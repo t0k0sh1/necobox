@@ -1,4 +1,4 @@
-import { getSecureRandomInt, shuffleString as shuffleStringSecure } from "./random";
+import { getSecureRandomInt, shuffleString } from "./random";
 
 export type TextType =
   | "alphanumeric"
@@ -40,11 +40,6 @@ export function countLength(str: string, mode: LengthMode): number {
     return byteCount;
   }
   return str.length;
-}
-
-// Fisher-Yatesアルゴリズムでシャッフル（セキュアな乱数を使用）
-export function shuffleString(str: string): string {
-  return shuffleStringSecure(str);
 }
 
 // UUIDv4生成関数（セキュアな乱数を使用）

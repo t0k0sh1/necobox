@@ -18,7 +18,7 @@ import {
   type RowSelectionRange,
   type SelectionRange,
   type SortState,
-} from "@/lib/utils/csv-parser";
+} from "@/lib/utils/csv";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { CsvFilterDropdown } from "./CsvFilterDropdown";
