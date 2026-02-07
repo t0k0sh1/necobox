@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { GitCheatsheet } from "../components/GitCheatsheet";
 import CheatsheetsPage from "../[locale]/cheatsheets/page";
 
 describe("Cheatsheets Page", () => {
@@ -121,5 +122,141 @@ describe("Cheatsheets Page", () => {
     });
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("200 OK");
+  });
+
+  describe("Git Commands Tab", () => {
+    it("renders Git Commands tab", () => {
+      render(<CheatsheetsPage />);
+      expect(
+        screen.getByRole("tab", { name: "Git Commands" })
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("Git Commands (GitCheatsheet)", () => {
+    beforeEach(() => {
+      (navigator.clipboard.writeText as jest.Mock).mockClear();
+    });
+
+    it("renders git commands", () => {
+      render(<GitCheatsheet />);
+      expect(screen.getByText("git init")).toBeInTheDocument();
+      expect(screen.getByText("git commit")).toBeInTheDocument();
+      expect(screen.getByText("git branch")).toBeInTheDocument();
+    });
+
+    it("renders git category headers", () => {
+      render(<GitCheatsheet />);
+      expect(screen.getByText("Basics")).toBeInTheDocument();
+      expect(screen.getByText("Branching")).toBeInTheDocument();
+      expect(screen.getByText("Diff & History")).toBeInTheDocument();
+      expect(screen.getByText("Remote")).toBeInTheDocument();
+      expect(screen.getByText("Stash")).toBeInTheDocument();
+      expect(screen.getByText("Reset & Undo")).toBeInTheDocument();
+    });
+
+    it("renders search bar", () => {
+      render(<GitCheatsheet />);
+      expect(
+        screen.getByPlaceholderText(
+          "Search by command, option, or description..."
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("filters git commands by search query", () => {
+      render(<GitCheatsheet />);
+
+      const searchInput = screen.getByPlaceholderText(
+        "Search by command, option, or description..."
+      );
+      fireEvent.change(searchInput, { target: { value: "rebase" } });
+
+      expect(screen.getByText("git rebase")).toBeInTheDocument();
+      // git init は検索結果に含まれないはず
+      expect(screen.queryByText("git init")).not.toBeInTheDocument();
+    });
+
+    it("filters git commands by option flag (cross-search)", () => {
+      render(<GitCheatsheet />);
+
+      const searchInput = screen.getByPlaceholderText(
+        "Search by command, option, or description..."
+      );
+      fireEvent.change(searchInput, { target: { value: "--amend" } });
+
+      // --amend オプションを持つ git commit が表示されるはず
+      expect(screen.getByText("git commit")).toBeInTheDocument();
+    });
+
+    it("shows no results message when search has no matches", () => {
+      render(<GitCheatsheet />);
+
+      const searchInput = screen.getByPlaceholderText(
+        "Search by command, option, or description..."
+      );
+      fireEvent.change(searchInput, { target: { value: "zzzzzzz" } });
+
+      expect(
+        screen.getByText("No matching commands found")
+      ).toBeInTheDocument();
+    });
+
+    it("expands and collapses command options (accordion)", () => {
+      render(<GitCheatsheet />);
+
+      // git init をクリックしてオプションを展開
+      const initButton = screen
+        .getByText("git init")
+        .closest("button")!;
+      fireEvent.click(initButton);
+
+      // オプションが表示される
+      expect(screen.getByText("--bare")).toBeInTheDocument();
+      expect(
+        screen.getByText("--initial-branch <name>")
+      ).toBeInTheDocument();
+
+      // もう一度クリックして折りたたみ
+      fireEvent.click(initButton);
+      expect(screen.queryByText("--bare")).not.toBeInTheDocument();
+    });
+
+    it("collapses and expands categories", () => {
+      render(<GitCheatsheet />);
+
+      // Basics カテゴリのトグルボタンをクリック
+      const categoryButton = screen
+        .getByText("Basics")
+        .closest("button")!;
+      fireEvent.click(categoryButton);
+
+      // 折りたたんだ後、git init が非表示になるはず
+      expect(screen.queryByText("git init")).not.toBeInTheDocument();
+      // ただし他のカテゴリの要素は残る
+      expect(screen.getByText("git branch")).toBeInTheDocument();
+
+      // もう一度クリックして展開
+      fireEvent.click(categoryButton);
+      expect(screen.getByText("git init")).toBeInTheDocument();
+    });
+
+    it("copies git command text when copy button is clicked", async () => {
+      render(<GitCheatsheet />);
+
+      const initButton = screen
+        .getByText("git init")
+        .closest("button")!;
+      const copyButtons = initButton
+        .closest(".group")!
+        .querySelectorAll("button");
+      const copyButton = copyButtons[copyButtons.length - 1];
+
+      await act(async () => {
+        fireEvent.click(copyButton);
+      });
+
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith("git init");
+    });
   });
 });
