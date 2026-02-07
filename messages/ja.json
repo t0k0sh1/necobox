@@ -711,14 +711,14 @@
       "languageMarkup": "言語 & マークアップ"
     },
     "tabs": {
-      "httpStatus": "HTTP Status",
-      "gitCommands": "Git",
-      "httpHeaders": "HTTP Headers",
-      "dockerCommands": "Docker",
-      "shellCommands": "Shell",
-      "sqlSyntax": "SQL",
-      "markdownSyntax": "Markdown",
-      "mimeTypes": "MIME Types"
+      "httpStatus": "HTTPステータス",
+      "gitCommands": "Gitコマンド",
+      "httpHeaders": "HTTPヘッダー",
+      "dockerCommands": "Dockerコマンド",
+      "shellCommands": "シェルコマンド",
+      "sqlSyntax": "SQL構文",
+      "markdownSyntax": "Markdown構文",
+      "mimeTypes": "MIMEタイプ"
     },
     "httpStatus": {
       "searchPlaceholder": "コード、名前、説明で検索...",

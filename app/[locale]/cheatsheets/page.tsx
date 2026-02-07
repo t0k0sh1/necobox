@@ -1,16 +1,66 @@
 "use client";
 
-import { DockerCheatsheet } from "@/app/components/DockerCheatsheet";
-import { GitCheatsheet } from "@/app/components/GitCheatsheet";
-import { HttpHeaderCheatsheet } from "@/app/components/HttpHeaderCheatsheet";
-import { HttpStatusCheatsheet } from "@/app/components/HttpStatusCheatsheet";
-import { MarkdownCheatsheet } from "@/app/components/MarkdownCheatsheet";
-import { MimeTypeCheatsheet } from "@/app/components/MimeTypeCheatsheet";
-import { ShellCheatsheet } from "@/app/components/ShellCheatsheet";
-import { SqlCheatsheet } from "@/app/components/SqlCheatsheet";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
+
+const HttpStatusCheatsheet = dynamic(
+  () =>
+    import("@/app/components/HttpStatusCheatsheet").then(
+      (mod) => mod.HttpStatusCheatsheet
+    ),
+  { ssr: false }
+);
+const HttpHeaderCheatsheet = dynamic(
+  () =>
+    import("@/app/components/HttpHeaderCheatsheet").then(
+      (mod) => mod.HttpHeaderCheatsheet
+    ),
+  { ssr: false }
+);
+const MimeTypeCheatsheet = dynamic(
+  () =>
+    import("@/app/components/MimeTypeCheatsheet").then(
+      (mod) => mod.MimeTypeCheatsheet
+    ),
+  { ssr: false }
+);
+const GitCheatsheet = dynamic(
+  () =>
+    import("@/app/components/GitCheatsheet").then(
+      (mod) => mod.GitCheatsheet
+    ),
+  { ssr: false }
+);
+const DockerCheatsheet = dynamic(
+  () =>
+    import("@/app/components/DockerCheatsheet").then(
+      (mod) => mod.DockerCheatsheet
+    ),
+  { ssr: false }
+);
+const ShellCheatsheet = dynamic(
+  () =>
+    import("@/app/components/ShellCheatsheet").then(
+      (mod) => mod.ShellCheatsheet
+    ),
+  { ssr: false }
+);
+const SqlCheatsheet = dynamic(
+  () =>
+    import("@/app/components/SqlCheatsheet").then(
+      (mod) => mod.SqlCheatsheet
+    ),
+  { ssr: false }
+);
+const MarkdownCheatsheet = dynamic(
+  () =>
+    import("@/app/components/MarkdownCheatsheet").then(
+      (mod) => mod.MarkdownCheatsheet
+    ),
+  { ssr: false }
+);
 
 export default function CheatsheetsPage() {
   const t = useTranslations("cheatsheets");

@@ -62,7 +62,7 @@ const CATEGORY_COLORS: Record<
 };
 
 // directionバッジの色設定
-const DIRECTION_COLORS: Record<string, string> = {
+const DIRECTION_COLORS: Record<HttpHeader["direction"], string> = {
   request:
     "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
   response:
@@ -71,7 +71,7 @@ const DIRECTION_COLORS: Record<string, string> = {
     "bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400",
 };
 
-const DIRECTION_LABELS: Record<string, string> = {
+const DIRECTION_LABELS: Record<HttpHeader["direction"], string> = {
   request: "Req",
   response: "Res",
   both: "Both",
@@ -311,7 +311,7 @@ export function HttpHeaderCheatsheet() {
                             {/* MDNリンク */}
                             {h.mdnPath && (
                               <a
-                                href={`https://developer.mozilla.org/${locale}/docs/${h.mdnPath}`}
+                                href={`https://developer.mozilla.org/${locale === "ja" ? "ja" : "en-US"}/docs/${h.mdnPath}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline"
