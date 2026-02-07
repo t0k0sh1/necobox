@@ -8,6 +8,7 @@ import {
   batchGenerate,
   type IdType,
 } from "@/lib/utils/uuid-generator";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { Copy, Check, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useCallback } from "react";
@@ -27,25 +28,12 @@ export default function UuidGeneratorPage() {
   const [count, setCount] = useState(1);
   const [nanoidLength, setNanoidLength] = useState(21);
   const [results, setResults] = useState<string[]>([]);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const { copy, isCopied } = useCopyToClipboard(1500);
 
   const handleGenerate = useCallback(() => {
     const ids = batchGenerate(activeTab, count, { nanoidLength });
     setResults(ids);
   }, [activeTab, count, nanoidLength]);
-
-  const handleCopy = useCallback(async (text: string, field: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 1500);
-  }, []);
-
-  const handleCopyAll = useCallback(async () => {
-    const text = results.join("\n");
-    await navigator.clipboard.writeText(text);
-    setCopiedField("all");
-    setTimeout(() => setCopiedField(null), 1500);
-  }, [results]);
 
   return (
     <div className="flex flex-1 items-start justify-center py-4 px-4">
@@ -118,13 +106,13 @@ export default function UuidGeneratorPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">{t("generated")}</h2>
-              <Button variant="outline" size="sm" onClick={handleCopyAll}>
-                {copiedField === "all" ? (
+              <Button variant="outline" size="sm" onClick={() => copy(results.join("\n"), "all")}>
+                {isCopied("all") ? (
                   <Check className="size-4 mr-1" />
                 ) : (
                   <Copy className="size-4 mr-1" />
                 )}
-                {copiedField === "all"
+                {isCopied("all")
                   ? tCommon("copiedAll")
                   : t("copyAll")}
               </Button>
@@ -140,9 +128,9 @@ export default function UuidGeneratorPage() {
                     variant="ghost"
                     size="icon"
                     className="size-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleCopy(id, `id-${index}`)}
+                    onClick={() => copy(id, `id-${index}`)}
                   >
-                    {copiedField === `id-${index}` ? (
+                    {isCopied(`id-${index}`) ? (
                       <Check className="size-3.5" />
                     ) : (
                       <Copy className="size-3.5" />

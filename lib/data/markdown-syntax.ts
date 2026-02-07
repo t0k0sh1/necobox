@@ -1,3 +1,5 @@
+import { groupByCategory } from "./utils";
+
 // Markdown構文のカテゴリ
 export type MarkdownCategory =
   | "headings"
@@ -304,18 +306,5 @@ export const MARKDOWN_SYNTAXES: MarkdownSyntax[] = [
 
 // カテゴリごとにグループ化
 export function getMarkdownSyntaxByCategory(): Map<MarkdownCategory, MarkdownSyntax[]> {
-  const grouped = new Map<MarkdownCategory, MarkdownSyntax[]>();
-
-  for (const category of MARKDOWN_CATEGORY_ORDER) {
-    grouped.set(category, []);
-  }
-
-  for (const syntax of MARKDOWN_SYNTAXES) {
-    const list = grouped.get(syntax.category);
-    if (list) {
-      list.push(syntax);
-    }
-  }
-
-  return grouped;
+  return groupByCategory(MARKDOWN_SYNTAXES, MARKDOWN_CATEGORY_ORDER);
 }

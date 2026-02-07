@@ -12,19 +12,20 @@ import {
   getCurrentTimestamp,
   type TimestampUnit,
 } from "@/lib/utils/unix-timestamp";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { Copy, Check } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 function CopyButton({
   text,
   field,
-  copiedField,
+  isCopied,
   onCopy,
 }: {
   text: string;
   field: string;
-  copiedField: string | null;
+  isCopied: (id: string) => boolean;
   onCopy: (text: string, field: string) => void;
 }) {
   return (
@@ -34,7 +35,7 @@ function CopyButton({
       className="size-8"
       onClick={() => onCopy(text, field)}
     >
-      {copiedField === field ? (
+      {isCopied(field) ? (
         <Check className="size-3.5" />
       ) : (
         <Copy className="size-3.5" />
@@ -55,7 +56,7 @@ export default function UnixTimestampPage() {
   const [tsUnit, setTsUnit] = useState<TimestampUnit>("seconds");
   const [dateInput, setDateInput] = useState("");
   const [dateUnit, setDateUnit] = useState<TimestampUnit>("seconds");
-  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const { copy, isCopied } = useCopyToClipboard(1500);
 
   // 現在のタイムスタンプをリアルタイム更新
   useEffect(() => {
@@ -88,11 +89,9 @@ export default function UnixTimestampPage() {
     return dateToTimestamp(date, dateUnit);
   }, [dateInput, dateUnit]);
 
-  const handleCopy = useCallback(async (text: string, field: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 1500);
-  }, []);
+  const handleCopy = (text: string, field: string) => {
+    copy(text, field);
+  };
 
   return (
     <div className="flex flex-1 items-start justify-center py-4 px-4">
@@ -116,7 +115,7 @@ export default function UnixTimestampPage() {
                 </span>
                 <p className="font-mono text-lg">{currentTs}</p>
               </div>
-              <CopyButton text={String(currentTs)} field="currentTs" copiedField={copiedField} onCopy={handleCopy} />
+              <CopyButton text={String(currentTs)} field="currentTs" isCopied={isCopied} onCopy={handleCopy} />
             </div>
             <div className="flex items-center justify-between bg-muted/50 rounded-md px-3 py-2">
               <div>
@@ -125,7 +124,7 @@ export default function UnixTimestampPage() {
                 </span>
                 <p className="font-mono text-lg">{currentTsMs}</p>
               </div>
-              <CopyButton text={String(currentTsMs)} field="currentTsMs" copiedField={copiedField} onCopy={handleCopy} />
+              <CopyButton text={String(currentTsMs)} field="currentTsMs" isCopied={isCopied} onCopy={handleCopy} />
             </div>
           </div>
         </div>
@@ -183,7 +182,7 @@ export default function UnixTimestampPage() {
                         </span>
                         <p className="font-mono text-sm">{value}</p>
                       </div>
-                      <CopyButton text={value} field={`ts-${key}`} copiedField={copiedField} onCopy={handleCopy} />
+                      <CopyButton text={value} field={`ts-${key}`} isCopied={isCopied} onCopy={handleCopy} />
                     </div>
                   ))}
                 </div>
@@ -227,7 +226,7 @@ export default function UnixTimestampPage() {
                 <h3 className="font-medium">{t("result")}</h3>
                 <div className="flex items-center justify-between bg-muted/50 rounded px-3 py-2">
                   <p className="font-mono text-lg">{dateResult}</p>
-                  <CopyButton text={String(dateResult)} field="dateResult" copiedField={copiedField} onCopy={handleCopy} />
+                  <CopyButton text={String(dateResult)} field="dateResult" isCopied={isCopied} onCopy={handleCopy} />
                 </div>
               </div>
             )}

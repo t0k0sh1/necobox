@@ -1,3 +1,5 @@
+import { groupByCategory } from "./utils";
+
 // HTTPステータスコードのカテゴリ
 export type HttpStatusCategory = "1xx" | "2xx" | "3xx" | "4xx" | "5xx" | "non_standard";
 
@@ -730,18 +732,5 @@ export const CATEGORY_ORDER: HttpStatusCategory[] = ["1xx", "2xx", "3xx", "4xx",
 
 // カテゴリごとにグループ化
 export function getStatusCodesByCategory(): Map<HttpStatusCategory, HttpStatusCode[]> {
-  const grouped = new Map<HttpStatusCategory, HttpStatusCode[]>();
-
-  for (const category of CATEGORY_ORDER) {
-    grouped.set(category, []);
-  }
-
-  for (const code of HTTP_STATUS_CODES) {
-    const list = grouped.get(code.category);
-    if (list) {
-      list.push(code);
-    }
-  }
-
-  return grouped;
+  return groupByCategory(HTTP_STATUS_CODES, CATEGORY_ORDER);
 }

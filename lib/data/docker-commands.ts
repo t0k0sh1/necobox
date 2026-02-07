@@ -1,3 +1,5 @@
+import { groupByCategory } from "./utils";
+
 // Dockerコマンドのカテゴリ
 export type DockerCommandCategory =
   | "container"
@@ -464,18 +466,5 @@ export const DOCKER_COMMANDS: DockerCommand[] = [
 
 // カテゴリごとにグループ化
 export function getDockerCommandsByCategory(): Map<DockerCommandCategory, DockerCommand[]> {
-  const grouped = new Map<DockerCommandCategory, DockerCommand[]>();
-
-  for (const category of DOCKER_CATEGORY_ORDER) {
-    grouped.set(category, []);
-  }
-
-  for (const cmd of DOCKER_COMMANDS) {
-    const list = grouped.get(cmd.category);
-    if (list) {
-      list.push(cmd);
-    }
-  }
-
-  return grouped;
+  return groupByCategory(DOCKER_COMMANDS, DOCKER_CATEGORY_ORDER);
 }

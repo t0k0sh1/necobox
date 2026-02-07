@@ -1,3 +1,5 @@
+import { groupByCategory } from "./utils";
+
 // MIMEタイプのカテゴリ
 export type MimeCategory =
   | "text"
@@ -491,18 +493,5 @@ export const MIME_TYPES: MimeType[] = [
 
 // カテゴリごとにグループ化
 export function getMimeTypesByCategory(): Map<MimeCategory, MimeType[]> {
-  const grouped = new Map<MimeCategory, MimeType[]>();
-
-  for (const category of MIME_CATEGORY_ORDER) {
-    grouped.set(category, []);
-  }
-
-  for (const mime of MIME_TYPES) {
-    const list = grouped.get(mime.category);
-    if (list) {
-      list.push(mime);
-    }
-  }
-
-  return grouped;
+  return groupByCategory(MIME_TYPES, MIME_CATEGORY_ORDER);
 }
