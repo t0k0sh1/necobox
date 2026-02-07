@@ -17,13 +17,22 @@ describe("Knowledge Hub Page", () => {
   it("renders description", () => {
     render(<KnowledgeHubPage />);
     expect(
-      screen.getByText("Practical Git guides organized by situation")
+      screen.getByText("Practical guides organized by situation for developers")
     ).toBeInTheDocument();
   });
 
   it("renders Git tab", () => {
     render(<KnowledgeHubPage />);
     expect(screen.getByRole("tab", { name: "Git" })).toBeInTheDocument();
+  });
+
+  it("renders all 5 tabs", () => {
+    render(<KnowledgeHubPage />);
+    expect(screen.getByRole("tab", { name: "Git" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "SQL" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Shell / CLI" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "JS/TS Arrays" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Java Stream" })).toBeInTheDocument();
   });
 
   it("renders link to cheatsheets", () => {
@@ -192,7 +201,7 @@ describe("GitKnowledge Component", () => {
     fireEvent.click(cardButton);
 
     // コピーボタンをクリック（プレースホルダーなし → 直接コピー）
-    const copyButton = screen.getByLabelText("Copy git diff");
+    const copyButton = screen.getByLabelText("Copy Working directory vs staging area");
     await act(async () => {
       fireEvent.click(copyButton);
     });
@@ -211,7 +220,7 @@ describe("GitKnowledge Component", () => {
 
     // git revert <commit-hash> のコピーボタンをクリック
     const copyButton = screen.getByLabelText(
-      "Copy git revert <commit-hash>"
+      "Copy Revert a commit (safe for shared branches)"
     );
     fireEvent.click(copyButton);
 
@@ -232,7 +241,7 @@ describe("GitKnowledge Component", () => {
 
     // モーダルを開く
     const copyButton = screen.getByLabelText(
-      "Copy git revert <commit-hash>"
+      "Copy Revert a commit (safe for shared branches)"
     );
     fireEvent.click(copyButton);
 
@@ -265,7 +274,7 @@ describe("GitKnowledge Component", () => {
 
     // モーダルを開く
     const copyButton = screen.getByLabelText(
-      "Copy git diff <commit1> <commit2>"
+      "Copy Between two commits"
     );
     fireEvent.click(copyButton);
 
@@ -293,7 +302,7 @@ describe("GitKnowledge Component", () => {
     fireEvent.click(cardButton);
 
     const copyButton = screen.getByLabelText(
-      "Copy git revert <commit-hash>"
+      "Copy Revert a commit (safe for shared branches)"
     );
     fireEvent.click(copyButton);
 

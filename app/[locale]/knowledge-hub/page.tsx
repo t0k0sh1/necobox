@@ -13,6 +13,34 @@ const GitKnowledge = dynamic(
   { ssr: false }
 );
 
+const SqlKnowledge = dynamic(
+  () =>
+    import("@/app/components/SqlKnowledge").then((mod) => mod.SqlKnowledge),
+  { ssr: false }
+);
+
+const ShellKnowledge = dynamic(
+  () =>
+    import("@/app/components/ShellKnowledge").then((mod) => mod.ShellKnowledge),
+  { ssr: false }
+);
+
+const JsArrayKnowledge = dynamic(
+  () =>
+    import("@/app/components/JsArrayKnowledge").then(
+      (mod) => mod.JsArrayKnowledge
+    ),
+  { ssr: false }
+);
+
+const JavaStreamKnowledge = dynamic(
+  () =>
+    import("@/app/components/JavaStreamKnowledge").then(
+      (mod) => mod.JavaStreamKnowledge
+    ),
+  { ssr: false }
+);
+
 export default function KnowledgeHubPage() {
   const t = useTranslations("knowledgeHub");
 
@@ -43,14 +71,47 @@ export default function KnowledgeHubPage() {
           </div>
 
           <Tabs defaultValue="git">
-            <TabsList className="w-full">
-              <TabsTrigger value="git" className="font-bold text-base">
+            <TabsList className="w-full h-auto overflow-x-auto">
+              <TabsTrigger value="git" className="font-bold text-base shrink-0">
                 {t("tabs.git")}
+              </TabsTrigger>
+              <TabsTrigger value="sql" className="font-bold text-base shrink-0">
+                {t("tabs.sql")}
+              </TabsTrigger>
+              <TabsTrigger
+                value="shell"
+                className="font-bold text-base shrink-0"
+              >
+                {t("tabs.shell")}
+              </TabsTrigger>
+              <TabsTrigger
+                value="jsArray"
+                className="font-bold text-base shrink-0"
+              >
+                {t("tabs.jsArray")}
+              </TabsTrigger>
+              <TabsTrigger
+                value="javaStream"
+                className="font-bold text-base shrink-0"
+              >
+                {t("tabs.javaStream")}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="git" className="mt-4">
               <GitKnowledge />
+            </TabsContent>
+            <TabsContent value="sql" className="mt-4">
+              <SqlKnowledge />
+            </TabsContent>
+            <TabsContent value="shell" className="mt-4">
+              <ShellKnowledge />
+            </TabsContent>
+            <TabsContent value="jsArray" className="mt-4">
+              <JsArrayKnowledge />
+            </TabsContent>
+            <TabsContent value="javaStream" className="mt-4">
+              <JavaStreamKnowledge />
             </TabsContent>
           </Tabs>
         </div>

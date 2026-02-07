@@ -1147,10 +1147,14 @@
   },
   "knowledgeHub": {
     "title": "ノウハウ集",
-    "description": "シチュエーション別のGit実践ガイド",
+    "description": "シチュエーション別の開発者向け実践ガイド",
     "breadcrumb": "ノウハウ集",
     "tabs": {
-      "git": "Git"
+      "git": "Git",
+      "sql": "SQL",
+      "shell": "Shell / CLI",
+      "jsArray": "JS/TS 配列",
+      "javaStream": "Java Stream"
     },
     "searchPlaceholder": "シチュエーション、タグ、コマンドで検索...",
     "noResults": "一致するノウハウが見つかりません",
