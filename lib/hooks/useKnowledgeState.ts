@@ -5,7 +5,8 @@ import { useCopyToClipboard } from "./useCopyToClipboard";
 import { useCallback, useMemo, useState } from "react";
 
 // プレースホルダー（<...>形式）を抽出
-const PLACEHOLDER_RE = /<([^>]+)>/g;
+// 識別子文字の直後の <...> はジェネリクス（例: List<String>）なので除外
+const PLACEHOLDER_RE = /(?<![A-Za-z0-9_])<([^>]+)>/g;
 
 export function extractPlaceholders(code: string): string[] {
   const matches: string[] = [];

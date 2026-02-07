@@ -201,7 +201,7 @@ describe("GitKnowledge Component", () => {
     fireEvent.click(cardButton);
 
     // コピーボタンをクリック（プレースホルダーなし → 直接コピー）
-    const copyButton = screen.getByLabelText("Copy git diff");
+    const copyButton = screen.getByLabelText("Copy Working directory vs staging area");
     await act(async () => {
       fireEvent.click(copyButton);
     });
@@ -220,7 +220,7 @@ describe("GitKnowledge Component", () => {
 
     // git revert <commit-hash> のコピーボタンをクリック
     const copyButton = screen.getByLabelText(
-      "Copy git revert <commit-hash>"
+      "Copy Revert a commit (safe for shared branches)"
     );
     fireEvent.click(copyButton);
 
@@ -241,7 +241,7 @@ describe("GitKnowledge Component", () => {
 
     // モーダルを開く
     const copyButton = screen.getByLabelText(
-      "Copy git revert <commit-hash>"
+      "Copy Revert a commit (safe for shared branches)"
     );
     fireEvent.click(copyButton);
 
@@ -274,7 +274,7 @@ describe("GitKnowledge Component", () => {
 
     // モーダルを開く
     const copyButton = screen.getByLabelText(
-      "Copy git diff <commit1> <commit2>"
+      "Copy Between two commits"
     );
     fireEvent.click(copyButton);
 
@@ -302,7 +302,7 @@ describe("GitKnowledge Component", () => {
     fireEvent.click(cardButton);
 
     const copyButton = screen.getByLabelText(
-      "Copy git revert <commit-hash>"
+      "Copy Revert a commit (safe for shared branches)"
     );
     fireEvent.click(copyButton);
 
