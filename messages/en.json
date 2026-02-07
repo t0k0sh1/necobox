@@ -48,6 +48,7 @@
     "hashGenerator": "Hash Generator",
     "cronTester": "Cron Expression Tester",
     "cheatsheets": "Cheatsheets",
+    "knowledgeHub": "Knowledge Hub",
     "sectionGenerators": "Random Generation",
     "sectionConverters": "Conversion & Calculation",
     "sectionEditors": "Data Editors",
@@ -845,6 +846,8 @@
         "gfm_extensions": "GFM Extensions"
       }
     },
+    "relatedKnowledge": "Looking for practical usage guides?",
+    "viewKnowledgeHub": "View Knowledge Hub →",
     "mimeTypes": {
       "searchPlaceholder": "Search by MIME type, extension, or description...",
       "noResults": "No matching MIME types found",
@@ -1102,6 +1105,28 @@
     "error": {
       "invalidExpression": "Invalid cron expression",
       "parseFailed": "Failed to parse cron expression"
+    }
+  },
+  "knowledgeHub": {
+    "title": "Knowledge Hub",
+    "description": "Practical Git guides organized by situation",
+    "breadcrumb": "Knowledge Hub",
+    "tabs": {
+      "git": "Git"
+    },
+    "searchPlaceholder": "Search by situation, tag, or command...",
+    "noResults": "No matching knowledge items found",
+    "copy": "Copy",
+    "copied": "Copied",
+    "viewCheatsheet": "View related commands in Cheatsheets →",
+    "relatedCheatsheets": "Looking for command references?",
+    "viewCheatsheets": "View Cheatsheets →",
+    "placeholderDialog": {
+      "title": "Fill in placeholders",
+      "description": "Enter values for the placeholders below, then copy.",
+      "copyCommand": "Copy command",
+      "cancel": "Cancel",
+      "preview": "Preview"
     }
   },
   "jsonEditor": {

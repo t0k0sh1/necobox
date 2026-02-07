@@ -48,6 +48,7 @@
     "hashGenerator": "ハッシュ計算",
     "cronTester": "Cron式テスター",
     "cheatsheets": "チートシート集",
+    "knowledgeHub": "ノウハウ集",
     "sectionGenerators": "ランダム生成",
     "sectionConverters": "変換・計算",
     "sectionEditors": "データエディタ",
@@ -845,6 +846,8 @@
         "gfm_extensions": "GFM拡張"
       }
     },
+    "relatedKnowledge": "コマンドの実践的な使い方を知りたい方はこちら",
+    "viewKnowledgeHub": "ノウハウ集を見る →",
     "mimeTypes": {
       "searchPlaceholder": "MIMEタイプ、拡張子、説明で検索...",
       "noResults": "一致するMIMEタイプが見つかりません",
@@ -1102,6 +1105,28 @@
     "error": {
       "invalidExpression": "無効なCron式",
       "parseFailed": "Cron式の解析に失敗しました"
+    }
+  },
+  "knowledgeHub": {
+    "title": "ノウハウ集",
+    "description": "シチュエーション別のGit実践ガイド",
+    "breadcrumb": "ノウハウ集",
+    "tabs": {
+      "git": "Git"
+    },
+    "searchPlaceholder": "シチュエーション、タグ、コマンドで検索...",
+    "noResults": "一致するノウハウが見つかりません",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "viewCheatsheet": "チートシートで関連コマンドを見る →",
+    "relatedCheatsheets": "コマンドのリファレンスはこちら",
+    "viewCheatsheets": "チートシート集を見る →",
+    "placeholderDialog": {
+      "title": "プレースホルダーを入力",
+      "description": "以下のプレースホルダーに値を入力してからコピーできます。",
+      "copyCommand": "コマンドをコピー",
+      "cancel": "キャンセル",
+      "preview": "プレビュー"
     }
   },
   "jsonEditor": {

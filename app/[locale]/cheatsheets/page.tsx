@@ -2,6 +2,8 @@
 
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Link } from "@/i18n/routing";
+import { Lightbulb } from "lucide-react";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 
@@ -75,6 +77,20 @@ export default function CheatsheetsPage() {
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {t("description")}
             </p>
+          </div>
+
+          {/* ノウハウ集への相互リンクバナー */}
+          <div className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-sm">
+            <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="text-gray-700 dark:text-gray-300">
+              {t("relatedKnowledge")}{" "}
+              <Link
+                href="/knowledge-hub"
+                className="text-amber-600 dark:text-amber-400 hover:underline font-medium"
+              >
+                {t("viewKnowledgeHub")}
+              </Link>
+            </span>
           </div>
 
           <Tabs defaultValue="webApi">

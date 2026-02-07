@@ -26,6 +26,7 @@ export type IconName =
   | "Hash"
   | "Image"
   | "Key"
+  | "Lightbulb"
   | "Link"
   | "Lock"
   | "Palette"
@@ -240,6 +241,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "BookOpen",
     category: "references",
     i18nKey: "cheatsheets",
+  },
+  {
+    id: "knowledge-hub",
+    path: "/knowledge-hub",
+    icon: "Lightbulb",
+    category: "references",
+    i18nKey: "knowledgeHub",
   },
   {
     id: "service-status",
