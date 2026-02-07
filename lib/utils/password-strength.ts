@@ -28,28 +28,34 @@ async function getZxcvbn(): Promise<(password: string) => ZxcvbnResult> {
   if (zxcvbnPromise) return zxcvbnPromise;
 
   zxcvbnPromise = (async () => {
-    const [{ zxcvbn, zxcvbnOptions }, common, en] = await Promise.all([
-      import("@zxcvbn-ts/core"),
-      import("@zxcvbn-ts/language-common"),
-      import("@zxcvbn-ts/language-en"),
-    ]);
+    try {
+      const [{ zxcvbn, zxcvbnOptions }, common, en] = await Promise.all([
+        import("@zxcvbn-ts/core"),
+        import("@zxcvbn-ts/language-common"),
+        import("@zxcvbn-ts/language-en"),
+      ]);
 
-    // ESM/CJS interopにより、名前付きエクスポートまたはdefault内にある場合の両方に対応
-    const adjacencyGraphs = common.adjacencyGraphs ?? common.default?.adjacencyGraphs;
-    const commonDict = common.dictionary ?? common.default?.dictionary;
-    const enDict = en.dictionary ?? en.default?.dictionary;
-    const enTranslations = en.translations ?? en.default?.translations;
+      // ESM/CJS interopにより、名前付きエクスポートまたはdefault内にある場合の両方に対応
+      const adjacencyGraphs = common.adjacencyGraphs ?? common.default?.adjacencyGraphs;
+      const commonDict = common.dictionary ?? common.default?.dictionary;
+      const enDict = en.dictionary ?? en.default?.dictionary;
+      const enTranslations = en.translations ?? en.default?.translations;
 
-    zxcvbnOptions.setOptions({
-      graphs: adjacencyGraphs,
-      dictionary: {
-        ...commonDict,
-        ...enDict,
-      },
-      translations: enTranslations,
-    });
+      zxcvbnOptions.setOptions({
+        graphs: adjacencyGraphs,
+        dictionary: {
+          ...commonDict,
+          ...enDict,
+        },
+        translations: enTranslations,
+      });
 
-    return zxcvbn;
+      return zxcvbn;
+    } catch (error) {
+      // 初期化失敗時はキャッシュをクリアしてリトライ可能にする
+      zxcvbnPromise = null;
+      throw error;
+    }
   })();
 
   return zxcvbnPromise;

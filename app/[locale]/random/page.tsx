@@ -11,7 +11,7 @@ import { evaluatePasswordStrength, evaluateNistCompliance } from "@/lib/utils/pa
 import type { PasswordStrengthResult, NistComplianceResult } from "@/lib/utils/password-strength";
 import { checkPasswordBreach } from "@/lib/utils/hibp";
 import type { HibpResult } from "@/lib/utils/hibp";
-import { Info, RefreshCw } from "lucide-react";
+import { Eye, EyeOff, Info, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -64,6 +64,7 @@ export default function RandomPasswordPage() {
 
   // チェッカータブ状態
   const [checkPassword, setCheckPassword] = useState("");
+  const [showCheckPassword, setShowCheckPassword] = useState(false);
 
   // 強度判定状態（両タブ共通）
   const [strengthResult, setStrengthResult] = useState<PasswordStrengthResult | null>(null);
@@ -74,12 +75,16 @@ export default function RandomPasswordPage() {
 
   // デバウンス用ref
   const strengthTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // レース条件防止用ref
+  const evaluationIdRef = useRef(0);
 
   // 現在評価対象のパスワード
   const currentPassword = activeTab === "generate" ? generatedPassword : checkPassword;
 
   // パスワード強度評価（zxcvbn + NIST + HIBP）
   const evaluatePassword = useCallback(async (password: string) => {
+    const requestId = ++evaluationIdRef.current;
+
     if (!password) {
       setStrengthResult(null);
       setNistResult(null);
@@ -90,24 +95,23 @@ export default function RandomPasswordPage() {
     // NIST判定は同期
     setNistResult(evaluateNistCompliance(password));
 
-    // zxcvbn評価（非同期）
+    // zxcvbn評価 + HIBP漏洩チェックを並行実行
     setIsStrengthLoading(true);
-    try {
-      const result = await evaluatePasswordStrength(password);
-      setStrengthResult(result);
-    } finally {
-      setIsStrengthLoading(false);
-    }
-
-    // HIBP漏洩チェック（並行実行）
     setIsBreachChecking(true);
     setHibpResult(null);
-    try {
-      const result = await checkPasswordBreach(password);
-      setHibpResult(result);
-    } finally {
-      setIsBreachChecking(false);
-    }
+
+    const [strengthRes, hibpRes] = await Promise.all([
+      evaluatePasswordStrength(password).catch(() => null),
+      checkPasswordBreach(password).catch(() => ({ breached: false, count: 0, error: "Failed to check breach status" }) as HibpResult),
+    ]);
+
+    // 古いリクエストの結果を破棄
+    if (requestId !== evaluationIdRef.current) return;
+
+    setStrengthResult(strengthRes);
+    setIsStrengthLoading(false);
+    setHibpResult(hibpRes);
+    setIsBreachChecking(false);
   }, []);
 
   // noRepeat利用可否チェック
@@ -174,7 +178,7 @@ export default function RandomPasswordPage() {
       setNoRepeat(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [length, uppercase, lowercase, numbers, symbols, noRepeat]);
+  }, [length, uppercase, lowercase, numbers, symbols, spaces, unicode, noRepeat]);
 
   // 長さデバウンス
   useEffect(() => {
@@ -522,9 +526,9 @@ export default function RandomPasswordPage() {
 
               {/* パスワード入力 */}
               <div className="bg-gray-50 dark:bg-gray-900 rounded-md border overflow-hidden">
-                <div className="p-4">
+                <div className="p-4 flex items-center gap-2">
                   <input
-                    type="text"
+                    type={showCheckPassword ? "text" : "password"}
                     value={checkPassword}
                     onChange={(e) => setCheckPassword(e.target.value)}
                     placeholder={t("checker.placeholder")}
@@ -532,6 +536,19 @@ export default function RandomPasswordPage() {
                     autoComplete="off"
                     spellCheck={false}
                   />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowCheckPassword(!showCheckPassword)}
+                    className="shrink-0"
+                  >
+                    {showCheckPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </Button>
                 </div>
               </div>
 
