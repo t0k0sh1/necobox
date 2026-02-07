@@ -56,7 +56,7 @@ export default function UnixTimestampPage() {
   const [tsUnit, setTsUnit] = useState<TimestampUnit>("seconds");
   const [dateInput, setDateInput] = useState("");
   const [dateUnit, setDateUnit] = useState<TimestampUnit>("seconds");
-  const { copy, isCopied } = useCopyToClipboard();
+  const { copy, isCopied } = useCopyToClipboard(1500);
 
   // 現在のタイムスタンプをリアルタイム更新
   useEffect(() => {

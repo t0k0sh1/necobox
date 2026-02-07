@@ -40,7 +40,7 @@ export default function HashGeneratorPage() {
   );
   const [isUppercase, setIsUppercase] = useState(false);
   const [compareValue, setCompareValue] = useState("");
-  const { copy, isCopied } = useCopyToClipboard();
+  const { copy, isCopied } = useCopyToClipboard(1500);
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [fileSize, setFileSize] = useState(0);
@@ -101,7 +101,7 @@ export default function HashGeneratorPage() {
     [t]
   );
 
-  const handleCopy = useCallback(async (text: string, field: string) => {
+  const handleCopy = useCallback((text: string, field: string) => {
     copy(text, field);
   }, [copy]);
 

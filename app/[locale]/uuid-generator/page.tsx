@@ -28,7 +28,7 @@ export default function UuidGeneratorPage() {
   const [count, setCount] = useState(1);
   const [nanoidLength, setNanoidLength] = useState(21);
   const [results, setResults] = useState<string[]>([]);
-  const { copy, isCopied } = useCopyToClipboard();
+  const { copy, isCopied } = useCopyToClipboard(1500);
 
   const handleGenerate = useCallback(() => {
     const ids = batchGenerate(activeTab, count, { nanoidLength });
