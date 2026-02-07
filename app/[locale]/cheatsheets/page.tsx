@@ -1,5 +1,6 @@
 "use client";
 
+import { GitCheatsheet } from "@/app/components/GitCheatsheet";
 import { HttpStatusCheatsheet } from "@/app/components/HttpStatusCheatsheet";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,9 +26,15 @@ export default function CheatsheetsPage() {
               <TabsTrigger value="httpStatus" className="flex-1">
                 {t("tabs.httpStatus")}
               </TabsTrigger>
+              <TabsTrigger value="gitCommands" className="flex-1">
+                {t("tabs.gitCommands")}
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="httpStatus" className="mt-4">
               <HttpStatusCheatsheet />
+            </TabsContent>
+            <TabsContent value="gitCommands" className="mt-4">
+              <GitCheatsheet />
             </TabsContent>
           </Tabs>
         </div>

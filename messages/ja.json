@@ -706,7 +706,8 @@
     "description": "開発者向けリファレンスをすばやく参照",
     "breadcrumb": "チートシート集",
     "tabs": {
-      "httpStatus": "HTTPステータスコード"
+      "httpStatus": "HTTPステータスコード",
+      "gitCommands": "Gitコマンド"
     },
     "httpStatus": {
       "searchPlaceholder": "コード、名前、説明で検索...",
@@ -727,6 +728,24 @@
         "4xx": "4xx クライアントエラー",
         "5xx": "5xx サーバーエラー",
         "non_standard": "非標準（CDN/クラウド）"
+      }
+    },
+    "gitCommands": {
+      "searchPlaceholder": "コマンド、オプション、説明で検索...",
+      "noResults": "一致するコマンドが見つかりません",
+      "options": "オプション",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "categories": {
+        "basics": "基本操作",
+        "branching": "ブランチ",
+        "diff_history": "差分・履歴",
+        "remote": "リモート",
+        "stash": "スタッシュ",
+        "reset_undo": "リセット・取り消し",
+        "tag": "タグ",
+        "worktree": "Worktree",
+        "config": "設定"
       }
     }
   },

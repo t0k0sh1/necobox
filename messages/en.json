@@ -706,7 +706,8 @@
     "description": "Developer reference cheatsheets for quick lookup",
     "breadcrumb": "Cheatsheets",
     "tabs": {
-      "httpStatus": "HTTP Status Codes"
+      "httpStatus": "HTTP Status Codes",
+      "gitCommands": "Git Commands"
     },
     "httpStatus": {
       "searchPlaceholder": "Search by code, name, or description...",
@@ -727,6 +728,24 @@
         "4xx": "4xx Client Error",
         "5xx": "5xx Server Error",
         "non_standard": "Non-Standard (CDN/Cloud)"
+      }
+    },
+    "gitCommands": {
+      "searchPlaceholder": "Search by command, option, or description...",
+      "noResults": "No matching commands found",
+      "options": "Options",
+      "copy": "Copy",
+      "copied": "Copied",
+      "categories": {
+        "basics": "Basics",
+        "branching": "Branching",
+        "diff_history": "Diff & History",
+        "remote": "Remote",
+        "stash": "Stash",
+        "reset_undo": "Reset & Undo",
+        "tag": "Tag",
+        "worktree": "Worktree",
+        "config": "Config"
       }
     }
   },
