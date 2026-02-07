@@ -1147,10 +1147,14 @@
   },
   "knowledgeHub": {
     "title": "Knowledge Hub",
-    "description": "Practical Git guides organized by situation",
+    "description": "Practical guides organized by situation for developers",
     "breadcrumb": "Knowledge Hub",
     "tabs": {
-      "git": "Git"
+      "git": "Git",
+      "sql": "SQL",
+      "shell": "Shell / CLI",
+      "jsArray": "JS/TS Arrays",
+      "javaStream": "Java Stream"
     },
     "searchPlaceholder": "Search by situation, tag, or command...",
     "noResults": "No matching knowledge items found",

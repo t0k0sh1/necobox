@@ -17,13 +17,22 @@ describe("Knowledge Hub Page", () => {
   it("renders description", () => {
     render(<KnowledgeHubPage />);
     expect(
-      screen.getByText("Practical Git guides organized by situation")
+      screen.getByText("Practical guides organized by situation for developers")
     ).toBeInTheDocument();
   });
 
   it("renders Git tab", () => {
     render(<KnowledgeHubPage />);
     expect(screen.getByRole("tab", { name: "Git" })).toBeInTheDocument();
+  });
+
+  it("renders all 5 tabs", () => {
+    render(<KnowledgeHubPage />);
+    expect(screen.getByRole("tab", { name: "Git" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "SQL" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Shell / CLI" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "JS/TS Arrays" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Java Stream" })).toBeInTheDocument();
   });
 
   it("renders link to cheatsheets", () => {
