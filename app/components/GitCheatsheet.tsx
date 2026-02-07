@@ -16,7 +16,7 @@ import {
   Search,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // カテゴリごとの色設定
 const CATEGORY_COLORS: Record<
@@ -81,6 +81,13 @@ export function GitCheatsheet() {
     new Set()
   );
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   const groupedCommands = useMemo(() => getGitCommandsByCategory(), []);
 
@@ -137,15 +144,16 @@ export function GitCheatsheet() {
     });
   };
 
-  const handleCopy = async (text: string, id: string) => {
+  const handleCopy = useCallback(async (text: string, id: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
       setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      copyTimerRef.current = setTimeout(() => setCopiedId(null), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
-  };
+  }, []);
 
   const getName = (cmd: GitCommand) =>
     locale === "ja" ? cmd.nameJa : cmd.nameEn;
@@ -192,7 +200,7 @@ export function GitCheatsheet() {
             <button
               onClick={() => toggleCategory(category)}
               aria-expanded={!isCollapsed}
-              aria-label={`${t(`gitCommands.categories.${category}` as Parameters<typeof t>[0])} ${isCollapsed ? "expand" : "collapse"}`}
+              aria-label={t(`gitCommands.categories.${category}` as Parameters<typeof t>[0])}
               className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors"
             >
               <div className="flex items-center gap-2">
@@ -227,7 +235,7 @@ export function GitCheatsheet() {
                         <button
                           onClick={() => toggleCommand(cmd.command)}
                           aria-expanded={isExpanded}
-                          aria-label={`${cmd.command} ${isExpanded ? "collapse" : "expand"}`}
+                          aria-label={cmd.command}
                           className="flex items-center gap-3 flex-1 text-left min-w-0"
                         >
                           {isExpanded ? (
@@ -250,8 +258,12 @@ export function GitCheatsheet() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          aria-label={`${t("gitCommands.copy")} ${cmd.command}`}
-                          className={`h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity ${
+                          aria-label={
+                            copiedId === `row-${cmd.command}`
+                              ? `${t("gitCommands.copied")} ${cmd.command}`
+                              : `${t("gitCommands.copy")} ${cmd.command}`
+                          }
+                          className={`h-7 w-7 p-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity ${
                             copiedId === `row-${cmd.command}`
                               ? "opacity-100 text-green-600 dark:text-green-400"
                               : ""

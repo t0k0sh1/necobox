@@ -244,13 +244,7 @@ describe("Cheatsheets Page", () => {
     it("copies git command text when copy button is clicked", async () => {
       render(<GitCheatsheet />);
 
-      const initButton = screen
-        .getByText("git init")
-        .closest("button")!;
-      const copyButtons = initButton
-        .closest(".group")!
-        .querySelectorAll("button");
-      const copyButton = copyButtons[copyButtons.length - 1];
+      const copyButton = screen.getByLabelText("Copy git init");
 
       await act(async () => {
         fireEvent.click(copyButton);
