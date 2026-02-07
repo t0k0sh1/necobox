@@ -1,3 +1,5 @@
+import { groupByCategory } from "./utils";
+
 // Shell/Linuxコマンドのカテゴリ
 export type ShellCommandCategory =
   | "file_operations"
@@ -630,18 +632,5 @@ export const SHELL_COMMANDS: ShellCommand[] = [
 
 // カテゴリごとにグループ化
 export function getShellCommandsByCategory(): Map<ShellCommandCategory, ShellCommand[]> {
-  const grouped = new Map<ShellCommandCategory, ShellCommand[]>();
-
-  for (const category of SHELL_CATEGORY_ORDER) {
-    grouped.set(category, []);
-  }
-
-  for (const cmd of SHELL_COMMANDS) {
-    const list = grouped.get(cmd.category);
-    if (list) {
-      list.push(cmd);
-    }
-  }
-
-  return grouped;
+  return groupByCategory(SHELL_COMMANDS, SHELL_CATEGORY_ORDER);
 }

@@ -1,3 +1,5 @@
+import { groupByCategory } from "./utils";
+
 // HTTPヘッダーのカテゴリ
 export type HttpHeaderCategory =
   | "request_general"
@@ -425,18 +427,5 @@ export const HTTP_HEADERS: HttpHeader[] = [
 
 // カテゴリごとにグループ化
 export function getHttpHeadersByCategory(): Map<HttpHeaderCategory, HttpHeader[]> {
-  const grouped = new Map<HttpHeaderCategory, HttpHeader[]>();
-
-  for (const category of HTTP_HEADER_CATEGORY_ORDER) {
-    grouped.set(category, []);
-  }
-
-  for (const header of HTTP_HEADERS) {
-    const list = grouped.get(header.category);
-    if (list) {
-      list.push(header);
-    }
-  }
-
-  return grouped;
+  return groupByCategory(HTTP_HEADERS, HTTP_HEADER_CATEGORY_ORDER);
 }

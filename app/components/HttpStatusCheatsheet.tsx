@@ -23,6 +23,7 @@ import {
   ExternalLink,
   Search,
 } from "lucide-react";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
@@ -77,7 +78,7 @@ export function HttpStatusCheatsheet() {
   const [selectedCode, setSelectedCode] = useState<HttpStatusCode | null>(
     null
   );
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const { copy, isCopied } = useCopyToClipboard();
 
   const groupedCodes = useMemo(() => getStatusCodesByCategory(), []);
 
@@ -116,17 +117,11 @@ export function HttpStatusCheatsheet() {
     });
   };
 
-  const handleCopy = async (text: string, id: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
+  const handleCopy = (text: string, id: string) => {
+    copy(text, id);
   };
 
-  const handleCopyDetail = async (code: HttpStatusCode) => {
+  const handleCopyDetail = (code: HttpStatusCode) => {
     const isJa = locale === "ja";
     const name = isJa ? code.nameJa : code.nameEn;
     const description = isJa ? code.descriptionJa : code.descriptionEn;
@@ -143,7 +138,7 @@ export function HttpStatusCheatsheet() {
       text += `\nMDN: ${MDN_BASE_URLS[locale] || MDN_BASE_URLS.en}${code.mdnPath}`;
     }
 
-    await handleCopy(text, `detail-${code.code}`);
+    handleCopy(text, `detail-${code.code}`);
   };
 
   const getName = (code: HttpStatusCode) =>
@@ -251,7 +246,7 @@ export function HttpStatusCheatsheet() {
                       size="sm"
                       aria-label={`${t("httpStatus.copy")} ${code.code} ${code.nameEn}`}
                       className={`h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity ${
-                        copiedId === `row-${code.code}`
+                        isCopied(`row-${code.code}`)
                           ? "opacity-100 text-green-600 dark:text-green-400"
                           : ""
                       }`}
@@ -263,7 +258,7 @@ export function HttpStatusCheatsheet() {
                         );
                       }}
                     >
-                      {copiedId === `row-${code.code}` ? (
+                      {isCopied(`row-${code.code}`) ? (
                         <Check className="w-3.5 h-3.5" />
                       ) : (
                         <Copy className="w-3.5 h-3.5" />
@@ -373,12 +368,12 @@ export function HttpStatusCheatsheet() {
                 size="sm"
                 onClick={() => handleCopyDetail(selectedCode)}
                 className={
-                  copiedId === `detail-${selectedCode.code}`
+                  isCopied(`detail-${selectedCode.code}`)
                     ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
                     : ""
                 }
               >
-                {copiedId === `detail-${selectedCode.code}` ? (
+                {isCopied(`detail-${selectedCode.code}`) ? (
                   <>
                     <Check className="w-4 h-4 mr-2" />
                     {t("httpStatus.copied")}

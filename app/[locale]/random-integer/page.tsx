@@ -1,7 +1,9 @@
 "use client"
 
+import { getValueFontSize } from "@/app/components/GeneratedResultCard"
 import { Breadcrumbs } from "@/components/ui/breadcrumbs"
 import { Button } from "@/components/ui/button"
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard"
 import { Check, Copy, Loader2 } from "lucide-react"
 import { useState } from "react"
 import { useTranslations } from 'next-intl';
@@ -25,8 +27,7 @@ export default function RandomIntegerPage() {
   const [seedInput, setSeedInput] = useState('-1')
   const [results, setResults] = useState<number[]>([])
   const [loading, setLoading] = useState(false)
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
-  const [copiedAll, setCopiedAll] = useState(false)
+  const { copy, isCopied } = useCopyToClipboard()
 
   const normalizeInputs = (): GeneratorOptions => {
     let normalizedMin = parseInt(minInput, 10) || 1
@@ -91,16 +92,11 @@ export default function RandomIntegerPage() {
   }
 
   const handleCopyValue = (value: number, index: number) => {
-    navigator.clipboard.writeText(value.toString())
-    setCopiedIndex(index)
-    setTimeout(() => setCopiedIndex(null), 2000)
+    copy(value.toString(), `index-${index}`)
   }
 
   const handleCopyAll = () => {
-    const text = results.join('\n')
-    navigator.clipboard.writeText(text)
-    setCopiedAll(true)
-    setTimeout(() => setCopiedAll(false), 2000)
+    copy(results.join('\n'), 'all')
   }
 
   const handleMinBlur = () => {
@@ -136,16 +132,6 @@ export default function RandomIntegerPage() {
       normalizedSeed = MAX_SAFE_INTEGER
     }
     setSeedInput(normalizedSeed.toString())
-  }
-
-  const getValueFontSize = (value: number): string => {
-    const valueStr = value.toString()
-    const length = valueStr.length
-
-    if (length <= 5) return 'text-lg'
-    if (length <= 10) return 'text-base'
-    if (length <= 15) return 'text-sm'
-    return 'text-xs'
   }
 
   return (
@@ -281,12 +267,12 @@ export default function RandomIntegerPage() {
                   size="sm"
                   onClick={handleCopyAll}
                   className={
-                    copiedAll
+                    isCopied('all')
                       ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
                       : ""
                   }
                 >
-                  {copiedAll ? (
+                  {isCopied('all') ? (
                     <>
                       <Check className="w-4 h-4 mr-2" />
                       {tCommon('copiedAll')}
@@ -312,12 +298,12 @@ export default function RandomIntegerPage() {
                       size="sm"
                       onClick={() => handleCopyValue(value, index)}
                       className={`flex-shrink-0 ${
-                        copiedIndex === index
+                        isCopied(`index-${index}`)
                           ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400"
                           : ""
                       }`}
                     >
-                      {copiedIndex === index ? (
+                      {isCopied(`index-${index}`) ? (
                         <Check className="w-4 h-4" />
                       ) : (
                         <Copy className="w-4 h-4" />

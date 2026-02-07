@@ -1,3 +1,5 @@
+import { groupByCategory } from "./utils";
+
 // SQL構文のカテゴリ
 export type SqlSyntaxCategory =
   | "select"
@@ -470,18 +472,5 @@ export const SQL_SYNTAXES: SqlSyntax[] = [
 
 // カテゴリごとにグループ化
 export function getSqlSyntaxByCategory(): Map<SqlSyntaxCategory, SqlSyntax[]> {
-  const grouped = new Map<SqlSyntaxCategory, SqlSyntax[]>();
-
-  for (const category of SQL_CATEGORY_ORDER) {
-    grouped.set(category, []);
-  }
-
-  for (const syntax of SQL_SYNTAXES) {
-    const list = grouped.get(syntax.category);
-    if (list) {
-      list.push(syntax);
-    }
-  }
-
-  return grouped;
+  return groupByCategory(SQL_SYNTAXES, SQL_CATEGORY_ORDER);
 }

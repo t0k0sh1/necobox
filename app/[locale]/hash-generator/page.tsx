@@ -13,6 +13,7 @@ import {
   type HashAlgorithm,
 } from "@/lib/utils/hash-generator";
 import { formatFileSize } from "@/lib/utils/base64-converter";
+import { useCopyToClipboard } from "@/lib/hooks/useCopyToClipboard";
 import {
   Copy,
   Check,
@@ -39,7 +40,7 @@ export default function HashGeneratorPage() {
   );
   const [isUppercase, setIsUppercase] = useState(false);
   const [compareValue, setCompareValue] = useState("");
-  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const { copy, isCopied } = useCopyToClipboard();
   const [error, setError] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [fileSize, setFileSize] = useState(0);
@@ -101,10 +102,8 @@ export default function HashGeneratorPage() {
   );
 
   const handleCopy = useCallback(async (text: string, field: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 1500);
-  }, []);
+    copy(text, field);
+  }, [copy]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -239,13 +238,13 @@ export default function HashGeneratorPage() {
                         handleCopy(formatHash(hashes[algo] || ""), algo)
                       }
                     >
-                      {copiedField === algo ? (
+                      {isCopied(algo) ? (
                         <Check className="size-4" />
                       ) : (
                         <Copy className="size-4" />
                       )}
                       <span className="ml-1">
-                        {copiedField === algo
+                        {isCopied(algo)
                           ? tCommon("copied")
                           : tCommon("copy")}
                       </span>

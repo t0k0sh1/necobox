@@ -1,3 +1,5 @@
+import { groupByCategory } from "./utils";
+
 // Gitコマンドのカテゴリ
 export type GitCommandCategory =
   | "basics"
@@ -509,18 +511,5 @@ export const GIT_COMMANDS: GitCommand[] = [
 
 // カテゴリごとにグループ化
 export function getGitCommandsByCategory(): Map<GitCommandCategory, GitCommand[]> {
-  const grouped = new Map<GitCommandCategory, GitCommand[]>();
-
-  for (const category of GIT_CATEGORY_ORDER) {
-    grouped.set(category, []);
-  }
-
-  for (const cmd of GIT_COMMANDS) {
-    const list = grouped.get(cmd.category);
-    if (list) {
-      list.push(cmd);
-    }
-  }
-
-  return grouped;
+  return groupByCategory(GIT_COMMANDS, GIT_CATEGORY_ORDER);
 }
