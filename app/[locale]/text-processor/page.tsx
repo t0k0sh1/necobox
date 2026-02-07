@@ -316,37 +316,40 @@ export default function TextProcessorPage() {
                     {index > 0 && (
                       <ChevronRight className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                     )}
-                    <button
-                      onClick={() =>
-                        setSelectedStepId(
-                          selectedStepId === step.id ? null : step.id
-                        )
-                      }
-                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    <div
+                      className={`inline-flex items-center gap-1.5 rounded-full pl-3 pr-1 py-1 text-xs font-medium transition-colors ${
                         selectedStepId === step.id
                           ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                       }`}
                     >
-                      <span className="text-[10px] opacity-60">
-                        {index + 1}
-                      </span>
-                      {t(
-                        OPERATION_I18N_MAP[
-                          step.type
-                        ] as Parameters<typeof t>[0]
-                      )}
-                      <span
-                        role="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeStep(step.id);
-                        }}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedStepId(
+                            selectedStepId === step.id ? null : step.id
+                          )
+                        }
+                        className="inline-flex items-center gap-1.5"
+                      >
+                        <span className="text-[10px] opacity-60">
+                          {index + 1}
+                        </span>
+                        {t(
+                          OPERATION_I18N_MAP[
+                            step.type
+                          ] as Parameters<typeof t>[0]
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeStep(step.id)}
                         aria-label={t("pipeline.removeStep")}
+                        className="ml-0.5 rounded-full p-0.5 hover:bg-white/20 dark:hover:bg-black/20"
                       >
                         <X className="w-3 h-3" />
-                      </span>
-                    </button>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
