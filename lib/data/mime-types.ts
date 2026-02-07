@@ -1,0 +1,508 @@
+// MIMEタイプのカテゴリ
+export type MimeCategory =
+  | "text"
+  | "application"
+  | "image"
+  | "audio"
+  | "video"
+  | "font"
+  | "multipart";
+
+// MIMEタイプの型
+export interface MimeType {
+  mimeType: string;
+  nameEn: string;
+  nameJa: string;
+  category: MimeCategory;
+  descriptionEn: string;
+  descriptionJa: string;
+  extensions: string[];
+  commonUsageEn?: string;
+  commonUsageJa?: string;
+}
+
+// カテゴリの表示順
+export const MIME_CATEGORY_ORDER: MimeCategory[] = [
+  "text",
+  "application",
+  "image",
+  "audio",
+  "video",
+  "font",
+  "multipart",
+];
+
+// MIMEタイプ一覧
+export const MIME_TYPES: MimeType[] = [
+  // テキスト (text)
+  {
+    mimeType: "text/plain",
+    nameEn: "Plain Text",
+    nameJa: "プレーンテキスト",
+    category: "text",
+    descriptionEn: "Plain text without any formatting.",
+    descriptionJa: "フォーマットのないプレーンテキスト。",
+    extensions: [".txt"],
+    commonUsageEn: "Log files, README files, configuration files",
+    commonUsageJa: "ログファイル、READMEファイル、設定ファイル",
+  },
+  {
+    mimeType: "text/html",
+    nameEn: "HTML",
+    nameJa: "HTML",
+    category: "text",
+    descriptionEn: "HyperText Markup Language document.",
+    descriptionJa: "HyperText Markup Language文書。",
+    extensions: [".html", ".htm"],
+    commonUsageEn: "Web pages, email templates",
+    commonUsageJa: "Webページ、メールテンプレート",
+  },
+  {
+    mimeType: "text/css",
+    nameEn: "CSS",
+    nameJa: "CSS",
+    category: "text",
+    descriptionEn: "Cascading Style Sheets.",
+    descriptionJa: "カスケーディングスタイルシート。",
+    extensions: [".css"],
+    commonUsageEn: "Web page styling",
+    commonUsageJa: "Webページのスタイリング",
+  },
+  {
+    mimeType: "text/javascript",
+    nameEn: "JavaScript",
+    nameJa: "JavaScript",
+    category: "text",
+    descriptionEn: "JavaScript source code.",
+    descriptionJa: "JavaScriptソースコード。",
+    extensions: [".js", ".mjs"],
+    commonUsageEn: "Web scripts, Node.js applications",
+    commonUsageJa: "Webスクリプト、Node.jsアプリケーション",
+  },
+  {
+    mimeType: "text/csv",
+    nameEn: "CSV",
+    nameJa: "CSV",
+    category: "text",
+    descriptionEn: "Comma-separated values.",
+    descriptionJa: "カンマ区切り値。",
+    extensions: [".csv"],
+    commonUsageEn: "Data exchange, spreadsheet import/export",
+    commonUsageJa: "データ交換、スプレッドシートのインポート/エクスポート",
+  },
+  {
+    mimeType: "text/xml",
+    nameEn: "XML",
+    nameJa: "XML",
+    category: "text",
+    descriptionEn: "XML document.",
+    descriptionJa: "XML文書。",
+    extensions: [".xml"],
+    commonUsageEn: "Configuration files, data interchange, SOAP",
+    commonUsageJa: "設定ファイル、データ交換、SOAP",
+  },
+  {
+    mimeType: "text/markdown",
+    nameEn: "Markdown",
+    nameJa: "Markdown",
+    category: "text",
+    descriptionEn: "Markdown formatted text.",
+    descriptionJa: "Markdownフォーマットのテキスト。",
+    extensions: [".md", ".markdown"],
+    commonUsageEn: "Documentation, README files, blog posts",
+    commonUsageJa: "ドキュメント、READMEファイル、ブログ記事",
+  },
+
+  // アプリケーション (application)
+  {
+    mimeType: "application/json",
+    nameEn: "JSON",
+    nameJa: "JSON",
+    category: "application",
+    descriptionEn: "JavaScript Object Notation data.",
+    descriptionJa: "JavaScript Object Notationデータ。",
+    extensions: [".json"],
+    commonUsageEn: "API responses, configuration files, data exchange",
+    commonUsageJa: "APIレスポンス、設定ファイル、データ交換",
+  },
+  {
+    mimeType: "application/xml",
+    nameEn: "XML (Application)",
+    nameJa: "XML（アプリケーション）",
+    category: "application",
+    descriptionEn: "XML document for application processing.",
+    descriptionJa: "アプリケーション処理用のXML文書。",
+    extensions: [".xml"],
+    commonUsageEn: "SOAP APIs, RSS feeds, configuration",
+    commonUsageJa: "SOAP API、RSSフィード、設定",
+  },
+  {
+    mimeType: "application/pdf",
+    nameEn: "PDF",
+    nameJa: "PDF",
+    category: "application",
+    descriptionEn: "Portable Document Format.",
+    descriptionJa: "ポータブル・ドキュメント・フォーマット。",
+    extensions: [".pdf"],
+    commonUsageEn: "Documents, reports, invoices",
+    commonUsageJa: "文書、レポート、請求書",
+  },
+  {
+    mimeType: "application/zip",
+    nameEn: "ZIP",
+    nameJa: "ZIPアーカイブ",
+    category: "application",
+    descriptionEn: "ZIP compressed archive.",
+    descriptionJa: "ZIP圧縮アーカイブ。",
+    extensions: [".zip"],
+    commonUsageEn: "File compression and archiving",
+    commonUsageJa: "ファイルの圧縮とアーカイブ",
+  },
+  {
+    mimeType: "application/gzip",
+    nameEn: "GZIP",
+    nameJa: "GZIP圧縮",
+    category: "application",
+    descriptionEn: "GZIP compressed data.",
+    descriptionJa: "GZIP圧縮データ。",
+    extensions: [".gz"],
+    commonUsageEn: "File compression, HTTP content encoding",
+    commonUsageJa: "ファイル圧縮、HTTPコンテンツエンコーディング",
+  },
+  {
+    mimeType: "application/x-tar",
+    nameEn: "TAR Archive",
+    nameJa: "TARアーカイブ",
+    category: "application",
+    descriptionEn: "Tape archive file.",
+    descriptionJa: "テープアーカイブファイル。",
+    extensions: [".tar"],
+    commonUsageEn: "Unix/Linux file archiving",
+    commonUsageJa: "Unix/Linuxファイルアーカイブ",
+  },
+  {
+    mimeType: "application/octet-stream",
+    nameEn: "Binary Data",
+    nameJa: "バイナリデータ",
+    category: "application",
+    descriptionEn: "Arbitrary binary data. Default for unknown binary types.",
+    descriptionJa: "任意のバイナリデータ。不明なバイナリ型のデフォルト。",
+    extensions: [".bin"],
+    commonUsageEn: "File downloads, unknown binary types",
+    commonUsageJa: "ファイルダウンロード、不明なバイナリ型",
+  },
+  {
+    mimeType: "application/x-www-form-urlencoded",
+    nameEn: "URL-encoded Form Data",
+    nameJa: "URLエンコードフォームデータ",
+    category: "application",
+    descriptionEn: "Form data encoded as key-value pairs in URL format.",
+    descriptionJa: "URL形式のキーバリューペアとしてエンコードされたフォームデータ。",
+    extensions: [],
+    commonUsageEn: "HTML form submissions (default encoding)",
+    commonUsageJa: "HTMLフォーム送信（デフォルトエンコーディング）",
+  },
+  {
+    mimeType: "application/ld+json",
+    nameEn: "JSON-LD",
+    nameJa: "JSON-LD",
+    category: "application",
+    descriptionEn: "JSON for Linked Data.",
+    descriptionJa: "リンクデータ用JSON。",
+    extensions: [".jsonld"],
+    commonUsageEn: "Structured data, SEO (Schema.org)",
+    commonUsageJa: "構造化データ、SEO（Schema.org）",
+  },
+  {
+    mimeType: "application/wasm",
+    nameEn: "WebAssembly",
+    nameJa: "WebAssembly",
+    category: "application",
+    descriptionEn: "WebAssembly binary format.",
+    descriptionJa: "WebAssemblyバイナリフォーマット。",
+    extensions: [".wasm"],
+    commonUsageEn: "High-performance web applications",
+    commonUsageJa: "高性能Webアプリケーション",
+  },
+  {
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    nameEn: "Excel (XLSX)",
+    nameJa: "Excel（XLSX）",
+    category: "application",
+    descriptionEn: "Microsoft Excel spreadsheet (Open XML format).",
+    descriptionJa: "Microsoft Excelスプレッドシート（Open XML形式）。",
+    extensions: [".xlsx"],
+    commonUsageEn: "Spreadsheets, data reports",
+    commonUsageJa: "スプレッドシート、データレポート",
+  },
+  {
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    nameEn: "Word (DOCX)",
+    nameJa: "Word（DOCX）",
+    category: "application",
+    descriptionEn: "Microsoft Word document (Open XML format).",
+    descriptionJa: "Microsoft Word文書（Open XML形式）。",
+    extensions: [".docx"],
+    commonUsageEn: "Documents, reports",
+    commonUsageJa: "文書、レポート",
+  },
+
+  // 画像 (image)
+  {
+    mimeType: "image/jpeg",
+    nameEn: "JPEG",
+    nameJa: "JPEG",
+    category: "image",
+    descriptionEn: "JPEG image.",
+    descriptionJa: "JPEG画像。",
+    extensions: [".jpg", ".jpeg"],
+    commonUsageEn: "Photos, web images",
+    commonUsageJa: "写真、Web画像",
+  },
+  {
+    mimeType: "image/png",
+    nameEn: "PNG",
+    nameJa: "PNG",
+    category: "image",
+    descriptionEn: "Portable Network Graphics image.",
+    descriptionJa: "Portable Network Graphics画像。",
+    extensions: [".png"],
+    commonUsageEn: "Screenshots, graphics with transparency",
+    commonUsageJa: "スクリーンショット、透過のあるグラフィック",
+  },
+  {
+    mimeType: "image/gif",
+    nameEn: "GIF",
+    nameJa: "GIF",
+    category: "image",
+    descriptionEn: "Graphics Interchange Format image.",
+    descriptionJa: "Graphics Interchange Format画像。",
+    extensions: [".gif"],
+    commonUsageEn: "Animated images, simple graphics",
+    commonUsageJa: "アニメーション画像、シンプルなグラフィック",
+  },
+  {
+    mimeType: "image/webp",
+    nameEn: "WebP",
+    nameJa: "WebP",
+    category: "image",
+    descriptionEn: "WebP image format by Google.",
+    descriptionJa: "Google開発のWebP画像フォーマット。",
+    extensions: [".webp"],
+    commonUsageEn: "Web images (smaller than JPEG/PNG)",
+    commonUsageJa: "Web画像（JPEG/PNGより小さい）",
+  },
+  {
+    mimeType: "image/svg+xml",
+    nameEn: "SVG",
+    nameJa: "SVG",
+    category: "image",
+    descriptionEn: "Scalable Vector Graphics.",
+    descriptionJa: "スケーラブルベクターグラフィックス。",
+    extensions: [".svg"],
+    commonUsageEn: "Icons, logos, vector illustrations",
+    commonUsageJa: "アイコン、ロゴ、ベクターイラスト",
+  },
+  {
+    mimeType: "image/avif",
+    nameEn: "AVIF",
+    nameJa: "AVIF",
+    category: "image",
+    descriptionEn: "AV1 Image File Format.",
+    descriptionJa: "AV1画像ファイルフォーマット。",
+    extensions: [".avif"],
+    commonUsageEn: "Next-gen web images (high compression)",
+    commonUsageJa: "次世代Web画像（高圧縮）",
+  },
+  {
+    mimeType: "image/x-icon",
+    nameEn: "ICO",
+    nameJa: "アイコン",
+    category: "image",
+    descriptionEn: "Icon file format.",
+    descriptionJa: "アイコンファイルフォーマット。",
+    extensions: [".ico"],
+    commonUsageEn: "Favicons, application icons",
+    commonUsageJa: "ファビコン、アプリケーションアイコン",
+  },
+
+  // オーディオ (audio)
+  {
+    mimeType: "audio/mpeg",
+    nameEn: "MP3",
+    nameJa: "MP3",
+    category: "audio",
+    descriptionEn: "MPEG audio (MP3).",
+    descriptionJa: "MPEGオーディオ（MP3）。",
+    extensions: [".mp3"],
+    commonUsageEn: "Music, podcasts",
+    commonUsageJa: "音楽、ポッドキャスト",
+  },
+  {
+    mimeType: "audio/wav",
+    nameEn: "WAV",
+    nameJa: "WAV",
+    category: "audio",
+    descriptionEn: "Waveform Audio File Format.",
+    descriptionJa: "Waveformオーディオファイルフォーマット。",
+    extensions: [".wav"],
+    commonUsageEn: "Uncompressed audio, sound effects",
+    commonUsageJa: "非圧縮オーディオ、効果音",
+  },
+  {
+    mimeType: "audio/ogg",
+    nameEn: "OGG Audio",
+    nameJa: "OGGオーディオ",
+    category: "audio",
+    descriptionEn: "OGG Vorbis audio.",
+    descriptionJa: "OGG Vorbisオーディオ。",
+    extensions: [".ogg", ".oga"],
+    commonUsageEn: "Web audio, streaming",
+    commonUsageJa: "Webオーディオ、ストリーミング",
+  },
+  {
+    mimeType: "audio/webm",
+    nameEn: "WebM Audio",
+    nameJa: "WebMオーディオ",
+    category: "audio",
+    descriptionEn: "WebM audio format.",
+    descriptionJa: "WebMオーディオフォーマット。",
+    extensions: [".weba"],
+    commonUsageEn: "Web audio playback",
+    commonUsageJa: "Webオーディオ再生",
+  },
+
+  // ビデオ (video)
+  {
+    mimeType: "video/mp4",
+    nameEn: "MP4",
+    nameJa: "MP4",
+    category: "video",
+    descriptionEn: "MPEG-4 video.",
+    descriptionJa: "MPEG-4ビデオ。",
+    extensions: [".mp4"],
+    commonUsageEn: "Web video, streaming",
+    commonUsageJa: "Webビデオ、ストリーミング",
+  },
+  {
+    mimeType: "video/webm",
+    nameEn: "WebM Video",
+    nameJa: "WebMビデオ",
+    category: "video",
+    descriptionEn: "WebM video format.",
+    descriptionJa: "WebMビデオフォーマット。",
+    extensions: [".webm"],
+    commonUsageEn: "Web video (HTML5 video element)",
+    commonUsageJa: "Webビデオ（HTML5 video要素）",
+  },
+  {
+    mimeType: "video/ogg",
+    nameEn: "OGG Video",
+    nameJa: "OGGビデオ",
+    category: "video",
+    descriptionEn: "OGG Theora video.",
+    descriptionJa: "OGG Theoraビデオ。",
+    extensions: [".ogv"],
+    commonUsageEn: "Open-source video format",
+    commonUsageJa: "オープンソースビデオフォーマット",
+  },
+  {
+    mimeType: "video/quicktime",
+    nameEn: "QuickTime",
+    nameJa: "QuickTime",
+    category: "video",
+    descriptionEn: "Apple QuickTime video.",
+    descriptionJa: "Apple QuickTimeビデオ。",
+    extensions: [".mov"],
+    commonUsageEn: "Apple ecosystem video",
+    commonUsageJa: "Appleエコシステムのビデオ",
+  },
+
+  // フォント (font)
+  {
+    mimeType: "font/woff",
+    nameEn: "WOFF",
+    nameJa: "WOFF",
+    category: "font",
+    descriptionEn: "Web Open Font Format.",
+    descriptionJa: "Web Open Fontフォーマット。",
+    extensions: [".woff"],
+    commonUsageEn: "Web fonts",
+    commonUsageJa: "Webフォント",
+  },
+  {
+    mimeType: "font/woff2",
+    nameEn: "WOFF2",
+    nameJa: "WOFF2",
+    category: "font",
+    descriptionEn: "Web Open Font Format 2.",
+    descriptionJa: "Web Open Fontフォーマット2。",
+    extensions: [".woff2"],
+    commonUsageEn: "Web fonts (better compression than WOFF)",
+    commonUsageJa: "Webフォント（WOFFより高圧縮）",
+  },
+  {
+    mimeType: "font/ttf",
+    nameEn: "TrueType Font",
+    nameJa: "TrueTypeフォント",
+    category: "font",
+    descriptionEn: "TrueType font file.",
+    descriptionJa: "TrueTypeフォントファイル。",
+    extensions: [".ttf"],
+    commonUsageEn: "Desktop and web fonts",
+    commonUsageJa: "デスクトップおよびWebフォント",
+  },
+  {
+    mimeType: "font/otf",
+    nameEn: "OpenType Font",
+    nameJa: "OpenTypeフォント",
+    category: "font",
+    descriptionEn: "OpenType font file.",
+    descriptionJa: "OpenTypeフォントファイル。",
+    extensions: [".otf"],
+    commonUsageEn: "Advanced typography, desktop and web fonts",
+    commonUsageJa: "高度なタイポグラフィ、デスクトップおよびWebフォント",
+  },
+
+  // マルチパート (multipart)
+  {
+    mimeType: "multipart/form-data",
+    nameEn: "Form Data (Multipart)",
+    nameJa: "フォームデータ（マルチパート）",
+    category: "multipart",
+    descriptionEn: "Form data that can include file uploads.",
+    descriptionJa: "ファイルアップロードを含むことができるフォームデータ。",
+    extensions: [],
+    commonUsageEn: "File uploads, form submissions with files",
+    commonUsageJa: "ファイルアップロード、ファイル付きフォーム送信",
+  },
+  {
+    mimeType: "multipart/byteranges",
+    nameEn: "Byte Ranges",
+    nameJa: "バイト範囲",
+    category: "multipart",
+    descriptionEn: "Response containing multiple byte ranges.",
+    descriptionJa: "複数のバイト範囲を含むレスポンス。",
+    extensions: [],
+    commonUsageEn: "Partial content responses (HTTP 206)",
+    commonUsageJa: "部分コンテンツレスポンス（HTTP 206）",
+  },
+];
+
+// カテゴリごとにグループ化
+export function getMimeTypesByCategory(): Map<MimeCategory, MimeType[]> {
+  const grouped = new Map<MimeCategory, MimeType[]>();
+
+  for (const category of MIME_CATEGORY_ORDER) {
+    grouped.set(category, []);
+  }
+
+  for (const mime of MIME_TYPES) {
+    const list = grouped.get(mime.category);
+    if (list) {
+      list.push(mime);
+    }
+  }
+
+  return grouped;
+}

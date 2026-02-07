@@ -1,7 +1,13 @@
 "use client";
 
+import { DockerCheatsheet } from "@/app/components/DockerCheatsheet";
 import { GitCheatsheet } from "@/app/components/GitCheatsheet";
+import { HttpHeaderCheatsheet } from "@/app/components/HttpHeaderCheatsheet";
 import { HttpStatusCheatsheet } from "@/app/components/HttpStatusCheatsheet";
+import { MarkdownCheatsheet } from "@/app/components/MarkdownCheatsheet";
+import { MimeTypeCheatsheet } from "@/app/components/MimeTypeCheatsheet";
+import { ShellCheatsheet } from "@/app/components/ShellCheatsheet";
+import { SqlCheatsheet } from "@/app/components/SqlCheatsheet";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslations } from "next-intl";
@@ -21,20 +27,86 @@ export default function CheatsheetsPage() {
             </p>
           </div>
 
-          <Tabs defaultValue="httpStatus">
+          <Tabs defaultValue="webApi">
             <TabsList className="w-full">
-              <TabsTrigger value="httpStatus" className="flex-1">
-                {t("tabs.httpStatus")}
+              <TabsTrigger value="webApi" className="font-bold text-base">
+                {t("categories.webApi")}
               </TabsTrigger>
-              <TabsTrigger value="gitCommands" className="flex-1">
-                {t("tabs.gitCommands")}
+              <TabsTrigger value="commandLine" className="font-bold text-base">
+                {t("categories.commandLine")}
+              </TabsTrigger>
+              <TabsTrigger value="languageMarkup" className="font-bold text-base">
+                {t("categories.languageMarkup")}
               </TabsTrigger>
             </TabsList>
-            <TabsContent value="httpStatus" className="mt-4">
-              <HttpStatusCheatsheet />
+
+            <TabsContent value="webApi" className="mt-4">
+              <Tabs defaultValue="httpStatus">
+                <TabsList className="w-full flex overflow-x-auto">
+                  <TabsTrigger value="httpStatus" className="shrink-0 px-3">
+                    {t("tabs.httpStatus")}
+                  </TabsTrigger>
+                  <TabsTrigger value="httpHeaders" className="shrink-0 px-3">
+                    {t("tabs.httpHeaders")}
+                  </TabsTrigger>
+                  <TabsTrigger value="mimeTypes" className="shrink-0 px-3">
+                    {t("tabs.mimeTypes")}
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="httpStatus" className="mt-4">
+                  <HttpStatusCheatsheet />
+                </TabsContent>
+                <TabsContent value="httpHeaders" className="mt-4">
+                  <HttpHeaderCheatsheet />
+                </TabsContent>
+                <TabsContent value="mimeTypes" className="mt-4">
+                  <MimeTypeCheatsheet />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
-            <TabsContent value="gitCommands" className="mt-4">
-              <GitCheatsheet />
+
+            <TabsContent value="commandLine" forceMount className="mt-4 data-[state=inactive]:hidden">
+              <Tabs defaultValue="gitCommands">
+                <TabsList className="w-full flex overflow-x-auto">
+                  <TabsTrigger value="gitCommands" className="shrink-0 px-3">
+                    {t("tabs.gitCommands")}
+                  </TabsTrigger>
+                  <TabsTrigger value="dockerCommands" className="shrink-0 px-3">
+                    {t("tabs.dockerCommands")}
+                  </TabsTrigger>
+                  <TabsTrigger value="shellCommands" className="shrink-0 px-3">
+                    {t("tabs.shellCommands")}
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="gitCommands" className="mt-4">
+                  <GitCheatsheet />
+                </TabsContent>
+                <TabsContent value="dockerCommands" className="mt-4">
+                  <DockerCheatsheet />
+                </TabsContent>
+                <TabsContent value="shellCommands" className="mt-4">
+                  <ShellCheatsheet />
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
+
+            <TabsContent value="languageMarkup" forceMount className="mt-4 data-[state=inactive]:hidden">
+              <Tabs defaultValue="sqlSyntax">
+                <TabsList className="w-full flex overflow-x-auto">
+                  <TabsTrigger value="sqlSyntax" className="shrink-0 px-3">
+                    {t("tabs.sqlSyntax")}
+                  </TabsTrigger>
+                  <TabsTrigger value="markdownSyntax" className="shrink-0 px-3">
+                    {t("tabs.markdownSyntax")}
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="sqlSyntax" className="mt-4">
+                  <SqlCheatsheet />
+                </TabsContent>
+                <TabsContent value="markdownSyntax" className="mt-4">
+                  <MarkdownCheatsheet />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
           </Tabs>
         </div>

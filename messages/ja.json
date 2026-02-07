@@ -705,9 +705,20 @@
     "title": "チートシート集",
     "description": "開発者向けリファレンスをすばやく参照",
     "breadcrumb": "チートシート集",
+    "categories": {
+      "webApi": "Web & API",
+      "commandLine": "コマンドライン",
+      "languageMarkup": "言語 & マークアップ"
+    },
     "tabs": {
-      "httpStatus": "HTTPステータスコード",
-      "gitCommands": "Gitコマンド"
+      "httpStatus": "HTTP Status",
+      "gitCommands": "Git",
+      "httpHeaders": "HTTP Headers",
+      "dockerCommands": "Docker",
+      "shellCommands": "Shell",
+      "sqlSyntax": "SQL",
+      "markdownSyntax": "Markdown",
+      "mimeTypes": "MIME Types"
     },
     "httpStatus": {
       "searchPlaceholder": "コード、名前、説明で検索...",
@@ -746,6 +757,109 @@
         "tag": "タグ",
         "worktree": "Worktree",
         "config": "設定"
+      }
+    },
+    "httpHeaders": {
+      "searchPlaceholder": "ヘッダー名、説明、値の例で検索...",
+      "noResults": "一致するヘッダーが見つかりません",
+      "example": "例",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "viewOnMdn": "MDNで確認",
+      "categories": {
+        "request_general": "リクエスト（一般）",
+        "response_general": "レスポンス（一般）",
+        "caching": "キャッシュ",
+        "security": "セキュリティ",
+        "cors": "CORS",
+        "content_negotiation": "コンテンツネゴシエーション",
+        "authentication": "認証"
+      }
+    },
+    "dockerCommands": {
+      "searchPlaceholder": "コマンド、オプション、説明で検索...",
+      "noResults": "一致するコマンドが見つかりません",
+      "options": "オプション",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "categories": {
+        "container": "コンテナ",
+        "image": "イメージ",
+        "network": "ネットワーク",
+        "volume": "ボリューム",
+        "compose": "Compose",
+        "system": "システム",
+        "registry": "レジストリ"
+      }
+    },
+    "shellCommands": {
+      "searchPlaceholder": "コマンド、オプション、説明で検索...",
+      "noResults": "一致するコマンドが見つかりません",
+      "options": "オプション",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "categories": {
+        "file_operations": "ファイル操作",
+        "text_processing": "テキスト処理",
+        "process_management": "プロセス管理",
+        "permissions": "パーミッション",
+        "networking": "ネットワーク",
+        "compression": "圧縮",
+        "system_info": "システム情報",
+        "pipe_redirect": "パイプ・リダイレクト"
+      }
+    },
+    "sqlSyntax": {
+      "searchPlaceholder": "構文、名前、説明で検索...",
+      "noResults": "一致する構文が見つかりません",
+      "example": "使用例",
+      "notes": "補足",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "categories": {
+        "select": "SELECT",
+        "join": "JOIN",
+        "aggregate": "集約",
+        "subquery": "サブクエリ・CTE",
+        "window_function": "ウィンドウ関数",
+        "dml": "DML（挿入/更新/削除）",
+        "ddl": "DDL（作成/変更/削除）",
+        "constraint": "制約"
+      }
+    },
+    "markdownSyntax": {
+      "searchPlaceholder": "構文、説明で検索...",
+      "noResults": "一致する構文が見つかりません",
+      "source": "ソース",
+      "preview": "HTML出力",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "categories": {
+        "headings": "見出し",
+        "emphasis": "強調",
+        "lists": "リスト",
+        "links_images": "リンク・画像",
+        "code": "コード",
+        "tables": "テーブル",
+        "blockquotes": "引用・区切り線",
+        "gfm_extensions": "GFM拡張"
+      }
+    },
+    "mimeTypes": {
+      "searchPlaceholder": "MIMEタイプ、拡張子、説明で検索...",
+      "noResults": "一致するMIMEタイプが見つかりません",
+      "extensions": "拡張子",
+      "commonUsage": "主な用途",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "categories": {
+        "text": "text/*",
+        "application": "application/*",
+        "image": "image/*",
+        "audio": "audio/*",
+        "video": "video/*",
+        "font": "font/*",
+        "multipart": "multipart/*"
       }
     }
   },
