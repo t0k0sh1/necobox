@@ -15,7 +15,7 @@ export interface KnowledgeItem {
   explanationEn: string;
   explanationJa: string;
   snippets: CodeSnippet[];
-  relatedCheatsheetTab?: string;
+  hasRelatedCheatsheet?: boolean;
   tags: string[];
 }
 
@@ -55,7 +55,7 @@ export const GIT_KNOWLEDGE: KnowledgeItem[] = [
         code: "git switch -c <branch-name> <commit-hash>",
       },
     ],
-    relatedCheatsheetTab: "gitCommands",
+    hasRelatedCheatsheet: true,
     tags: ["branch", "switch", "checkout"],
   },
   {
@@ -101,7 +101,7 @@ export const GIT_KNOWLEDGE: KnowledgeItem[] = [
         noteJa: "注意: コミットされていない変更が完全に失われます",
       },
     ],
-    relatedCheatsheetTab: "gitCommands",
+    hasRelatedCheatsheet: true,
     tags: ["reset", "revert", "restore", "undo"],
   },
   {
@@ -147,7 +147,7 @@ export const GIT_KNOWLEDGE: KnowledgeItem[] = [
         noteJa: "--staged やブランチ名と組み合わせて使用可能",
       },
     ],
-    relatedCheatsheetTab: "gitCommands",
+    hasRelatedCheatsheet: true,
     tags: ["diff", "compare", "staging"],
   },
 ];

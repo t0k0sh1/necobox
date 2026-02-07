@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   GIT_KNOWLEDGE,
   type KnowledgeItem,
@@ -285,7 +286,7 @@ export function GitKnowledge() {
                   </div>
 
                   {/* チートシートへのリンク */}
-                  {item.relatedCheatsheetTab && (
+                  {item.hasRelatedCheatsheet && (
                     <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
                       <Link
                         href="/cheatsheets"
@@ -314,12 +315,15 @@ export function GitKnowledge() {
           </DialogHeader>
 
           <div className="space-y-3">
-            {dialogPlaceholders.map((name) => (
+            {dialogPlaceholders.map((name) => {
+              const inputId = `placeholder-${name}`;
+              return (
               <div key={name} className="space-y-1">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                <Label htmlFor={inputId} className="text-sm font-medium text-gray-700 dark:text-gray-200">
                   {name}
-                </label>
+                </Label>
                 <Input
+                  id={inputId}
                   type="text"
                   placeholder={`<${name}>`}
                   value={dialogValues[name] ?? ""}
@@ -331,7 +335,8 @@ export function GitKnowledge() {
                   }
                 />
               </div>
-            ))}
+            );
+            })}
           </div>
 
           {/* プレビュー */}
