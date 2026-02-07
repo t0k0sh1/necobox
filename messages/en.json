@@ -71,6 +71,9 @@
     "includeLowercase": "Include Lowercase Letters",
     "includeNumbers": "Include Numbers",
     "includeSymbols": "Include Symbols",
+    "includeSpaces": "Include Spaces",
+    "includeUnicode": "Include Unicode Characters",
+    "includeUnicodeTooltip": "Adds Latin, Greek, Cyrillic, and CJK characters. Expands the character space per NIST SP 800-63B.",
     "selectSymbols": "Select symbols",
     "excludeSimilar": "Exclude similar characters",
     "excludeSimilarTooltip": {
@@ -96,7 +99,41 @@
       "moderate": "Moderate",
       "moderateDescription": "Reasonably secure but could be stronger. Add more length or variety.",
       "strong": "Strong",
-      "strongDescription": "Long and complex enough to resist brute-force and guessing attacks."
+      "strongDescription": "Long and complex enough to resist brute-force and guessing attacks.",
+      "veryWeak": "Very Weak",
+      "veryWeakDescription": "Extremely easy to guess. Do not use this password.",
+      "fair": "Fair",
+      "fairDescription": "Acceptable but could be improved with more length or complexity.",
+      "veryStrong": "Very Strong",
+      "veryStrongDescription": "Excellent password. Extremely difficult to crack.",
+      "crackTime": "Estimated crack time: {time}"
+    },
+    "nist": {
+      "title": "NIST SP 800-63B",
+      "compliant": "Compliant",
+      "compliantDescription": "Meets single-factor authentication requirements (15+ chars)",
+      "multiFactorOnly": "Multi-Factor Only",
+      "multiFactorOnlyDescription": "Meets multi-factor authentication requirements (8+ chars)",
+      "nonCompliant": "Non-Compliant",
+      "nonCompliantDescription": "Does not meet minimum requirements (less than 8 chars)",
+      "recommendation": "NIST recommends at least 15 characters for single-factor authentication"
+    },
+    "hibp": {
+      "title": "Breach Check",
+      "checking": "Checking breach database...",
+      "safe": "Not found in known breaches",
+      "breached": "Found in {count} data breach(es)!",
+      "breachedWarning": "This password has been exposed. Do not use it.",
+      "error": "Could not check breach status",
+      "privacyNote": "Your password is never sent. Only a partial hash is used (k-Anonymity)."
+    },
+    "tabs": {
+      "generate": "Generate",
+      "check": "Check"
+    },
+    "checker": {
+      "placeholder": "Enter a password to check...",
+      "description": "Check the strength and breach status of any password"
     }
   },
   "randomInteger": {

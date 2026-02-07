@@ -11,6 +11,8 @@ export async function POST(request: NextRequest) {
       numbers: body.numbers,
       symbols: body.symbols,
       symbolsSelection: body.symbolsSelection,
+      spaces: body.spaces ?? false,
+      unicode: body.unicode ?? false,
       length: body.length,
       excludeSimilar: body.excludeSimilar,
       noRepeat: body.noRepeat,

@@ -1,5 +1,13 @@
 import { generatePassword } from "../generate";
 
+// デフォルトオプション（テスト共通）
+const defaults = {
+  spaces: false,
+  unicode: false,
+  excludeSimilar: false,
+  noRepeat: false,
+};
+
 describe("generatePassword", () => {
   describe("basic functionality", () => {
     it("generates password of specified length", () => {
@@ -8,9 +16,8 @@ describe("generatePassword", () => {
         lowercase: true,
         numbers: true,
         symbols: false,
+        ...defaults,
         length: 16,
-        excludeSimilar: false,
-        noRepeat: false,
       });
 
       expect(password.length).toBe(16);
@@ -22,9 +29,8 @@ describe("generatePassword", () => {
         lowercase: false,
         numbers: false,
         symbols: false,
+        ...defaults,
         length: 10,
-        excludeSimilar: false,
-        noRepeat: false,
       });
 
       expect(password).toMatch(/^[A-Z]+$/);
@@ -36,9 +42,8 @@ describe("generatePassword", () => {
         lowercase: true,
         numbers: false,
         symbols: false,
+        ...defaults,
         length: 10,
-        excludeSimilar: false,
-        noRepeat: false,
       });
 
       expect(password).toMatch(/^[a-z]+$/);
@@ -50,9 +55,8 @@ describe("generatePassword", () => {
         lowercase: false,
         numbers: true,
         symbols: false,
+        ...defaults,
         length: 10,
-        excludeSimilar: false,
-        noRepeat: false,
       });
 
       expect(password).toMatch(/^[0-9]+$/);
@@ -64,9 +68,8 @@ describe("generatePassword", () => {
         lowercase: false,
         numbers: false,
         symbols: true,
+        ...defaults,
         length: 10,
-        excludeSimilar: false,
-        noRepeat: false,
       });
 
       expect(password).toMatch(/^[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]+$/);
@@ -80,13 +83,11 @@ describe("generatePassword", () => {
         lowercase: true,
         numbers: true,
         symbols: true,
+        ...defaults,
         length: 20,
-        excludeSimilar: false,
-        noRepeat: false,
       });
 
       expect(password.length).toBe(20);
-      // Should contain at least one of each type when length > 4
       expect(password).toMatch(/[A-Z]/);
       expect(password).toMatch(/[a-z]/);
       expect(password).toMatch(/[0-9]/);
@@ -94,22 +95,93 @@ describe("generatePassword", () => {
     });
 
     it("ensures each selected character type appears", () => {
-      // Run multiple times to ensure consistency
       for (let i = 0; i < 10; i++) {
         const password = generatePassword({
           uppercase: true,
           lowercase: true,
           numbers: true,
           symbols: false,
+          ...defaults,
           length: 10,
-          excludeSimilar: false,
-          noRepeat: false,
         });
 
         expect(password).toMatch(/[A-Z]/);
         expect(password).toMatch(/[a-z]/);
         expect(password).toMatch(/[0-9]/);
       }
+    });
+  });
+
+  describe("spaces option", () => {
+    it("generates password containing spaces", () => {
+      const password = generatePassword({
+        uppercase: false,
+        lowercase: true,
+        numbers: false,
+        symbols: false,
+        spaces: true,
+        unicode: false,
+        length: 50,
+        excludeSimilar: false,
+        noRepeat: false,
+      });
+
+      expect(password).toMatch(/ /);
+    });
+
+    it("generates password with only spaces", () => {
+      const password = generatePassword({
+        uppercase: false,
+        lowercase: false,
+        numbers: false,
+        symbols: false,
+        spaces: true,
+        unicode: false,
+        length: 5,
+        excludeSimilar: false,
+        noRepeat: false,
+      });
+
+      expect(password).toBe("     ");
+    });
+  });
+
+  describe("unicode option", () => {
+    it("generates password containing non-ASCII characters", () => {
+      const password = generatePassword({
+        uppercase: false,
+        lowercase: false,
+        numbers: false,
+        symbols: false,
+        spaces: false,
+        unicode: true,
+        length: 10,
+        excludeSimilar: false,
+        noRepeat: false,
+      });
+
+      // 全文字が非ASCIIであること
+      expect(password).toMatch(/^[^\x00-\x7E]+$/);
+    });
+
+    it("generates password with unicode and ascii mix", () => {
+      const password = generatePassword({
+        uppercase: true,
+        lowercase: true,
+        numbers: false,
+        symbols: false,
+        spaces: false,
+        unicode: true,
+        length: 20,
+        excludeSimilar: false,
+        noRepeat: false,
+      });
+
+      expect(password.length).toBe(20);
+      // 各種が含まれる（Unicode文字セットから最低1文字）
+      expect(password).toMatch(/[A-Z]/);
+      expect(password).toMatch(/[a-z]/);
+      expect(password).toMatch(/[^\x00-\x7E]/);
     });
   });
 
@@ -120,12 +192,11 @@ describe("generatePassword", () => {
         lowercase: true,
         numbers: true,
         symbols: true,
+        ...defaults,
         length: 100,
         excludeSimilar: true,
-        noRepeat: false,
       });
 
-      // Similar characters: I, l, O, o, 0, 1, _, |
       expect(password).not.toMatch(/[IlOo01_|]/);
     });
   });
@@ -137,8 +208,8 @@ describe("generatePassword", () => {
         lowercase: false,
         numbers: false,
         symbols: false,
+        ...defaults,
         length: 8,
-        excludeSimilar: false,
         noRepeat: true,
       });
 
@@ -153,8 +224,8 @@ describe("generatePassword", () => {
         lowercase: false,
         numbers: true,
         symbols: false,
+        ...defaults,
         length: 8,
-        excludeSimilar: false,
         noRepeat: true,
       });
 
@@ -196,12 +267,10 @@ describe("generatePassword", () => {
           greater: false,
           question: false,
         },
+        ...defaults,
         length: 20,
-        excludeSimilar: false,
-        noRepeat: false,
       });
 
-      // Only ! and @ should be present
       expect(password).toMatch(/^[!@]+$/);
     });
   });
@@ -214,9 +283,8 @@ describe("generatePassword", () => {
           lowercase: false,
           numbers: false,
           symbols: false,
+          ...defaults,
           length: 10,
-          excludeSimilar: false,
-          noRepeat: false,
         });
       }).toThrow("At least one character type must be selected");
     });
@@ -229,9 +297,8 @@ describe("generatePassword", () => {
         lowercase: false,
         numbers: false,
         symbols: false,
+        ...defaults,
         length: 1,
-        excludeSimilar: false,
-        noRepeat: false,
       });
 
       expect(password.length).toBe(1);
@@ -244,9 +311,8 @@ describe("generatePassword", () => {
         lowercase: true,
         numbers: true,
         symbols: true,
+        ...defaults,
         length: 4,
-        excludeSimilar: false,
-        noRepeat: false,
       });
 
       expect(password.length).toBe(4);
@@ -258,9 +324,8 @@ describe("generatePassword", () => {
         lowercase: true,
         numbers: true,
         symbols: true,
+        ...defaults,
         length: 2,
-        excludeSimilar: false,
-        noRepeat: false,
       });
 
       expect(password.length).toBe(2);
