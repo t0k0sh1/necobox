@@ -6,6 +6,8 @@ interface GeneratePasswordOptions {
   numbers: boolean;
   symbols: boolean;
   symbolsSelection?: Record<string, boolean>;
+  spaces: boolean;
+  unicode: boolean;
   length: number;
   excludeSimilar: boolean;
   noRepeat: boolean;
@@ -18,6 +20,8 @@ export function generatePassword(options: GeneratePasswordOptions): string {
     numbers,
     symbols,
     symbolsSelection,
+    spaces,
+    unicode,
     length,
     excludeSimilar,
     noRepeat,
@@ -75,6 +79,17 @@ export function generatePassword(options: GeneratePasswordOptions): string {
     symbolChars = symbolChars.replace(/[|_]/g, "");
   }
 
+  // スペース文字
+  const spaceChars = " ";
+
+  // Unicode文字セット（多言語の一般的な文字からランダム選択用）
+  // ラテン補助、ギリシャ文字、キリル文字、CJK統合漢字の一部を含む
+  const unicodeChars =
+    "àáâãäåæçèéêëìíîïðñòóôõöùúûüýþÿ" +
+    "αβγδεζηθικλμνξοπρστυφχψω" +
+    "абвгдежзиклмнопрстуфхцчшщ" +
+    "日月火水木金土風雨雪花鳥虫魚山川海空星";
+
   // 選択された文字種の配列を作成
   const characterSets: { name: string; chars: string }[] = [];
   if (uppercase)
@@ -83,6 +98,8 @@ export function generatePassword(options: GeneratePasswordOptions): string {
     characterSets.push({ name: "lowercase", chars: lowercaseChars });
   if (numbers) characterSets.push({ name: "numbers", chars: numberChars });
   if (symbols) characterSets.push({ name: "symbols", chars: symbolChars });
+  if (spaces) characterSets.push({ name: "spaces", chars: spaceChars });
+  if (unicode) characterSets.push({ name: "unicode", chars: unicodeChars });
 
   // 文字セットが空の場合はエラー
   if (characterSets.length === 0) {

@@ -71,6 +71,9 @@
     "includeLowercase": "小文字を含める",
     "includeNumbers": "数字を含める",
     "includeSymbols": "記号を含める",
+    "includeSpaces": "スペースを含める",
+    "includeUnicode": "Unicode文字を含める",
+    "includeUnicodeTooltip": "ラテン文字、ギリシャ文字、キリル文字、CJK漢字を追加します。NIST SP 800-63B に基づき文字空間を拡張します。",
     "selectSymbols": "記号を選択",
     "excludeSimilar": "類似文字を除外",
     "excludeSimilarTooltip": {
@@ -96,7 +99,41 @@
       "moderate": "中程度",
       "moderateDescription": "比較的安全ですが、より強力にできます。長さや種類を追加してください。",
       "strong": "強い",
-      "strongDescription": "ブルートフォースや推測攻撃に耐えられるほど長く複雑です。"
+      "strongDescription": "ブルートフォースや推測攻撃に耐えられるほど長く複雑です。",
+      "veryWeak": "非常に弱い",
+      "veryWeakDescription": "非常に推測されやすいパスワードです。使用しないでください。",
+      "fair": "普通",
+      "fairDescription": "許容範囲ですが、長さや複雑さを増やすとより安全です。",
+      "veryStrong": "非常に強い",
+      "veryStrongDescription": "優れたパスワードです。クラックは極めて困難です。",
+      "crackTime": "推定クラック時間: {time}"
+    },
+    "nist": {
+      "title": "NIST SP 800-63B",
+      "compliant": "準拠",
+      "compliantDescription": "単一要素認証の要件を満たしています（15文字以上）",
+      "multiFactorOnly": "多要素認証のみ",
+      "multiFactorOnlyDescription": "多要素認証の要件を満たしています（8文字以上）",
+      "nonCompliant": "非準拠",
+      "nonCompliantDescription": "最低要件を満たしていません（8文字未満）",
+      "recommendation": "NISTは単一要素認証に15文字以上を推奨しています"
+    },
+    "hibp": {
+      "title": "漏洩チェック",
+      "checking": "漏洩データベースを確認中...",
+      "safe": "既知の漏洩データに含まれていません",
+      "breached": "{count}件のデータ漏洩で発見されました！",
+      "breachedWarning": "このパスワードは漏洩しています。使用しないでください。",
+      "error": "漏洩状況を確認できませんでした",
+      "privacyNote": "パスワードは送信されません。部分的なハッシュのみ使用します（k-Anonymity）。"
+    },
+    "tabs": {
+      "generate": "生成",
+      "check": "チェック"
+    },
+    "checker": {
+      "placeholder": "チェックするパスワードを入力...",
+      "description": "任意のパスワードの強度と漏洩状況をチェック"
     }
   },
   "randomInteger": {

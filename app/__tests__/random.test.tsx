@@ -4,15 +4,39 @@ import RandomPasswordPage from "../[locale]/random/page";
 // Mock fetch
 global.fetch = jest.fn();
 
+// Mock zxcvbn（動的importをモック）
+jest.mock("@zxcvbn-ts/core", () => ({
+  zxcvbn: (password: string) => ({
+    score: password.length >= 16 ? 4 : password.length >= 8 ? 2 : 0,
+    crackTimesDisplay: { offlineSlowHashing1e4PerSecond: "centuries" },
+    feedback: { warning: "", suggestions: [] },
+  }),
+  zxcvbnOptions: { setOptions: jest.fn() },
+}));
+jest.mock("@zxcvbn-ts/language-common", () => ({
+  default: { adjacencyGraphs: {}, dictionary: {} },
+}));
+jest.mock("@zxcvbn-ts/language-en", () => ({
+  default: { dictionary: {}, translations: {} },
+}));
+
 describe("Random Password Page", () => {
   beforeEach(() => {
     (navigator.clipboard.writeText as jest.Mock).mockClear();
     (global.fetch as jest.Mock).mockClear();
-    (global.fetch as jest.Mock).mockResolvedValue({
-      json: () =>
-        Promise.resolve({
-          passwords: ["TestPassword123!"],
-        }),
+    (global.fetch as jest.Mock).mockImplementation((url: string) => {
+      if (typeof url === "string" && url.startsWith("/api/v1/hibp")) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve("00000:0\n"),
+        });
+      }
+      return Promise.resolve({
+        json: () =>
+          Promise.resolve({
+            passwords: ["TestPassword123!"],
+          }),
+      });
     });
   });
 
@@ -131,13 +155,14 @@ describe("Random Password Page", () => {
       expect(screen.getByText("TestPassword123!")).toBeInTheDocument();
     });
 
-    // Then check for strength indicator
+    // Then check for strength indicator (5段階: Very Weak / Weak / Fair / Strong / Very Strong)
     await waitFor(() => {
-      // Should show one of the strength levels (format: "Strong: description" or "Moderate: description" or "Weak: description")
       const strengthText =
-        screen.queryByText(/Strong:/) ||
-        screen.queryByText(/Moderate:/) ||
-        screen.queryByText(/Weak:/);
+        screen.queryByText("Very Strong") ||
+        screen.queryByText("Strong") ||
+        screen.queryByText("Fair") ||
+        screen.queryByText("Weak") ||
+        screen.queryByText("Very Weak");
       expect(strengthText).toBeInTheDocument();
     });
   });
