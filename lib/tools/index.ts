@@ -33,6 +33,7 @@ export type IconName =
   | "Search"
   | "Shield"
   | "Sparkles"
+  | "TextCursorInput"
   | "Timer"
   | "Type";
 
@@ -181,6 +182,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "Braces",
     category: "editors",
     i18nKey: "jsonEditor",
+  },
+  {
+    id: "text-processor",
+    path: "/text-processor",
+    icon: "TextCursorInput",
+    category: "editors",
+    i18nKey: "textProcessor",
   },
   // Tasks（タスク管理）
   {

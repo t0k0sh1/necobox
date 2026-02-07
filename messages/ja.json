@@ -49,6 +49,7 @@
     "cronTester": "Cron式テスター",
     "cheatsheets": "チートシート集",
     "knowledgeHub": "ノウハウ集",
+    "textProcessor": "テキスト処理",
     "sectionGenerators": "ランダム生成",
     "sectionConverters": "変換・計算",
     "sectionEditors": "データエディタ",
@@ -1206,6 +1207,75 @@
       "invalidJson": "無効なJSON形式です",
       "fileTooLarge": "ファイルサイズが大きすぎます",
       "invalidFile": "JSONファイルではありません"
+    }
+  },
+  "textProcessor": {
+    "title": "テキスト処理",
+    "description": "テキストの変換・加工を行う各種操作",
+    "breadcrumb": "テキスト処理",
+    "input": "入力",
+    "output": "出力",
+    "inputPlaceholder": "処理するテキストを入力...",
+    "outputPlaceholder": "処理結果がここに表示されます",
+    "stats": {
+      "characters": "文字数",
+      "charactersNoSpaces": "文字数（空白除外）",
+      "words": "単語数",
+      "lines": "行数",
+      "nonEmptyLines": "非空行数",
+      "bytes": "バイト数（UTF-8）"
+    },
+    "operation": {
+      "label": "操作",
+      "caseConvert": "ケース変換",
+      "wrap": "行の囲み",
+      "joinLines": "行の結合",
+      "splitToLines": "区切りで分割",
+      "removeDuplicates": "重複行除去",
+      "sortLines": "行ソート",
+      "trimLines": "行トリム",
+      "removeEmptyLines": "空行除去"
+    },
+    "case": {
+      "label": "ケースタイプ",
+      "camelCase": "camelCase",
+      "snakeCase": "snake_case",
+      "kebabCase": "kebab-case",
+      "pascalCase": "PascalCase",
+      "constantCase": "CONSTANT_CASE"
+    },
+    "sort": {
+      "label": "並び順",
+      "asc": "昇順",
+      "desc": "降順",
+      "reverse": "逆順"
+    },
+    "wrap": {
+      "label": "囲みプリセット",
+      "singleQuote": "シングルクォート ('...')",
+      "doubleQuote": "ダブルクォート (\"...\")",
+      "backtick": "バッククォート (`...`)",
+      "custom": "カスタム",
+      "prefix": "前置文字列",
+      "suffix": "後置文字列"
+    },
+    "delimiter": {
+      "label": "区切り文字",
+      "tab": "タブ",
+      "comma": "カンマ",
+      "space": "スペース"
+    },
+    "toolbar": {
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "outputToInput": "出力 → 入力",
+      "clear": "クリア"
+    },
+    "pipeline": {
+      "label": "パイプライン",
+      "addOperation": "操作を追加",
+      "clearAll": "全てクリア",
+      "removeStep": "ステップを削除"
     }
   }
 }

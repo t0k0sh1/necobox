@@ -49,6 +49,7 @@
     "cronTester": "Cron Expression Tester",
     "cheatsheets": "Cheatsheets",
     "knowledgeHub": "Knowledge Hub",
+    "textProcessor": "Text Processor",
     "sectionGenerators": "Random Generation",
     "sectionConverters": "Conversion & Calculation",
     "sectionEditors": "Data Editors",
@@ -1206,6 +1207,75 @@
       "invalidJson": "Invalid JSON format",
       "fileTooLarge": "File size is too large",
       "invalidFile": "Not a JSON file"
+    }
+  },
+  "textProcessor": {
+    "title": "Text Processor",
+    "description": "Transform and manipulate text with various operations",
+    "breadcrumb": "Text Processor",
+    "input": "Input",
+    "output": "Output",
+    "inputPlaceholder": "Enter text to process...",
+    "outputPlaceholder": "Processed text will appear here",
+    "stats": {
+      "characters": "Characters",
+      "charactersNoSpaces": "Characters (no spaces)",
+      "words": "Words",
+      "lines": "Lines",
+      "nonEmptyLines": "Non-empty lines",
+      "bytes": "Bytes (UTF-8)"
+    },
+    "operation": {
+      "label": "Operation",
+      "caseConvert": "Case Convert",
+      "wrap": "Wrap Lines",
+      "joinLines": "Join Lines",
+      "splitToLines": "Split to Lines",
+      "removeDuplicates": "Remove Duplicates",
+      "sortLines": "Sort Lines",
+      "trimLines": "Trim Lines",
+      "removeEmptyLines": "Remove Empty Lines"
+    },
+    "case": {
+      "label": "Case Type",
+      "camelCase": "camelCase",
+      "snakeCase": "snake_case",
+      "kebabCase": "kebab-case",
+      "pascalCase": "PascalCase",
+      "constantCase": "CONSTANT_CASE"
+    },
+    "sort": {
+      "label": "Sort Order",
+      "asc": "Ascending",
+      "desc": "Descending",
+      "reverse": "Reverse"
+    },
+    "wrap": {
+      "label": "Wrap Preset",
+      "singleQuote": "Single Quote ('...')",
+      "doubleQuote": "Double Quote (\"...\")",
+      "backtick": "Backtick (`...`)",
+      "custom": "Custom",
+      "prefix": "Prefix",
+      "suffix": "Suffix"
+    },
+    "delimiter": {
+      "label": "Delimiter",
+      "tab": "Tab",
+      "comma": "Comma",
+      "space": "Space"
+    },
+    "toolbar": {
+      "copy": "Copy",
+      "copied": "Copied",
+      "outputToInput": "Output → Input",
+      "clear": "Clear"
+    },
+    "pipeline": {
+      "label": "Pipeline",
+      "addOperation": "Add Operation",
+      "clearAll": "Clear All",
+      "removeStep": "Remove step"
     }
   }
 }

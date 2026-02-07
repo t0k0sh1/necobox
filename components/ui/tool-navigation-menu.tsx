@@ -48,6 +48,7 @@ import {
   Search,
   Shield,
   Sparkles,
+  TextCursorInput,
   Timer,
   Type,
 } from "lucide-react";
@@ -83,6 +84,7 @@ const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   Search,
   Shield,
   Sparkles,
+  TextCursorInput,
   Timer,
   Type,
 };
