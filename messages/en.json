@@ -705,9 +705,20 @@
     "title": "Cheatsheets",
     "description": "Developer reference cheatsheets for quick lookup",
     "breadcrumb": "Cheatsheets",
+    "categories": {
+      "webApi": "Web & API",
+      "commandLine": "Command Line",
+      "languageMarkup": "Language & Markup"
+    },
     "tabs": {
-      "httpStatus": "HTTP Status Codes",
-      "gitCommands": "Git Commands"
+      "httpStatus": "HTTP Status",
+      "gitCommands": "Git",
+      "httpHeaders": "HTTP Headers",
+      "dockerCommands": "Docker",
+      "shellCommands": "Shell",
+      "sqlSyntax": "SQL",
+      "markdownSyntax": "Markdown",
+      "mimeTypes": "MIME Types"
     },
     "httpStatus": {
       "searchPlaceholder": "Search by code, name, or description...",
@@ -746,6 +757,109 @@
         "tag": "Tag",
         "worktree": "Worktree",
         "config": "Config"
+      }
+    },
+    "httpHeaders": {
+      "searchPlaceholder": "Search by header name, description, or example...",
+      "noResults": "No matching headers found",
+      "example": "Example",
+      "copy": "Copy",
+      "copied": "Copied",
+      "viewOnMdn": "View on MDN",
+      "categories": {
+        "request_general": "Request (General)",
+        "response_general": "Response (General)",
+        "caching": "Caching",
+        "security": "Security",
+        "cors": "CORS",
+        "content_negotiation": "Content Negotiation",
+        "authentication": "Authentication"
+      }
+    },
+    "dockerCommands": {
+      "searchPlaceholder": "Search by command, option, or description...",
+      "noResults": "No matching commands found",
+      "options": "Options",
+      "copy": "Copy",
+      "copied": "Copied",
+      "categories": {
+        "container": "Container",
+        "image": "Image",
+        "network": "Network",
+        "volume": "Volume",
+        "compose": "Compose",
+        "system": "System",
+        "registry": "Registry"
+      }
+    },
+    "shellCommands": {
+      "searchPlaceholder": "Search by command, option, or description...",
+      "noResults": "No matching commands found",
+      "options": "Options",
+      "copy": "Copy",
+      "copied": "Copied",
+      "categories": {
+        "file_operations": "File Operations",
+        "text_processing": "Text Processing",
+        "process_management": "Process Management",
+        "permissions": "Permissions",
+        "networking": "Networking",
+        "compression": "Compression",
+        "system_info": "System Info",
+        "pipe_redirect": "Pipe & Redirect"
+      }
+    },
+    "sqlSyntax": {
+      "searchPlaceholder": "Search by syntax, name, or description...",
+      "noResults": "No matching syntax found",
+      "example": "Example",
+      "notes": "Note",
+      "copy": "Copy",
+      "copied": "Copied",
+      "categories": {
+        "select": "SELECT",
+        "join": "JOIN",
+        "aggregate": "Aggregate",
+        "subquery": "Subquery & CTE",
+        "window_function": "Window Functions",
+        "dml": "DML (Insert/Update/Delete)",
+        "ddl": "DDL (Create/Alter/Drop)",
+        "constraint": "Constraints"
+      }
+    },
+    "markdownSyntax": {
+      "searchPlaceholder": "Search by syntax or description...",
+      "noResults": "No matching syntax found",
+      "source": "Source",
+      "preview": "HTML Output",
+      "copy": "Copy",
+      "copied": "Copied",
+      "categories": {
+        "headings": "Headings",
+        "emphasis": "Emphasis",
+        "lists": "Lists",
+        "links_images": "Links & Images",
+        "code": "Code",
+        "tables": "Tables",
+        "blockquotes": "Blockquotes & Rules",
+        "gfm_extensions": "GFM Extensions"
+      }
+    },
+    "mimeTypes": {
+      "searchPlaceholder": "Search by MIME type, extension, or description...",
+      "noResults": "No matching MIME types found",
+      "extensions": "Extensions",
+      "commonUsage": "Common Usage",
+      "copy": "Copy",
+      "copied": "Copied",
+      "categories": {
+        "text": "text/*",
+        "application": "application/*",
+        "image": "image/*",
+        "audio": "audio/*",
+        "video": "video/*",
+        "font": "font/*",
+        "multipart": "multipart/*"
       }
     }
   },
