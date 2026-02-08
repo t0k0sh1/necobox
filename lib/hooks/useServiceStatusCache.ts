@@ -34,13 +34,26 @@ function loadCache(): ServiceStatusCache | null {
   }
 }
 
+function isServiceStatusInfoLike(value: unknown): value is ServiceStatusInfo {
+  if (value === null || typeof value !== "object") return false;
+  const v = value as { id?: unknown; category?: unknown; status?: unknown };
+  return (
+    typeof v.id === "string" &&
+    typeof v.category === "string" &&
+    typeof v.status === "string"
+  );
+}
+
 function isCacheValid(cache: ServiceStatusCache): boolean {
   const entries = Object.values(cache);
   if (entries.length === 0) return false;
   const now = Date.now();
-  return entries.every(
-    (entry) => typeof entry.cachedAt === "number" && now - entry.cachedAt < CACHE_TTL_MS
-  );
+  return entries.every((entry) => {
+    if (typeof entry.cachedAt !== "number" || now - entry.cachedAt >= CACHE_TTL_MS) {
+      return false;
+    }
+    return isServiceStatusInfoLike(entry.data);
+  });
 }
 
 function saveToCache(statuses: ServiceStatusInfo[]): void {
@@ -75,6 +88,7 @@ export function useServiceStatusCache(): UseServiceStatusCacheReturn {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const initializedRef = useRef(false);
+  const refreshingRef = useRef(false);
 
   const fetchAllFromApi = useCallback(async () => {
     try {
@@ -110,8 +124,14 @@ export function useServiceStatusCache(): UseServiceStatusCacheReturn {
   }, [fetchAllFromApi]);
 
   const handleRefreshAll = useCallback(async () => {
+    if (refreshingRef.current) return;
+    refreshingRef.current = true;
     setRefreshing(true);
-    await fetchAllFromApi();
+    try {
+      await fetchAllFromApi();
+    } finally {
+      refreshingRef.current = false;
+    }
   }, [fetchAllFromApi]);
 
   const handleRefreshService = useCallback(

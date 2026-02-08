@@ -241,6 +241,90 @@ describe("useServiceStatusCache", () => {
     expect(global.fetch).toHaveBeenCalledWith("/api/v1/service-status");
   });
 
+  it("不正なスキーマのキャッシュ → APIから取得", async () => {
+    // data が文字列など不正な形式
+    const malformedCache = JSON.stringify({
+      foo: { cachedAt: Date.now(), data: "not-an-object" },
+    });
+    localStorageMock.getItem.mockReturnValue(malformedCache);
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ statuses: mockStatuses }),
+    });
+
+    const { result } = renderHook(() => useServiceStatusCache());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith("/api/v1/service-status");
+  });
+
+  it("data に必須フィールドが欠けたキャッシュ → APIから取得", async () => {
+    const incompleteCache = JSON.stringify({
+      aws: { cachedAt: Date.now(), data: { id: "aws", name: "AWS" } }, // category, status が欠落
+    });
+    localStorageMock.getItem.mockReturnValue(incompleteCache);
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ statuses: mockStatuses }),
+    });
+
+    const { result } = renderHook(() => useServiceStatusCache());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith("/api/v1/service-status");
+  });
+
+  it("handleRefreshAll の二重呼び出しを防止する", async () => {
+    localStorageMock.getItem.mockReturnValue(createValidCache());
+
+    let resolvePromise: (value: unknown) => void;
+    (global.fetch as jest.Mock).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvePromise = resolve;
+        })
+    );
+
+    const { result } = renderHook(() => useServiceStatusCache());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    // 1回目の refreshAll を開始（未完了）
+    let refreshPromise1: Promise<void>;
+    act(() => {
+      refreshPromise1 = result.current.handleRefreshAll();
+    });
+
+    // 2回目の refreshAll を呼び出し（ガードにより無視されるべき）
+    let refreshPromise2: Promise<void>;
+    act(() => {
+      refreshPromise2 = result.current.handleRefreshAll();
+    });
+
+    // 1回目を解決
+    await act(async () => {
+      resolvePromise!({
+        ok: true,
+        json: () => Promise.resolve({ statuses: mockStatuses }),
+      });
+      await refreshPromise1!;
+      await refreshPromise2!;
+    });
+
+    // fetch は1回だけ呼ばれる
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
   it("refreshing 状態が正しく遷移する", async () => {
     localStorageMock.getItem.mockReturnValue(createValidCache());
 
