@@ -344,16 +344,24 @@
       "unknown": "Unknown"
     },
     "categories": {
+      "all": "All",
       "cloud-vendor": "Cloud Vendors",
       "file-storage": "File Storage",
       "dev-tools": "Development Tools",
       "communication": "Communication",
       "hosting-cdn": "Hosting/CDN",
+      "ai-ml": "AI / ML",
+      "design-tools": "Design Tools",
       "other": "Other"
     },
     "scheduledMaintenance": "Scheduled Maintenance",
     "maintenanceFrom": "From: {date}",
-    "maintenanceUntil": "Until: {date}"
+    "maintenanceUntil": "Until: {date}",
+    "responseTime": "{ms}ms",
+    "lastChecked": "Last checked: {time}",
+    "components": "Components",
+    "componentsCount": "{ok}/{total} normal",
+    "viewDownDetector": "View on DownDetector"
   },
   "textViewer": {
     "title": "Text File Viewer",
