@@ -294,7 +294,10 @@ export function ServiceStatusCard({
       {service.components && service.components.length > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
           <button
+            type="button"
             onClick={() => setIsComponentsOpen(!isComponentsOpen)}
+            aria-expanded={isComponentsOpen}
+            aria-controls="components-list"
             className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors w-full"
           >
             {isComponentsOpen ? (
@@ -311,7 +314,7 @@ export function ServiceStatusCard({
             </span>
           </button>
           {isComponentsOpen && (
-            <div className="mt-2 space-y-1 pl-5">
+            <div id="components-list" className="mt-2 space-y-1 pl-5">
               {service.components.map((component) => (
                 <div
                   key={component.name}

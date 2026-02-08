@@ -20,8 +20,9 @@ export function CategoryChips({
   const t = useTranslations("serviceStatus");
 
   return (
-    <div className="md:hidden flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
+    <div className="md:hidden flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
       <button
+        type="button"
         onClick={() => onSelect("all")}
         className={cn(
           "flex-shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
@@ -34,6 +35,7 @@ export function CategoryChips({
       </button>
       {categories.map(({ category, count }) => (
         <button
+          type="button"
           key={category}
           onClick={() => onSelect(category)}
           className={cn(

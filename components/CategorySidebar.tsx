@@ -22,6 +22,7 @@ export function CategorySidebar({
   return (
     <aside className="hidden md:flex w-56 flex-shrink-0 flex-col gap-1 border-r border-gray-200 dark:border-gray-800 pr-4 overflow-y-auto">
       <button
+        type="button"
         onClick={() => onSelect("all")}
         className={cn(
           "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-left",
@@ -37,6 +38,7 @@ export function CategorySidebar({
       </button>
       {categories.map(({ category, count }) => (
         <button
+          type="button"
           key={category}
           onClick={() => onSelect(category)}
           className={cn(
