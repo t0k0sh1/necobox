@@ -24,7 +24,6 @@ const MOCK_CONFIG: KnowledgeConfig = {
           noteJa: "値を指定",
         },
       ],
-      hasRelatedCheatsheet: true,
       tags: ["tagA", "tagB"],
     },
     {
@@ -188,42 +187,66 @@ describe("KnowledgeTemplate", () => {
     expect(codeEl.parentElement?.tagName).toBe("PRE");
   });
 
-  it("shows cheatsheet link for items with hasRelatedCheatsheet", () => {
-    render(<KnowledgeTemplate config={MOCK_CONFIG} />);
-
-    const button = screen.getByText("How to do thing A").closest("button")!;
-    fireEvent.click(button);
-
-    expect(
-      screen.getByText("View related commands in Cheatsheets →")
-    ).toBeInTheDocument();
-  });
-
-  it("does not show cheatsheet link for items without hasRelatedCheatsheet", () => {
-    render(<KnowledgeTemplate config={MOCK_CONFIG} />);
-
-    const button = screen.getByText("How to do thing B").closest("button")!;
-    fireEvent.click(button);
-
-    // Item B has no hasRelatedCheatsheet, so no link
-    const links = screen.queryAllByText(
-      "View related commands in Cheatsheets →"
-    );
-    expect(links.length).toBe(0);
-  });
-
-  it("uses custom cheatsheetPath", () => {
+  it("renders warning banner when item has warning", () => {
     const config: KnowledgeConfig = {
-      ...MOCK_CONFIG,
-      cheatsheetPath: "/custom-path",
+      items: [
+        {
+          id: "warn-item",
+          situationEn: "Dangerous operation",
+          situationJa: "危険な操作",
+          warningEn: "This rewrites history.",
+          warningJa: "履歴を書き換えます。",
+          explanationEn: "Be careful.",
+          explanationJa: "注意してください。",
+          snippets: [
+            { labelEn: "Command", labelJa: "コマンド", code: "git reset --hard" },
+          ],
+          tags: ["test"],
+        },
+      ],
     };
     render(<KnowledgeTemplate config={config} />);
 
+    const button = screen.getByText("Dangerous operation").closest("button")!;
+    fireEvent.click(button);
+
+    expect(screen.getByText("This rewrites history.")).toBeInTheDocument();
+  });
+
+  it("does not render warning banner when item has no warning", () => {
+    render(<KnowledgeTemplate config={MOCK_CONFIG} />);
+
     const button = screen.getByText("How to do thing A").closest("button")!;
     fireEvent.click(button);
 
-    const link = screen.getByText("View related commands in Cheatsheets →");
-    expect(link.closest("a")).toHaveAttribute("href", "/custom-path");
+    // MOCK_CONFIG の item-1 には warning がないため、警告バナーは表示されない
+    expect(screen.queryByText("This rewrites history.")).not.toBeInTheDocument();
+  });
+
+  it("renders backtick-wrapped text as inline code elements", () => {
+    const config: KnowledgeConfig = {
+      items: [
+        {
+          id: "code-item",
+          situationEn: "Using inline code",
+          situationJa: "インラインコードを使う",
+          explanationEn: "Use `git switch` to change branches.",
+          explanationJa: "`git switch` でブランチを切り替えます。",
+          snippets: [
+            { labelEn: "Switch", labelJa: "切り替え", code: "git switch main" },
+          ],
+          tags: ["test"],
+        },
+      ],
+    };
+    render(<KnowledgeTemplate config={config} />);
+
+    const button = screen.getByText("Using inline code").closest("button")!;
+    fireEvent.click(button);
+
+    // バッククォートで囲まれた部分が <code> 要素になっている
+    const codeEl = screen.getByText("git switch");
+    expect(codeEl.tagName).toBe("CODE");
   });
 
   describe("generics are not treated as placeholders", () => {
