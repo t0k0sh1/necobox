@@ -344,16 +344,24 @@
       "unknown": "取得不可"
     },
     "categories": {
+      "all": "すべて",
       "cloud-vendor": "クラウドベンダー",
       "file-storage": "ファイルストレージ",
       "dev-tools": "開発ツール",
       "communication": "コミュニケーション",
       "hosting-cdn": "ホスティング/CDN",
+      "ai-ml": "AI / ML",
+      "design-tools": "デザインツール",
       "other": "その他"
     },
     "scheduledMaintenance": "定期メンテナンス予定",
     "maintenanceFrom": "開始: {date}",
-    "maintenanceUntil": "終了: {date}"
+    "maintenanceUntil": "終了: {date}",
+    "responseTime": "{ms}ms",
+    "lastChecked": "最終確認: {time}",
+    "components": "コンポーネント",
+    "componentsCount": "{ok}/{total} 正常",
+    "viewDownDetector": "DownDetectorで確認"
   },
   "textViewer": {
     "title": "テキストファイルビューア",

@@ -13,12 +13,19 @@ export type ServiceCategory =
   | "dev-tools"
   | "communication"
   | "hosting-cdn"
+  | "ai-ml"
+  | "design-tools"
   | "other";
 
 export interface ScheduledMaintenance {
   name: string;
   scheduled_for: string; // ISO 8601形式
   scheduled_until?: string; // ISO 8601形式、オプショナル
+}
+
+export interface ServiceComponent {
+  name: string;
+  status: string;
 }
 
 export interface ServiceStatusInfo {
@@ -30,6 +37,9 @@ export interface ServiceStatusInfo {
   statusUrl: string;
   lastChecked?: Date;
   scheduledMaintenances?: ScheduledMaintenance[];
+  responseTimeMs?: number;
+  components?: ServiceComponent[];
+  downdetectorUrl?: string;
 }
 
 interface ServiceConfig {
@@ -38,7 +48,13 @@ interface ServiceConfig {
   category: ServiceCategory;
   url: string;
   statusUrl: string;
+  downdetectorSlug?: string;
   fetchFn: () => Promise<ServiceStatus>;
+  fetchRichFn?: () => Promise<{
+    status: ServiceStatus;
+    components?: ServiceComponent[];
+    scheduledMaintenances?: ScheduledMaintenance[];
+  }>;
 }
 
 // タイムアウト付きfetch
@@ -505,7 +521,7 @@ function determineStatuspageStatus(data: {
   return "operational";
 }
 
-// Statuspage.ioベースのサービス（Box, Dropbox, Vercel, Netlify, Cloudflare）
+// Statuspage.ioベースのサービス（基本ステータス取得）
 async function fetchStatuspageStatus(url: string): Promise<ServiceStatus> {
   try {
     const response = await fetchWithTimeout(url);
@@ -541,15 +557,16 @@ async function fetchStatuspageStatus(url: string): Promise<ServiceStatus> {
   }
 }
 
-// Statuspage.ioベースのサービスからステータスとメンテナンス情報を取得（Box、Dropbox用）
-async function fetchStatuspageStatusAndMaintenances(url: string): Promise<{
+// Statuspage.ioベースのリッチ取得（コンポーネント情報・メンテナンス情報含む）
+async function fetchStatuspageStatusRich(url: string): Promise<{
   status: ServiceStatus;
-  scheduledMaintenances: ScheduledMaintenance[];
+  components?: ServiceComponent[];
+  scheduledMaintenances?: ScheduledMaintenance[];
 }> {
   try {
     const response = await fetchWithTimeout(url);
     if (!response.ok) {
-      return { status: "unknown", scheduledMaintenances: [] };
+      return { status: "unknown" };
     }
 
     const contentType = response.headers.get("content-type");
@@ -557,7 +574,7 @@ async function fetchStatuspageStatusAndMaintenances(url: string): Promise<{
       console.error(
         `Statuspage status fetch error: Invalid content-type: ${contentType} for ${url}`
       );
-      return { status: "unknown", scheduledMaintenances: [] };
+      return { status: "unknown" };
     }
 
     const text = await response.text();
@@ -569,13 +586,28 @@ async function fetchStatuspageStatusAndMaintenances(url: string): Promise<{
         `Statuspage status fetch error: Failed to parse JSON from ${url}`,
         parseError
       );
-      return { status: "unknown", scheduledMaintenances: [] };
+      return { status: "unknown" };
     }
 
-    // ステータス判定（ヘルパー関数を使用）
+    // ステータス判定
     const status = determineStatuspageStatus(data);
 
-    // メンテナンス情報を取得（エラーが発生してもステータスは返す）
+    // コンポーネント情報を抽出
+    interface StatuspageComponent {
+      name?: string;
+      status?: string;
+      group?: boolean;
+      group_id?: string | null;
+    }
+    const rawComponents = (data.components || []) as StatuspageComponent[];
+    const components: ServiceComponent[] = rawComponents
+      .filter((c) => !c.group && c.name)
+      .map((c) => ({
+        name: c.name!,
+        status: c.status || "unknown",
+      }));
+
+    // メンテナンス情報を取得
     let futureMaintenances: ScheduledMaintenance[] = [];
     try {
       interface StatuspageMaintenance {
@@ -584,40 +616,19 @@ async function fetchStatuspageStatusAndMaintenances(url: string): Promise<{
         scheduled_for?: string;
         scheduled_until?: string;
       }
-
-      // scheduled_maintenancesが存在しない場合も正常に処理
       const scheduledMaintenances = (data.scheduled_maintenances ||
         []) as StatuspageMaintenance[];
       const now = new Date();
 
-      // 未来日のメンテナンスのみをフィルタリング
       futureMaintenances = scheduledMaintenances
         .filter((maintenance) => {
           try {
-            // statusが"scheduled"のもののみを対象
-            if (maintenance.status !== "scheduled") {
-              return false;
-            }
-
-            // scheduled_forが現在時刻より後のもののみ
-            if (!maintenance.scheduled_for) {
-              return false;
-            }
-
+            if (maintenance.status !== "scheduled") return false;
+            if (!maintenance.scheduled_for) return false;
             const scheduledFor = new Date(maintenance.scheduled_for);
-            // 無効な日付の場合は除外
-            if (isNaN(scheduledFor.getTime())) {
-              return false;
-            }
-
+            if (isNaN(scheduledFor.getTime())) return false;
             return scheduledFor > now;
-          } catch (filterError) {
-            // 個々のメンテナンスのフィルタリングでエラーが発生した場合は除外
-            console.error(
-              "Error filtering maintenance:",
-              maintenance,
-              filterError
-            );
+          } catch {
             return false;
           }
         })
@@ -627,18 +638,21 @@ async function fetchStatuspageStatusAndMaintenances(url: string): Promise<{
           scheduled_until: maintenance.scheduled_until,
         }));
     } catch (maintenanceError) {
-      // メンテナンス情報の取得・処理でエラーが発生した場合もステータスは返す
       console.error(
-        "Error processing maintenance information (status will still be returned):",
+        "Error processing maintenance information:",
         maintenanceError
       );
-      futureMaintenances = [];
     }
 
-    return { status, scheduledMaintenances: futureMaintenances };
+    return {
+      status,
+      components: components.length > 0 ? components : undefined,
+      scheduledMaintenances:
+        futureMaintenances.length > 0 ? futureMaintenances : undefined,
+    };
   } catch (error) {
-    console.error("Statuspage status fetch error:", error);
-    return { status: "unknown", scheduledMaintenances: [] };
+    console.error("Statuspage rich fetch error:", error);
+    return { status: "unknown" };
   }
 }
 
@@ -650,6 +664,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "cloud-vendor",
     url: "https://aws.amazon.com",
     statusUrl: "https://status.aws.amazon.com",
+    downdetectorSlug: "aws-amazon-web-services",
     fetchFn: fetchAWSStatus,
   },
   {
@@ -658,6 +673,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "cloud-vendor",
     url: "https://azure.microsoft.com",
     statusUrl: "https://status.azure.com",
+    downdetectorSlug: "windows-azure",
     fetchFn: fetchAzureStatus,
   },
   {
@@ -666,6 +682,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "cloud-vendor",
     url: "https://cloud.google.com",
     statusUrl: "https://status.cloud.google.com",
+    downdetectorSlug: "google-cloud",
     fetchFn: fetchGCPStatus,
   },
   {
@@ -674,8 +691,11 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "file-storage",
     url: "https://www.box.com",
     statusUrl: "https://status.box.com",
+    downdetectorSlug: "box",
     fetchFn: () =>
       fetchStatuspageStatus("https://status.box.com/api/v2/summary.json"),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich("https://status.box.com/api/v2/summary.json"),
   },
   {
     id: "dropbox",
@@ -683,8 +703,15 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "file-storage",
     url: "https://www.dropbox.com",
     statusUrl: "https://status.dropbox.com",
+    downdetectorSlug: "dropbox",
     fetchFn: () =>
-      fetchStatuspageStatus("https://status.dropbox.com/api/v2/summary.json"),
+      fetchStatuspageStatus(
+        "https://status.dropbox.com/api/v2/summary.json"
+      ),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
+        "https://status.dropbox.com/api/v2/summary.json"
+      ),
   },
   {
     id: "github",
@@ -692,7 +719,40 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "dev-tools",
     url: "https://github.com",
     statusUrl: "https://www.githubstatus.com",
+    downdetectorSlug: "github",
     fetchFn: fetchGitHubStatus,
+  },
+  {
+    id: "circleci",
+    name: "CircleCI",
+    category: "dev-tools",
+    url: "https://circleci.com",
+    statusUrl: "https://status.circleci.com",
+    downdetectorSlug: "circleci",
+    fetchFn: () =>
+      fetchStatuspageStatus(
+        "https://status.circleci.com/api/v2/summary.json"
+      ),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
+        "https://status.circleci.com/api/v2/summary.json"
+      ),
+  },
+  {
+    id: "jira",
+    name: "Jira",
+    category: "dev-tools",
+    url: "https://www.atlassian.com/software/jira",
+    statusUrl: "https://jira-software.status.atlassian.com",
+    downdetectorSlug: "jira",
+    fetchFn: () =>
+      fetchStatuspageStatus(
+        "https://jira-software.status.atlassian.com/api/v2/summary.json"
+      ),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
+        "https://jira-software.status.atlassian.com/api/v2/summary.json"
+      ),
   },
   {
     id: "slack",
@@ -700,6 +760,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "communication",
     url: "https://slack.com",
     statusUrl: "https://slack-status.com",
+    downdetectorSlug: "slack",
     fetchFn: fetchSlackStatus,
   },
   {
@@ -708,8 +769,45 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "communication",
     url: "https://zoom.us",
     statusUrl: "https://status.zoom.us",
+    downdetectorSlug: "zoom",
     fetchFn: () =>
       fetchStatuspageStatus("https://status.zoom.us/api/v2/summary.json"),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
+        "https://status.zoom.us/api/v2/summary.json"
+      ),
+  },
+  {
+    id: "discord",
+    name: "Discord",
+    category: "communication",
+    url: "https://discord.com",
+    statusUrl: "https://discordstatus.com",
+    downdetectorSlug: "discord",
+    fetchFn: () =>
+      fetchStatuspageStatus(
+        "https://discordstatus.com/api/v2/summary.json"
+      ),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
+        "https://discordstatus.com/api/v2/summary.json"
+      ),
+  },
+  {
+    id: "notion",
+    name: "Notion",
+    category: "communication",
+    url: "https://www.notion.so",
+    statusUrl: "https://www.notion-status.com",
+    downdetectorSlug: "notion",
+    fetchFn: () =>
+      fetchStatuspageStatus(
+        "https://www.notion-status.com/api/v2/summary.json"
+      ),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
+        "https://www.notion-status.com/api/v2/summary.json"
+      ),
   },
   {
     id: "vercel",
@@ -717,8 +815,13 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "hosting-cdn",
     url: "https://vercel.com",
     statusUrl: "https://www.vercel-status.com",
+    downdetectorSlug: "vercel",
     fetchFn: () =>
       fetchStatuspageStatus(
+        "https://www.vercel-status.com/api/v2/summary.json"
+      ),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
         "https://www.vercel-status.com/api/v2/summary.json"
       ),
   },
@@ -728,8 +831,13 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "hosting-cdn",
     url: "https://www.netlify.com",
     statusUrl: "https://www.netlifystatus.com",
+    downdetectorSlug: "netlify",
     fetchFn: () =>
       fetchStatuspageStatus(
+        "https://www.netlifystatus.com/api/v2/summary.json"
+      ),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
         "https://www.netlifystatus.com/api/v2/summary.json"
       ),
   },
@@ -739,9 +847,62 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "hosting-cdn",
     url: "https://www.cloudflare.com",
     statusUrl: "https://www.cloudflarestatus.com",
+    downdetectorSlug: "cloudflare",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://www.cloudflarestatus.com/api/v2/summary.json"
+      ),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
+        "https://www.cloudflarestatus.com/api/v2/summary.json"
+      ),
+  },
+  {
+    id: "openai",
+    name: "OpenAI",
+    category: "ai-ml",
+    url: "https://openai.com",
+    statusUrl: "https://status.openai.com",
+    downdetectorSlug: "openai",
+    fetchFn: () =>
+      fetchStatuspageStatus(
+        "https://status.openai.com/api/v2/summary.json"
+      ),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
+        "https://status.openai.com/api/v2/summary.json"
+      ),
+  },
+  {
+    id: "anthropic",
+    name: "Anthropic (Claude)",
+    category: "ai-ml",
+    url: "https://www.anthropic.com",
+    statusUrl: "https://status.anthropic.com",
+    downdetectorSlug: "anthropic",
+    fetchFn: () =>
+      fetchStatuspageStatus(
+        "https://status.anthropic.com/api/v2/summary.json"
+      ),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
+        "https://status.anthropic.com/api/v2/summary.json"
+      ),
+  },
+  {
+    id: "figma",
+    name: "Figma",
+    category: "design-tools",
+    url: "https://www.figma.com",
+    statusUrl: "https://status.figma.com",
+    downdetectorSlug: "figma",
+    fetchFn: () =>
+      fetchStatuspageStatus(
+        "https://status.figma.com/api/v2/summary.json"
+      ),
+    fetchRichFn: () =>
+      fetchStatuspageStatusRich(
+        "https://status.figma.com/api/v2/summary.json"
       ),
   },
   {
@@ -750,6 +911,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "other",
     url: "https://stripe.com",
     statusUrl: "https://status.stripe.com",
+    downdetectorSlug: "stripe",
     fetchFn: fetchStripeStatus,
   },
 ];
@@ -757,68 +919,23 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
 // 全サービスのステータスを取得
 export async function fetchAllServiceStatuses(): Promise<ServiceStatusInfo[]> {
   const promises = SERVICE_CONFIGS.map(async (config) => {
+    const startTime = performance.now();
     try {
-      // BoxとDropboxの場合はメンテナンス情報も取得
-      if (config.id === "box" || config.id === "dropbox") {
-        return await fetchServiceStatusWithMaintenance(config);
+      let status: ServiceStatus;
+      let components: ServiceComponent[] | undefined;
+      let scheduledMaintenances: ScheduledMaintenance[] | undefined;
+
+      if (config.fetchRichFn) {
+        const result = await config.fetchRichFn();
+        status = result.status;
+        components = result.components;
+        scheduledMaintenances = result.scheduledMaintenances;
       } else {
-        const status = await config.fetchFn();
-        return {
-          id: config.id,
-          name: config.name,
-          category: config.category,
-          status,
-          url: config.url,
-          statusUrl: config.statusUrl,
-          lastChecked: new Date(),
-        };
+        status = await config.fetchFn();
       }
-    } catch (error) {
-      console.error(`Error fetching status for ${config.id}:`, error);
-      return {
-        id: config.id,
-        name: config.name,
-        category: config.category,
-        status: "unknown" as ServiceStatus,
-        url: config.url,
-        statusUrl: config.statusUrl,
-        lastChecked: new Date(),
-      };
-    }
-  });
 
-  return Promise.all(promises);
-}
+      const responseTimeMs = Math.round(performance.now() - startTime);
 
-// Box/Dropboxサービスのステータスとメンテナンス情報を取得するヘルパー関数
-async function fetchServiceStatusWithMaintenance(
-  config: ServiceConfig
-): Promise<ServiceStatusInfo> {
-  const url =
-    config.id === "box"
-      ? "https://status.box.com/api/v2/summary.json"
-      : "https://status.dropbox.com/api/v2/summary.json";
-  try {
-    const { status, scheduledMaintenances } =
-      await fetchStatuspageStatusAndMaintenances(url);
-    return {
-      id: config.id,
-      name: config.name,
-      category: config.category,
-      status,
-      url: config.url,
-      statusUrl: config.statusUrl,
-      lastChecked: new Date(),
-      scheduledMaintenances: scheduledMaintenances || [],
-    };
-  } catch (maintenanceError) {
-    // メンテナンス情報取得でエラーが発生した場合も、ステータス取得を試みる
-    console.error(
-      `Error fetching maintenance for ${config.id}, attempting status fetch:`,
-      maintenanceError
-    );
-    try {
-      const status = await config.fetchFn();
       return {
         id: config.id,
         name: config.name,
@@ -827,13 +944,33 @@ async function fetchServiceStatusWithMaintenance(
         url: config.url,
         statusUrl: config.statusUrl,
         lastChecked: new Date(),
-        scheduledMaintenances: [],
+        responseTimeMs,
+        components,
+        scheduledMaintenances,
+        downdetectorUrl: config.downdetectorSlug
+          ? `https://downdetector.com/status/${config.downdetectorSlug}/`
+          : undefined,
       };
-    } catch (statusError) {
-      // ステータス取得も失敗した場合
-      throw statusError;
+    } catch (error) {
+      console.error(`Error fetching status for ${config.id}:`, error);
+      const responseTimeMs = Math.round(performance.now() - startTime);
+      return {
+        id: config.id,
+        name: config.name,
+        category: config.category,
+        status: "unknown" as ServiceStatus,
+        url: config.url,
+        statusUrl: config.statusUrl,
+        lastChecked: new Date(),
+        responseTimeMs,
+        downdetectorUrl: config.downdetectorSlug
+          ? `https://downdetector.com/status/${config.downdetectorSlug}/`
+          : undefined,
+      };
     }
-  }
+  });
+
+  return Promise.all(promises);
 }
 
 // 特定のサービスのステータスを取得
@@ -845,24 +982,41 @@ export async function fetchServiceStatus(
     return null;
   }
 
+  const startTime = performance.now();
   try {
-    // BoxとDropboxの場合はメンテナンス情報も取得
-    if (config.id === "box" || config.id === "dropbox") {
-      return await fetchServiceStatusWithMaintenance(config);
+    let status: ServiceStatus;
+    let components: ServiceComponent[] | undefined;
+    let scheduledMaintenances: ScheduledMaintenance[] | undefined;
+
+    if (config.fetchRichFn) {
+      const result = await config.fetchRichFn();
+      status = result.status;
+      components = result.components;
+      scheduledMaintenances = result.scheduledMaintenances;
     } else {
-      const status = await config.fetchFn();
-      return {
-        id: config.id,
-        name: config.name,
-        category: config.category,
-        status,
-        url: config.url,
-        statusUrl: config.statusUrl,
-        lastChecked: new Date(),
-      };
+      status = await config.fetchFn();
     }
+
+    const responseTimeMs = Math.round(performance.now() - startTime);
+
+    return {
+      id: config.id,
+      name: config.name,
+      category: config.category,
+      status,
+      url: config.url,
+      statusUrl: config.statusUrl,
+      lastChecked: new Date(),
+      responseTimeMs,
+      components,
+      scheduledMaintenances,
+      downdetectorUrl: config.downdetectorSlug
+        ? `https://downdetector.com/status/${config.downdetectorSlug}/`
+        : undefined,
+    };
   } catch (error) {
     console.error(`Error fetching status for ${serviceId}:`, error);
+    const responseTimeMs = Math.round(performance.now() - startTime);
     return {
       id: config.id,
       name: config.name,
@@ -871,6 +1025,10 @@ export async function fetchServiceStatus(
       url: config.url,
       statusUrl: config.statusUrl,
       lastChecked: new Date(),
+      responseTimeMs,
+      downdetectorUrl: config.downdetectorSlug
+        ? `https://downdetector.com/status/${config.downdetectorSlug}/`
+        : undefined,
     };
   }
 }

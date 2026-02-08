@@ -6,8 +6,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatRelativeTime } from "@/lib/utils/relative-time";
+import { getServiceIcon } from "@/lib/utils/service-icons";
 import { ServiceStatusInfo } from "@/lib/utils/service-status";
-import { ExternalLink, Flag, RefreshCw } from "lucide-react";
+import {
+  Activity,
+  ChevronDown,
+  ChevronRight,
+  ExternalLink,
+  Flag,
+  RefreshCw,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
@@ -23,6 +32,7 @@ export function ServiceStatusCard({
   const t = useTranslations("serviceStatus");
   const locale = useLocale();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isComponentsOpen, setIsComponentsOpen] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -37,6 +47,19 @@ export function ServiceStatusCard({
     }
   };
 
+  const getBorderColor = (status: string) => {
+    switch (status) {
+      case "operational":
+        return "border-l-green-500";
+      case "degraded":
+        return "border-l-orange-500";
+      case "down":
+        return "border-l-red-500";
+      default:
+        return "border-l-gray-400";
+    }
+  };
+
   const getStatusText = (status: string) => {
     switch (status) {
       case "operational":
@@ -48,6 +71,13 @@ export function ServiceStatusCard({
       default:
         return t("status.unknown");
     }
+  };
+
+  const getResponseTimeColor = (ms?: number) => {
+    if (ms === undefined) return "text-gray-400";
+    if (ms < 200) return "text-green-600 dark:text-green-400";
+    if (ms < 500) return "text-orange-600 dark:text-orange-400";
+    return "text-red-600 dark:text-red-400";
   };
 
   const handleRefresh = async () => {
@@ -71,15 +101,10 @@ export function ServiceStatusCard({
 
     const now = new Date();
 
-    // 各メンテナンスにパース済み日付を追加
     const maintenancesWithDate = service.scheduledMaintenances
       .map((m) => {
         const scheduledFor = new Date(m.scheduled_for);
-        // 無効な日付の場合は除外
         if (isNaN(scheduledFor.getTime())) {
-          console.warn(
-            `[ServiceStatusCard] Invalid scheduled_for date: "${m.scheduled_for}" in service "${service.id}". Entry will be ignored.`
-          );
           return null;
         }
         return { maintenance: m, scheduledFor };
@@ -93,7 +118,6 @@ export function ServiceStatusCard({
         } => item !== null
       );
 
-    // 未来日のメンテナンスのみをフィルタリング
     const futureMaintenances = maintenancesWithDate.filter(
       (m) => m.scheduledFor > now
     );
@@ -102,17 +126,14 @@ export function ServiceStatusCard({
       return null;
     }
 
-    // 最も近い日時のメンテナンスを返す
     return futureMaintenances.sort(
       (a, b) => a.scheduledFor.getTime() - b.scheduledFor.getTime()
     )[0].maintenance;
   }, [service]);
 
-  // 日時フォーマット関数
   const formatDateTime = (dateString: string): string => {
     try {
       const date = new Date(dateString);
-      // ロケールに応じたフォーマット（日本語は"ja-JP"、英語は"en-US"）
       const localeCode = locale === "ja" ? "ja-JP" : "en-US";
       return new Intl.DateTimeFormat(localeCode, {
         year: "numeric",
@@ -126,19 +147,36 @@ export function ServiceStatusCard({
     }
   };
 
+  const ServiceIcon = getServiceIcon(service.id);
+
+  // ロケールに応じた DownDetector URL
+  const downdetectorUrl = useMemo(() => {
+    if (!service.downdetectorUrl) return undefined;
+    if (locale === "ja") {
+      return service.downdetectorUrl
+        .replace("downdetector.com", "downdetector.jp")
+        .replace("/status/", "/shougai/");
+    }
+    return service.downdetectorUrl;
+  }, [service.downdetectorUrl, locale]);
+
+  // コンポーネントの正常数
+  const componentsOk = service.components
+    ? service.components.filter((c) => c.status === "operational").length
+    : 0;
+  const componentsTotal = service.components?.length || 0;
+
   return (
-    <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3 flex-1">
-          <div
-            className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${getStatusColor(
-              service.status
-            )}`}
-            title={getStatusText(service.status)}
-          />
+    <div
+      className={`border border-gray-200 dark:border-gray-800 border-l-4 ${getBorderColor(service.status)} rounded-lg p-4 bg-white dark:bg-gray-950 hover:shadow-md transition-shadow`}
+    >
+      {/* ヘッダー: アイコン + サービス名 + アクションボタン */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <ServiceIcon className="w-5 h-5 mt-0.5 flex-shrink-0 text-gray-600 dark:text-gray-400" />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                 {service.name}
               </h3>
               {upcomingMaintenance && (
@@ -178,12 +216,55 @@ export function ServiceStatusCard({
                 </Tooltip>
               )}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {getStatusText(service.status)}
-            </p>
+
+            {/* ステータス + レスポンスタイム */}
+            <div className="flex items-center gap-2 mb-1">
+              <div
+                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getStatusColor(service.status)}`}
+              />
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {getStatusText(service.status)}
+              </span>
+              {service.responseTimeMs !== undefined && (
+                <span
+                  className={`text-xs tabular-nums ${getResponseTimeColor(service.responseTimeMs)}`}
+                >
+                  {t("responseTime", { ms: String(service.responseTimeMs) })}
+                </span>
+              )}
+            </div>
+
+            {/* 最終チェック時刻 */}
+            {service.lastChecked && (
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                {t("lastChecked", {
+                  time: formatRelativeTime(
+                    new Date(service.lastChecked),
+                    locale === "ja" ? "ja" : "en"
+                  ),
+                })}
+              </p>
+            )}
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+
+        {/* アクションボタン */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {downdetectorUrl && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <a
+                  href={downdetectorUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-md w-8 h-8 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <Activity className="w-4 h-4" />
+                </a>
+              </TooltipTrigger>
+              <TooltipContent>{t("viewDownDetector")}</TooltipContent>
+            </Tooltip>
+          )}
           {onRefresh && (
             <Button
               variant="ghost"
@@ -201,13 +282,56 @@ export function ServiceStatusCard({
             href={service.statusUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+            className="inline-flex items-center justify-center rounded-md w-8 h-8 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             title={t("viewStatusPage")}
           >
             <ExternalLink className="w-4 h-4" />
           </a>
         </div>
       </div>
+
+      {/* コンポーネント別ステータス */}
+      {service.components && service.components.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+          <button
+            type="button"
+            onClick={() => setIsComponentsOpen(!isComponentsOpen)}
+            aria-expanded={isComponentsOpen}
+            aria-controls="components-list"
+            className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors w-full"
+          >
+            {isComponentsOpen ? (
+              <ChevronDown className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronRight className="w-3.5 h-3.5" />
+            )}
+            <span>{t("components")}</span>
+            <span className="text-gray-400 dark:text-gray-500">
+              ({t("componentsCount", {
+                ok: String(componentsOk),
+                total: String(componentsTotal),
+              })})
+            </span>
+          </button>
+          {isComponentsOpen && (
+            <div id="components-list" className="mt-2 space-y-1 pl-5">
+              {service.components.map((component) => (
+                <div
+                  key={component.name}
+                  className="flex items-center gap-2 text-xs"
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(component.status)}`}
+                  />
+                  <span className="text-gray-600 dark:text-gray-400 truncate">
+                    {component.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
