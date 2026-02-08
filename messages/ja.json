@@ -285,7 +285,8 @@
       "isp": "ISP",
       "as": "AS番号",
       "asname": "AS名",
-      "map": "地図"
+      "map": "地図",
+      "dbIpLink": "db-ip.com で詳細を表示"
     },
     "whoisInfo": {
       "raw": "生のwhois情報",

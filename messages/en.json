@@ -285,7 +285,8 @@
       "isp": "ISP",
       "as": "AS Number",
       "asname": "AS Name",
-      "map": "Map"
+      "map": "Map",
+      "dbIpLink": "View details on db-ip.com"
     },
     "whoisInfo": {
       "raw": "Raw whois Information",
