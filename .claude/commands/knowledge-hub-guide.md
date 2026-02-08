@@ -21,7 +21,6 @@
   explanationEn: string,   // 英語の解説文
   explanationJa: string,   // 日本語の解説文
   snippets: CodeSnippet[], // コードスニペット群
-  hasRelatedCheatsheet?: boolean,
   tags: string[],          // 検索・フィルタ用タグ
 }
 ```

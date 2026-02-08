@@ -77,9 +77,9 @@ export const GIT_KNOWLEDGE: KnowledgeItem[] = [
         labelJa: "未プッシュのコミット一覧",
         code: "git log @{u}..HEAD --oneline",
         noteEn:
-          "Shows commits that exist locally but not on the remote tracking branch. No output means all commits have been pushed.",
+          "Shows commits that exist locally but not on the upstream tracking branch. Run `git fetch` first to ensure the tracking branch is up to date. No output after fetch means all commits have been pushed. Requires an upstream to be configured; for branches without one, use `git log origin/<branch>..HEAD --oneline` instead.",
         noteJa:
-          "ローカルにあってリモート追跡ブランチにないコミットを表示。何も表示されなければ全コミットがプッシュ済み。",
+          "ローカルにあってアップストリーム追跡ブランチにないコミットを表示。事前に `git fetch` を実行してリモート追跡ブランチを最新化してください。fetch 後に何も表示されなければ全コミットがプッシュ済み。アップストリーム未設定のブランチでは `git log origin/<branch>..HEAD --oneline` を使用してください。",
       },
     ],
     tags: ["log", "push", "remote"],
