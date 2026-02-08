@@ -50,6 +50,7 @@
     "cheatsheets": "チートシート集",
     "knowledgeHub": "ノウハウ集",
     "textProcessor": "テキスト処理",
+    "colorSchemeDesigner": "カラースキームデザイナー β",
     "sectionGenerators": "ランダム生成",
     "sectionConverters": "変換・計算",
     "sectionEditors": "データエディタ",
@@ -1210,6 +1211,56 @@
       "invalidJson": "無効なJSON形式です",
       "fileTooLarge": "ファイルサイズが大きすぎます",
       "invalidFile": "JSONファイルではありません"
+    }
+  },
+  "colorSchemeDesigner": {
+    "title": "カラースキームデザイナー β",
+    "description": "カスタムカラーパレットを作成し、アクセシビリティチェックとエクスポート",
+    "breadcrumb": "カラースキームデザイナー β",
+    "palette": "パレット",
+    "addColor": "色を追加",
+    "colorName": "名前",
+    "delete": "削除",
+    "accessibility": "アクセシビリティ",
+    "export": "エクスポート",
+    "exportText": "テキスト",
+    "download": "ダウンロード",
+    "blocksPreview": {
+      "schemeColors": "パレット",
+      "grayscale": "グレースケール"
+    },
+    "grayscale": "グレースケール",
+    "addGrayscale": "グレースケールを追加",
+    "schemeName": "スキーム名",
+    "schemeNamePlaceholder": "マイカラースキーム",
+    "moveUp": "上に移動",
+    "moveDown": "下に移動",
+    "linkColor": "プレビュー要素に紐付け",
+    "previewLight": "ライトモード",
+    "previewDark": "ダークモード",
+    "preview": {
+      "heroTitle": "素晴らしい製品を、もっと速く。",
+      "heroDescription": "チームの生産性を最大化するオールインワンプラットフォーム。",
+      "ctaTitle": "今すぐ始めましょう",
+      "ctaDescription": "無料トライアルでその違いを体感してください。",
+      "linkingHint": "プレビュー内の要素をクリックして色を紐付け"
+    },
+    "schemeSelector": {
+      "savedSchemes": "保存済みスキーム",
+      "unsavedScheme": "（未保存）",
+      "save": "保存",
+      "saveAsNew": "名前を付けて保存",
+      "new": "新規作成",
+      "delete": "スキーム削除",
+      "noSavedSchemes": "保存済みスキームなし",
+      "modified": "変更あり"
+    },
+    "unsavedChanges": {
+      "title": "未保存の変更",
+      "description": "未保存の変更があります。どうしますか？",
+      "cancel": "キャンセル",
+      "discard": "変更を破棄",
+      "saveAndSwitch": "保存して切り替え"
     }
   },
   "textProcessor": {
