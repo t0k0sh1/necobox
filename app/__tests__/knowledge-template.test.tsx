@@ -24,7 +24,6 @@ const MOCK_CONFIG: KnowledgeConfig = {
           noteJa: "値を指定",
         },
       ],
-      hasRelatedCheatsheet: true,
       tags: ["tagA", "tagB"],
     },
     {
@@ -186,44 +185,6 @@ describe("KnowledgeTemplate", () => {
     const codeEl = screen.getByText(/SELECT \*/);
     expect(codeEl.tagName).toBe("CODE");
     expect(codeEl.parentElement?.tagName).toBe("PRE");
-  });
-
-  it("shows cheatsheet link for items with hasRelatedCheatsheet", () => {
-    render(<KnowledgeTemplate config={MOCK_CONFIG} />);
-
-    const button = screen.getByText("How to do thing A").closest("button")!;
-    fireEvent.click(button);
-
-    expect(
-      screen.getByText("View related commands in Cheatsheets →")
-    ).toBeInTheDocument();
-  });
-
-  it("does not show cheatsheet link for items without hasRelatedCheatsheet", () => {
-    render(<KnowledgeTemplate config={MOCK_CONFIG} />);
-
-    const button = screen.getByText("How to do thing B").closest("button")!;
-    fireEvent.click(button);
-
-    // Item B has no hasRelatedCheatsheet, so no link
-    const links = screen.queryAllByText(
-      "View related commands in Cheatsheets →"
-    );
-    expect(links.length).toBe(0);
-  });
-
-  it("uses custom cheatsheetPath", () => {
-    const config: KnowledgeConfig = {
-      ...MOCK_CONFIG,
-      cheatsheetPath: "/custom-path",
-    };
-    render(<KnowledgeTemplate config={config} />);
-
-    const button = screen.getByText("How to do thing A").closest("button")!;
-    fireEvent.click(button);
-
-    const link = screen.getByText("View related commands in Cheatsheets →");
-    expect(link.closest("a")).toHaveAttribute("href", "/custom-path");
   });
 
   describe("generics are not treated as placeholders", () => {

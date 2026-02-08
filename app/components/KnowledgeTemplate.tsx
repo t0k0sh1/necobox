@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import type { KnowledgeConfig, KnowledgeItem } from "@/lib/types/knowledge";
 import { useKnowledgeState } from "@/lib/hooks/useKnowledgeState";
 import {
-  BookOpen,
+  AlertTriangle,
   Check,
   ChevronDown,
   ChevronRight,
@@ -22,7 +22,6 @@ import {
   Search,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
 
 // タグの色設定
 const TAG_COLORS = [
@@ -48,7 +47,6 @@ interface KnowledgeTemplateProps {
 export function KnowledgeTemplate({ config }: KnowledgeTemplateProps) {
   const t = useTranslations("knowledgeHub");
   const locale = useLocale();
-  const cheatsheetPath = config.cheatsheetPath ?? "/cheatsheets";
 
   const {
     searchQuery,
@@ -61,6 +59,7 @@ export function KnowledgeTemplate({ config }: KnowledgeTemplateProps) {
     dialogOpen,
     setDialogOpen,
     dialogPlaceholders,
+    dialogPlaceholderDescs,
     dialogValues,
     setDialogValues,
     handleDialogCopy,
@@ -70,10 +69,30 @@ export function KnowledgeTemplate({ config }: KnowledgeTemplateProps) {
 
   const getSituation = (item: KnowledgeItem) =>
     locale === "ja" ? item.situationJa : item.situationEn;
+  const getWarning = (item: KnowledgeItem) =>
+    locale === "ja" ? item.warningJa : item.warningEn;
   const getExplanation = (item: KnowledgeItem) =>
     locale === "ja" ? item.explanationJa : item.explanationEn;
 
   const isMultiline = (code: string) => code.includes("\n");
+
+  // バッククォートで囲まれた部分を <code> タグに変換
+  const renderWithCode = (text: string) => {
+    const parts = text.split(/(`[^`]+`)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith("`") && part.endsWith("`")) {
+        return (
+          <code
+            key={i}
+            className="text-sm font-mono bg-gray-100 dark:bg-gray-800 rounded px-1.5 py-0.5 text-gray-900 dark:text-gray-100"
+          >
+            {part.slice(1, -1)}
+          </code>
+        );
+      }
+      return part;
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -136,9 +155,17 @@ export function KnowledgeTemplate({ config }: KnowledgeTemplateProps) {
               {/* カードボディ */}
               {isExpanded && (
                 <div className="px-4 py-4 space-y-4 bg-white dark:bg-black">
+                  {/* 注意事項 */}
+                  {getWarning(item) && (
+                    <div className="flex items-start gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md text-sm text-amber-800 dark:text-amber-300">
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>{getWarning(item)}</span>
+                    </div>
+                  )}
+
                   {/* 解説テキスト */}
-                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {getExplanation(item)}
+                  <p className="text-base text-gray-800 dark:text-gray-200 leading-relaxed">
+                    {renderWithCode(getExplanation(item))}
                   </p>
 
                   {/* スニペット群 */}
@@ -152,7 +179,7 @@ export function KnowledgeTemplate({ config }: KnowledgeTemplateProps) {
 
                       return (
                         <div key={snippetId} className="space-y-1">
-                          <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">
+                          <div className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                             {snippetLabel}
                           </div>
                           <div className="relative group">
@@ -179,7 +206,7 @@ export function KnowledgeTemplate({ config }: KnowledgeTemplateProps) {
                                   : ""
                               }`}
                               onClick={() =>
-                                handleCopyClick(snippet.code, snippetId)
+                                handleCopyClick(snippet.code, snippetId, snippet.placeholders)
                               }
                             >
                               {isCopied(snippetId) ? (
@@ -190,7 +217,7 @@ export function KnowledgeTemplate({ config }: KnowledgeTemplateProps) {
                             </Button>
                           </div>
                           {snippetNote && (
-                            <p className="text-xs text-gray-400 dark:text-gray-500 ml-1">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 ml-1">
                               {snippetNote}
                             </p>
                           )}
@@ -199,18 +226,6 @@ export function KnowledgeTemplate({ config }: KnowledgeTemplateProps) {
                     })}
                   </div>
 
-                  {/* チートシートへのリンク */}
-                  {item.hasRelatedCheatsheet && (
-                    <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
-                      <Link
-                        href={cheatsheetPath}
-                        className="inline-flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        <BookOpen className="w-3.5 h-3.5" />
-                        {t("viewCheatsheet")}
-                      </Link>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
@@ -231,13 +246,17 @@ export function KnowledgeTemplate({ config }: KnowledgeTemplateProps) {
           <div className="space-y-3">
             {dialogPlaceholders.map((name) => {
               const inputId = `placeholder-${name}`;
+              const desc = dialogPlaceholderDescs?.[name];
+              const displayLabel = desc
+                ? locale === "ja" ? desc.descriptionJa : desc.descriptionEn
+                : name;
               return (
                 <div key={name} className="space-y-1">
                   <Label
                     htmlFor={inputId}
                     className="text-sm font-medium text-gray-700 dark:text-gray-200"
                   >
-                    {name}
+                    {displayLabel}
                   </Label>
                   <Input
                     id={inputId}

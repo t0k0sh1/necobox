@@ -1,6 +1,6 @@
 "use client";
 
-import type { KnowledgeItem } from "@/lib/types/knowledge";
+import type { KnowledgeItem, PlaceholderDescription } from "@/lib/types/knowledge";
 import { useCopyToClipboard } from "./useCopyToClipboard";
 import { useCallback, useMemo, useState } from "react";
 
@@ -40,6 +40,7 @@ export function useKnowledgeState(items: KnowledgeItem[]) {
   const [dialogSnippetId, setDialogSnippetId] = useState<string | null>(null);
   const [dialogCode, setDialogCode] = useState("");
   const [dialogPlaceholders, setDialogPlaceholders] = useState<string[]>([]);
+  const [dialogPlaceholderDescs, setDialogPlaceholderDescs] = useState<Record<string, PlaceholderDescription> | undefined>(undefined);
   const [dialogValues, setDialogValues] = useState<Record<string, string>>({});
 
   const filteredItems = useMemo(() => {
@@ -75,7 +76,7 @@ export function useKnowledgeState(items: KnowledgeItem[]) {
   };
 
   const handleCopyClick = useCallback(
-    (code: string, snippetId: string) => {
+    (code: string, snippetId: string, descs?: Record<string, PlaceholderDescription>) => {
       const placeholders = extractPlaceholders(code);
       if (placeholders.length === 0) {
         copy(code, snippetId);
@@ -83,6 +84,7 @@ export function useKnowledgeState(items: KnowledgeItem[]) {
         setDialogCode(code);
         setDialogSnippetId(snippetId);
         setDialogPlaceholders(placeholders);
+        setDialogPlaceholderDescs(descs);
         setDialogValues({});
         setDialogOpen(true);
       }
@@ -110,6 +112,7 @@ export function useKnowledgeState(items: KnowledgeItem[]) {
     dialogOpen,
     setDialogOpen,
     dialogPlaceholders,
+    dialogPlaceholderDescs,
     dialogValues,
     setDialogValues,
     handleDialogCopy,

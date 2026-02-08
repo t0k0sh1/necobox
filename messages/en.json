@@ -884,8 +884,6 @@
         "gfm_extensions": "GFM Extensions"
       }
     },
-    "relatedKnowledge": "Looking for practical usage guides?",
-    "viewKnowledgeHub": "View Knowledge Hub →",
     "mimeTypes": {
       "searchPlaceholder": "Search by MIME type, extension, or description...",
       "noResults": "No matching MIME types found",
@@ -1149,18 +1147,10 @@
     "title": "Knowledge Hub",
     "description": "Practical guides organized by situation for developers",
     "breadcrumb": "Knowledge Hub",
-    "tabs": {
-      "git": "Git",
-      "sql": "SQL",
-      "shell": "Shell / CLI",
-      "jsArray": "JS/TS Arrays",
-      "javaStream": "Java Stream"
-    },
     "searchPlaceholder": "Search by situation, tag, or command...",
     "noResults": "No matching knowledge items found",
     "copy": "Copy",
     "copied": "Copied",
-    "viewCheatsheet": "View related commands in Cheatsheets →",
     "relatedCheatsheets": "Looking for command references?",
     "viewCheatsheets": "View Cheatsheets →",
     "placeholderDialog": {

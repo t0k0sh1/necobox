@@ -884,8 +884,6 @@
         "gfm_extensions": "GFM拡張"
       }
     },
-    "relatedKnowledge": "コマンドの実践的な使い方を知りたい方はこちら",
-    "viewKnowledgeHub": "ノウハウ集を見る →",
     "mimeTypes": {
       "searchPlaceholder": "MIMEタイプ、拡張子、説明で検索...",
       "noResults": "一致するMIMEタイプが見つかりません",
@@ -1149,18 +1147,10 @@
     "title": "ノウハウ集",
     "description": "シチュエーション別の開発者向け実践ガイド",
     "breadcrumb": "ノウハウ集",
-    "tabs": {
-      "git": "Git",
-      "sql": "SQL",
-      "shell": "Shell / CLI",
-      "jsArray": "JS/TS 配列",
-      "javaStream": "Java Stream"
-    },
     "searchPlaceholder": "シチュエーション、タグ、コマンドで検索...",
     "noResults": "一致するノウハウが見つかりません",
     "copy": "コピー",
     "copied": "コピーしました",
-    "viewCheatsheet": "チートシートで関連コマンドを見る →",
     "relatedCheatsheets": "コマンドのリファレンスはこちら",
     "viewCheatsheets": "チートシート集を見る →",
     "placeholderDialog": {
