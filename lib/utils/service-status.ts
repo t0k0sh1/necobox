@@ -82,6 +82,29 @@ async function fetchWithTimeout(
   }
 }
 
+// RSSアイテムが解消済みかどうかを判定するヘルパー関数
+// タイトルまたは説明文に解消済みキーワードが含まれていれば true を返す
+export function isResolvedRssItem(title: string, description: string): boolean {
+  const resolvedKeywords = [
+    "resolved",
+    "operating normally",
+    "back to normal",
+    "informational message",
+    "service is operating",
+    "has been resolved",
+    "issue has been fixed",
+    "no longer experiencing",
+  ];
+
+  const lowerTitle = title.toLowerCase();
+  const lowerDescription = description.toLowerCase();
+
+  return resolvedKeywords.some(
+    (keyword) =>
+      lowerTitle.includes(keyword) || lowerDescription.includes(keyword)
+  );
+}
+
 // AWS RSSフィード解析
 async function fetchAWSStatus(): Promise<ServiceStatus> {
   try {
@@ -129,6 +152,11 @@ async function fetchAWSStatus(): Promise<ServiceStatus> {
       }
     }
 
+    // 解消済みアイテムは正常として扱う
+    if (isResolvedRssItem(title, description)) {
+      return "operational";
+    }
+
     // 重大な問題のキーワードをチェック
     if (
       title.includes("service disruption") ||
@@ -153,8 +181,8 @@ async function fetchAWSStatus(): Promise<ServiceStatus> {
       return "degraded";
     }
 
-    // その他の問題がある場合
-    return "degraded";
+    // どのキーワードにも一致しないアイテムは障害ではない
+    return "operational";
   } catch (error) {
     console.error("AWS status fetch error:", error);
     return "unknown";
@@ -203,6 +231,11 @@ async function fetchAzureStatus(): Promise<ServiceStatus> {
       }
     }
 
+    // 解消済みアイテムは正常として扱う
+    if (isResolvedRssItem(title, description)) {
+      return "operational";
+    }
+
     if (
       title.includes("service disruption") ||
       title.includes("service interruption") ||
@@ -225,7 +258,8 @@ async function fetchAzureStatus(): Promise<ServiceStatus> {
       return "degraded";
     }
 
-    return "degraded";
+    // どのキーワードにも一致しないアイテムは障害ではない
+    return "operational";
   } catch (error) {
     console.error("Azure status fetch error:", error);
     return "unknown";
@@ -430,6 +464,11 @@ async function fetchStripeStatus(): Promise<ServiceStatus> {
       }
     }
 
+    // 解消済みアイテムは正常として扱う
+    if (isResolvedRssItem(title, summary)) {
+      return "operational";
+    }
+
     // 重大な問題のキーワードをチェック
     if (
       title.includes("service disruption") ||
@@ -460,8 +499,8 @@ async function fetchStripeStatus(): Promise<ServiceStatus> {
       return "degraded";
     }
 
-    // その他の問題がある場合
-    return "degraded";
+    // どのキーワードにも一致しないアイテムは障害ではない
+    return "operational";
   } catch (error) {
     console.error("Stripe status fetch error:", error);
     return "unknown";
