@@ -369,7 +369,7 @@ export default function IPInfoPage() {
                     {(data.ip || data.basicInfo?.ip) && (
                       <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border">
                         <a
-                          href={`https://db-ip.com/${data.ip || data.basicInfo?.ip}`}
+                          href={`https://db-ip.com/${encodeURIComponent(data.ip || data.basicInfo?.ip || "")}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
