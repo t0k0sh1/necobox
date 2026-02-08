@@ -6,7 +6,7 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -364,6 +364,19 @@ export default function IPInfoPage() {
                         <p className="text-lg font-semibold">
                           {data.geoip.asname}
                         </p>
+                      </div>
+                    )}
+                    {(data.ip || data.basicInfo?.ip) && (
+                      <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border">
+                        <a
+                          href={`https://db-ip.com/${encodeURIComponent(data.ip || data.basicInfo?.ip || "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {t("geoipInfo.dbIpLink")}
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
                       </div>
                     )}
                   </div>
