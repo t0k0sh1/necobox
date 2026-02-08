@@ -18,6 +18,7 @@ import {
   type SchemeColor,
   type ColorScheme,
   type WorkingScheme,
+  DEFAULT_SCHEME_NAME,
 } from "@/lib/utils/color-scheme-designer";
 import { useColorSchemeStorage } from "@/lib/hooks/useColorSchemeStorage";
 import { useTranslations } from "next-intl";
@@ -31,7 +32,7 @@ type PendingAction =
 export default function ColorSchemeDesignerPage() {
   const t = useTranslations("colorSchemeDesigner");
 
-  const [schemeName, setSchemeName] = useState("My Color Scheme");
+  const [schemeName, setSchemeName] = useState(DEFAULT_SCHEME_NAME);
   const [colors, setColors] = useState<SchemeColor[]>([]);
   const [colorMappings, setColorMappings] = useState<Record<string, string>>(
     {}
@@ -90,10 +91,11 @@ export default function ColorSchemeDesignerPage() {
   }, [storage.isInitialized]);
 
   // ワーキングステートを自動保存（復元完了後のみ）
+  const { saveDraftState } = storage;
   useEffect(() => {
     if (!restoredRef.current) return;
-    storage.saveDraftState(workingScheme);
-  }, [workingScheme, storage]);
+    saveDraftState(workingScheme);
+  }, [workingScheme, saveDraftState]);
 
   // スキームをUIに適用するヘルパー
   const applyScheme = useCallback(
@@ -111,14 +113,34 @@ export default function ColorSchemeDesignerPage() {
     setLinkingColorId((prev) => (prev === colorId ? null : colorId));
   }, []);
 
+  /** bg と border が同一 DOM に配置される要素ペア（bg クリック時に border も同時マッピング） */
+  const BG_BORDER_PAIRS: Record<string, string> = useMemo(
+    () => ({
+      "page-bg": "page-border",
+      "nav-bg": "nav-border",
+      "feature-card-bg": "feature-card-border",
+      "testimonial-card-bg": "testimonial-card-border",
+      "footer-bg": "footer-border",
+    }),
+    []
+  );
+
   // プレビュー要素クリック時の紐付け処理
   const handleElementClick = useCallback(
     (elementId: string) => {
       if (!linkingColorId) return;
-      setColorMappings((prev) => ({ ...prev, [elementId]: linkingColorId }));
+      setColorMappings((prev) => {
+        const next = { ...prev, [elementId]: linkingColorId };
+        // bg と border が同一 DOM の場合、border も同時に紐付ける
+        const pairedBorder = BG_BORDER_PAIRS[elementId];
+        if (pairedBorder) {
+          next[pairedBorder] = linkingColorId;
+        }
+        return next;
+      });
       setLinkingColorId(null);
     },
-    [linkingColorId]
+    [linkingColorId, BG_BORDER_PAIRS]
   );
 
   // --- スキーム管理ハンドラー ---
@@ -139,10 +161,10 @@ export default function ColorSchemeDesignerPage() {
       return;
     }
     storage.setActiveSchemeId(null);
-    setSchemeName("My Color Scheme");
+    setSchemeName(DEFAULT_SCHEME_NAME);
     setColors([]);
     setColorMappings({});
-    storage.markAsSaved({ name: "My Color Scheme", colors: [], colorMappings: {} });
+    storage.markAsSaved({ name: DEFAULT_SCHEME_NAME, colors: [], colorMappings: {} });
   }, [isDirty, storage]);
 
   const handleLoad = useCallback(
@@ -163,10 +185,10 @@ export default function ColorSchemeDesignerPage() {
   const handleDelete = useCallback(() => {
     if (!storage.activeSchemeId) return;
     storage.deleteScheme(storage.activeSchemeId);
-    setSchemeName("My Color Scheme");
+    setSchemeName(DEFAULT_SCHEME_NAME);
     setColors([]);
     setColorMappings({});
-    storage.markAsSaved({ name: "My Color Scheme", colors: [], colorMappings: {} });
+    storage.markAsSaved({ name: DEFAULT_SCHEME_NAME, colors: [], colorMappings: {} });
   }, [storage]);
 
   // --- 未保存変更確認ダイアログ ---
@@ -176,10 +198,10 @@ export default function ColorSchemeDesignerPage() {
       if (!action) return;
       if (action.type === "new") {
         storage.setActiveSchemeId(null);
-        setSchemeName("My Color Scheme");
+        setSchemeName(DEFAULT_SCHEME_NAME);
         setColors([]);
         setColorMappings({});
-        storage.markAsSaved({ name: "My Color Scheme", colors: [], colorMappings: {} });
+        storage.markAsSaved({ name: DEFAULT_SCHEME_NAME, colors: [], colorMappings: {} });
       } else if (action.type === "load") {
         const loaded = storage.loadScheme(action.schemeId);
         if (loaded) {

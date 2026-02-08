@@ -5,6 +5,7 @@ import {
   type WorkingScheme,
   type SchemeColor,
   generateId,
+  DEFAULT_SCHEME_NAME,
 } from "@/lib/utils/color-scheme-designer";
 
 const STORAGE_KEY = "necobox-color-schemes";
@@ -152,12 +153,13 @@ export function useColorSchemeStorage(): UseColorSchemeStorageReturn {
   // 最後に保存した状態の JSON 文字列を記録し、未保存検知に使用
   const savedSnapshotRef = useRef<string>("");
 
-  // SSR-safe 初期化
+  // SSR-safe 初期化（クライアントサイドでのみ localStorage から復元）
   useEffect(() => {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
     const data = loadFromStorage();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe 初期化パターンのため effect 内で setState が必要
     setSchemes(data.schemes);
     setActiveSchemeId(data.lastActiveSchemeId);
     setIsInitialized(true);
@@ -180,6 +182,24 @@ export function useColorSchemeStorage(): UseColorSchemeStorageReturn {
       colorMappings: w.colorMappings,
     });
   }, []);
+
+  const saveAsNewScheme = useCallback(
+    (current: WorkingScheme): string => {
+      const id = generateId();
+      const newScheme: SavedColorScheme = {
+        id,
+        name: current.name,
+        colors: current.colors,
+        colorMappings: current.colorMappings,
+        updatedAt: Date.now(),
+      };
+      setSchemes((prev) => [...prev, newScheme]);
+      setActiveSchemeId(id);
+      savedSnapshotRef.current = workingToSnapshot(current);
+      return id;
+    },
+    [workingToSnapshot]
+  );
 
   const saveScheme = useCallback(
     (current: WorkingScheme): string => {
@@ -204,26 +224,7 @@ export function useColorSchemeStorage(): UseColorSchemeStorageReturn {
       // activeSchemeId がない場合は新規保存
       return saveAsNewScheme(current);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activeSchemeId, workingToSnapshot]
-  );
-
-  const saveAsNewScheme = useCallback(
-    (current: WorkingScheme): string => {
-      const id = generateId();
-      const newScheme: SavedColorScheme = {
-        id,
-        name: current.name,
-        colors: current.colors,
-        colorMappings: current.colorMappings,
-        updatedAt: Date.now(),
-      };
-      setSchemes((prev) => [...prev, newScheme]);
-      setActiveSchemeId(id);
-      savedSnapshotRef.current = workingToSnapshot(current);
-      return id;
-    },
-    [workingToSnapshot]
+    [activeSchemeId, workingToSnapshot, saveAsNewScheme]
   );
 
   const loadScheme = useCallback(
@@ -254,7 +255,7 @@ export function useColorSchemeStorage(): UseColorSchemeStorageReturn {
     (current: WorkingScheme): boolean => {
       if (!savedSnapshotRef.current) {
         // 一度も保存していない場合、色があれば dirty
-        return current.colors.length > 0 || current.name !== "My Color Scheme";
+        return current.colors.length > 0 || current.name !== DEFAULT_SCHEME_NAME;
       }
       return workingToSnapshot(current) !== savedSnapshotRef.current;
     },

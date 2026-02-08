@@ -75,6 +75,36 @@ describe("color-scheme-designer", () => {
       expect(css).not.toContain("gray");
       expect(css).toContain("}");
     });
+
+    it("記号・日本語を含む名前を安全な変数名に正規化する", () => {
+      const scheme: ColorScheme = {
+        name: "Test",
+        colors: [
+          { id: "1", hex: "#ff0000", name: "メイン色!", group: "palette" },
+          { id: "2", hex: "#00ff00", name: "bg@hero#1", group: "palette" },
+        ],
+      };
+      const css = exportAsCssVariables(scheme);
+      // 日本語・記号が除去され、フォールバック "color" になる
+      expect(css).toContain("--color-color:");
+      // 英数字部分のみ残る
+      expect(css).toContain("--color-bghero1:");
+    });
+
+    it("同名の色が重複した場合にサフィックスで一意化する", () => {
+      const scheme: ColorScheme = {
+        name: "Test",
+        colors: [
+          { id: "1", hex: "#ff0000", name: "Primary", group: "palette" },
+          { id: "2", hex: "#00ff00", name: "Primary", group: "palette" },
+          { id: "3", hex: "#0000ff", name: "Primary", group: "palette" },
+        ],
+      };
+      const css = exportAsCssVariables(scheme);
+      expect(css).toContain("--color-primary:");
+      expect(css).toContain("--color-primary-2:");
+      expect(css).toContain("--color-primary-3:");
+    });
   });
 
   describe("exportAsTailwindConfig", () => {
@@ -89,6 +119,30 @@ describe("color-scheme-designer", () => {
       expect(config).toContain("tailwind.config.js");
       expect(config).toContain('"primary"');
       expect(config).toContain("#3b82f6");
+    });
+
+    it("記号を含む名前を安全なキーに正規化する", () => {
+      const scheme: ColorScheme = {
+        name: "Test",
+        colors: [
+          { id: "1", hex: "#ff0000", name: "bg@hero#1", group: "palette" },
+        ],
+      };
+      const config = exportAsTailwindConfig(scheme);
+      expect(config).toContain('"bghero1"');
+    });
+
+    it("同名の色が重複した場合にサフィックスで一意化する", () => {
+      const scheme: ColorScheme = {
+        name: "Test",
+        colors: [
+          { id: "1", hex: "#ff0000", name: "Primary", group: "palette" },
+          { id: "2", hex: "#00ff00", name: "Primary", group: "palette" },
+        ],
+      };
+      const config = exportAsTailwindConfig(scheme);
+      expect(config).toContain('"primary"');
+      expect(config).toContain('"primary-2"');
     });
   });
 
@@ -134,6 +188,23 @@ describe("color-scheme-designer", () => {
     it("空の色配列では空のペアを返す", () => {
       const pairs = calculateContrastPairs([]);
       expect(pairs).toEqual([]);
+    });
+
+    it("grayscale の hex2（ダーク側）も評価に含める", () => {
+      const colors: SchemeColor[] = [
+        {
+          id: "1",
+          hex: "#f5f5f5",
+          hex2: "#1a1a1a",
+          name: "Background",
+          group: "grayscale",
+        },
+      ];
+      const pairs = calculateContrastPairs(colors);
+      const bgNames = pairs.map((p) => p.bgName);
+      // hex（ライト側）と hex2（ダーク側）の両方が評価対象に含まれる
+      expect(bgNames).toContain("Background");
+      expect(bgNames).toContain("Background (Dark)");
     });
   });
 });

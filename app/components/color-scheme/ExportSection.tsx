@@ -26,9 +26,14 @@ export function ExportSection({ scheme }: ExportSectionProps) {
 
   const handleCopy = useCallback(
     async (text: string, tab: string) => {
-      await navigator.clipboard.writeText(text);
-      setCopiedTab(tab);
-      setTimeout(() => setCopiedTab(null), 2000);
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopiedTab(tab);
+        setTimeout(() => setCopiedTab(null), 2000);
+      } catch {
+        // クリップボードAPIが利用不可の環境（HTTP、iframe制限等）ではエラーを無視
+        console.warn("Clipboard API is not available");
+      }
     },
     []
   );

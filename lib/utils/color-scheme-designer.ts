@@ -15,6 +15,9 @@ import {
   type HSL,
 } from "./color-converter";
 
+/** 新規スキームのデフォルト名 */
+export const DEFAULT_SCHEME_NAME = "My Color Scheme";
+
 // --- 型定義 ---
 
 export type ColorGroup = "palette" | "grayscale";
@@ -89,6 +92,41 @@ export function generateId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
 
+// --- 名前正規化ヘルパー ---
+
+/**
+ * 色名を CSS 変数名 / Tailwind キーに安全な slug に変換する。
+ * 英数字と - のみに正規化し、重複時はサフィックスで一意化する。
+ */
+function toSafeSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "") // 英数字・スペース・ハイフン以外を除去
+    .trim()
+    .replace(/\s+/g, "-")         // スペースをハイフンに
+    .replace(/-+/g, "-")          // 連続ハイフンを1つに
+    .replace(/^-|-$/g, "")        // 先頭・末尾のハイフンを除去
+    || "color";                   // 空文字になった場合のフォールバック
+}
+
+/**
+ * slug の配列内で一意な名前を保証する。
+ * 重複が発生した場合はサフィックス (-2, -3, ...) を付与する。
+ */
+function uniquifySlug(slug: string, usedSlugs: Set<string>): string {
+  if (!usedSlugs.has(slug)) {
+    usedSlugs.add(slug);
+    return slug;
+  }
+  let counter = 2;
+  while (usedSlugs.has(`${slug}-${counter}`)) {
+    counter++;
+  }
+  const unique = `${slug}-${counter}`;
+  usedSlugs.add(unique);
+  return unique;
+}
+
 // --- エクスポート関数 ---
 
 /** Markdown 箇条書き形式でエクスポート */
@@ -122,12 +160,13 @@ export function exportAsText(scheme: ColorScheme): string {
 /** CSS変数形式でエクスポート */
 export function exportAsCssVariables(scheme: ColorScheme): string {
   const lines: string[] = [":root {"];
+  const usedSlugs = new Set<string>();
 
   for (const color of scheme.colors) {
-    const varName = color.name.toLowerCase().replace(/\s+/g, "-");
-    lines.push(`  --color-${varName}: ${color.hex};`);
+    const slug = uniquifySlug(toSafeSlug(color.name), usedSlugs);
+    lines.push(`  --color-${slug}: ${color.hex};`);
     if (color.hex2) {
-      lines.push(`  --color-${varName}-2: ${color.hex2};`);
+      lines.push(`  --color-${slug}-2: ${color.hex2};`);
     }
   }
 
@@ -138,9 +177,10 @@ export function exportAsCssVariables(scheme: ColorScheme): string {
 /** Tailwind Config 形式でエクスポート */
 export function exportAsTailwindConfig(scheme: ColorScheme): string {
   const colors: Record<string, string> = {};
+  const usedSlugs = new Set<string>();
 
   for (const color of scheme.colors) {
-    const key = color.name.toLowerCase().replace(/\s+/g, "-");
+    const key = uniquifySlug(toSafeSlug(color.name), usedSlugs);
     colors[key] = color.hex;
     if (color.hex2) {
       colors[`${key}-2`] = color.hex2;
@@ -303,9 +343,26 @@ export function calculateContrastPairs(
 ): ContrastPair[] {
   const pairs: ContrastPair[] = [];
 
-  // 白テキスト on パレットカラー & 黒テキスト on パレットカラー
+  // 評価対象の (名前, hex) ペアを構築
+  // grayscale の hex2（ダーク側）も評価に含める
+  interface EvalColor {
+    name: string;
+    hex: string;
+  }
+  const evalColors: EvalColor[] = [];
   for (const color of colors) {
-    const bgRgb = hexToRgb(color.hex);
+    evalColors.push({ name: color.name, hex: color.hex });
+    if (color.hex2) {
+      evalColors.push({
+        name: `${color.name} (Dark)`,
+        hex: color.hex2,
+      });
+    }
+  }
+
+  // 白テキスト & 黒テキストとの各色のコントラスト
+  for (const ec of evalColors) {
+    const bgRgb = hexToRgb(ec.hex);
     if (!bgRgb) continue;
 
     const whiteRgb: RGB = { r: 255, g: 255, b: 255 };
@@ -313,8 +370,8 @@ export function calculateContrastPairs(
     pairs.push({
       fgName: "White",
       fgHex: "#ffffff",
-      bgName: color.name,
-      bgHex: color.hex,
+      bgName: ec.name,
+      bgHex: ec.hex,
       ratio: whiteResult.ratio,
       wcagAA: whiteResult.wcagAA,
       wcagAAA: whiteResult.wcagAAA,
@@ -325,26 +382,26 @@ export function calculateContrastPairs(
     pairs.push({
       fgName: "Black",
       fgHex: "#000000",
-      bgName: color.name,
-      bgHex: color.hex,
+      bgName: ec.name,
+      bgHex: ec.hex,
       ratio: blackResult.ratio,
       wcagAA: blackResult.wcagAA,
       wcagAAA: blackResult.wcagAAA,
     });
   }
 
-  // パレットカラー同士の組み合わせ
-  for (let i = 0; i < colors.length; i++) {
-    for (let j = i + 1; j < colors.length; j++) {
-      const fgRgb = hexToRgb(colors[i].hex);
-      const bgRgb = hexToRgb(colors[j].hex);
+  // 色同士の組み合わせ
+  for (let i = 0; i < evalColors.length; i++) {
+    for (let j = i + 1; j < evalColors.length; j++) {
+      const fgRgb = hexToRgb(evalColors[i].hex);
+      const bgRgb = hexToRgb(evalColors[j].hex);
       if (fgRgb && bgRgb) {
         const result = getContrastRatio(fgRgb, bgRgb);
         pairs.push({
-          fgName: colors[i].name,
-          fgHex: colors[i].hex,
-          bgName: colors[j].name,
-          bgHex: colors[j].hex,
+          fgName: evalColors[i].name,
+          fgHex: evalColors[i].hex,
+          bgName: evalColors[j].name,
+          bgHex: evalColors[j].hex,
           ratio: result.ratio,
           wcagAA: result.wcagAA,
           wcagAAA: result.wcagAAA,
