@@ -34,6 +34,7 @@ export type IconName =
   | "Shield"
   | "Sparkles"
   | "TextCursorInput"
+  | "Paintbrush"
   | "Timer"
   | "Type";
 
@@ -189,6 +190,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "TextCursorInput",
     category: "editors",
     i18nKey: "textProcessor",
+  },
+  {
+    id: "color-scheme-designer",
+    path: "/color-scheme-designer",
+    icon: "Paintbrush",
+    category: "editors",
+    i18nKey: "colorSchemeDesigner",
   },
   // Tasks（タスク管理）
   {

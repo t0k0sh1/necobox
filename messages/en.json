@@ -50,6 +50,7 @@
     "cheatsheets": "Cheatsheets",
     "knowledgeHub": "Knowledge Hub",
     "textProcessor": "Text Processor",
+    "colorSchemeDesigner": "Color Scheme Designer β",
     "sectionGenerators": "Random Generation",
     "sectionConverters": "Conversion & Calculation",
     "sectionEditors": "Data Editors",
@@ -1210,6 +1211,56 @@
       "invalidJson": "Invalid JSON format",
       "fileTooLarge": "File size is too large",
       "invalidFile": "Not a JSON file"
+    }
+  },
+  "colorSchemeDesigner": {
+    "title": "Color Scheme Designer β",
+    "description": "Create and manage custom color palettes with accessibility checks and export",
+    "breadcrumb": "Color Scheme Designer β",
+    "palette": "Palette",
+    "addColor": "Add Color",
+    "grayscale": "Grayscale",
+    "addGrayscale": "Add Grayscale",
+    "colorName": "Name",
+    "delete": "Delete",
+    "accessibility": "Accessibility",
+    "export": "Export",
+    "exportText": "Text",
+    "download": "Download",
+    "blocksPreview": {
+      "schemeColors": "Palette",
+      "grayscale": "Grayscale"
+    },
+    "schemeName": "Scheme Name",
+    "schemeNamePlaceholder": "My Color Scheme",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "linkColor": "Link to preview element",
+    "previewLight": "Light Mode",
+    "previewDark": "Dark Mode",
+    "preview": {
+      "heroTitle": "Build great products, faster.",
+      "heroDescription": "An all-in-one platform to maximize your team's productivity.",
+      "ctaTitle": "Get started today",
+      "ctaDescription": "Experience the difference with a free trial.",
+      "linkingHint": "Click an element in the preview to link the color"
+    },
+    "schemeSelector": {
+      "savedSchemes": "Saved Schemes",
+      "unsavedScheme": "(Unsaved)",
+      "save": "Save",
+      "saveAsNew": "Save As New",
+      "new": "New Scheme",
+      "delete": "Delete Scheme",
+      "noSavedSchemes": "No saved schemes",
+      "modified": "Modified"
+    },
+    "unsavedChanges": {
+      "title": "Unsaved Changes",
+      "description": "You have unsaved changes. What would you like to do?",
+      "cancel": "Cancel",
+      "discard": "Discard Changes",
+      "saveAndSwitch": "Save & Switch"
     }
   },
   "textProcessor": {
