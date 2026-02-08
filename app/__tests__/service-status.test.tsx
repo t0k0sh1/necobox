@@ -208,6 +208,7 @@ const createMockServiceWithPastMaintenance = (
 describe("Service Status Page", () => {
   beforeEach(() => {
     (global.fetch as jest.Mock).mockClear();
+    localStorage.clear();
   });
 
   it("renders page title and description", async () => {

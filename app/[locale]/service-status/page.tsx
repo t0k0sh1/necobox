@@ -6,10 +6,11 @@ import { ServiceStatusCard } from "@/components/ServiceStatusCard";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ServiceCategory, ServiceStatusInfo } from "@/lib/utils/service-status";
+import { useServiceStatusCache } from "@/lib/hooks/useServiceStatusCache";
+import { ServiceCategory } from "@/lib/utils/service-status";
 import { RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 const CATEGORY_ORDER: ServiceCategory[] = [
   "cloud-vendor",
@@ -25,54 +26,11 @@ const CATEGORY_ORDER: ServiceCategory[] = [
 export default function ServiceStatusPage() {
   const t = useTranslations("serviceStatus");
 
-  const [statuses, setStatuses] = useState<ServiceStatusInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const { statuses, loading, refreshing, handleRefreshAll, handleRefreshService } =
+    useServiceStatusCache();
   const [selectedCategory, setSelectedCategory] = useState<
     ServiceCategory | "all"
   >("all");
-
-  const fetchStatuses = async () => {
-    try {
-      const response = await fetch("/api/v1/service-status");
-      if (!response.ok) {
-        throw new Error("Failed to fetch service statuses");
-      }
-      const data = await response.json();
-      setStatuses(data.statuses || []);
-    } catch (error) {
-      console.error("Error fetching service statuses:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStatuses();
-  }, []);
-
-  const handleRefreshAll = async () => {
-    setRefreshing(true);
-    await fetchStatuses();
-  };
-
-  const handleRefreshService = async (serviceId: string) => {
-    try {
-      const response = await fetch(`/api/v1/service-status/${serviceId}`);
-      if (!response.ok) {
-        throw new Error("Failed to refresh service status");
-      }
-      const data = await response.json();
-      if (data.status) {
-        setStatuses((prev) =>
-          prev.map((s) => (s.id === serviceId ? data.status : s))
-        );
-      }
-    } catch (error) {
-      console.error(`Error refreshing service ${serviceId}:`, error);
-    }
-  };
 
   // カテゴリ別のサービス数を集計
   const categoryStats = useMemo(() => {
