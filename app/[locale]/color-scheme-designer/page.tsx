@@ -3,7 +3,7 @@
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { PropertyPanel } from "@/app/components/color-scheme/PropertyPanel";
 import { BlocksPreview } from "@/app/components/color-scheme/BlocksPreview";
-import { LandingPreview } from "@/app/components/color-scheme/LandingPreview";
+import { BlogPreview } from "@/app/components/color-scheme/BlogPreview";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -19,10 +19,21 @@ import {
   type ColorScheme,
   type WorkingScheme,
   DEFAULT_SCHEME_NAME,
+  generateId,
 } from "@/lib/utils/color-scheme-designer";
+import type { GrayscalePreset, PalettePreset } from "@/app/components/color-scheme/PaletteEditor";
 import { useColorSchemeStorage } from "@/lib/hooks/useColorSchemeStorage";
 import { useTranslations } from "next-intl";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+
+/** main 要素の min-height を 0 にしてページ全体のスクロールを抑止する */
+function useOverrideMainMinHeight() {
+  useEffect(() => {
+    const main = document.querySelector("main");
+    if (main) main.style.minHeight = "0";
+    return () => { if (main) main.style.minHeight = ""; };
+  }, []);
+}
 
 type PendingAction =
   | { type: "load"; schemeId: string }
@@ -42,6 +53,7 @@ export default function ColorSchemeDesignerPage() {
   const [previewDark, setPreviewDark] = useState(false);
 
   const storage = useColorSchemeStorage();
+  useOverrideMainMinHeight();
 
   // ワーキングスキームを構築
   const workingScheme = useMemo<WorkingScheme>(
@@ -113,34 +125,104 @@ export default function ColorSchemeDesignerPage() {
     setLinkingColorId((prev) => (prev === colorId ? null : colorId));
   }, []);
 
-  /** bg と border が同一 DOM に配置される要素ペア（bg クリック時に border も同時マッピング） */
-  const BG_BORDER_PAIRS: Record<string, string> = useMemo(
-    () => ({
-      "page-bg": "page-border",
-      "nav-bg": "nav-border",
-      "feature-card-bg": "feature-card-border",
-      "testimonial-card-bg": "testimonial-card-border",
-      "footer-bg": "footer-border",
-    }),
-    []
-  );
-
   // プレビュー要素クリック時の紐付け処理
   const handleElementClick = useCallback(
     (elementId: string) => {
       if (!linkingColorId) return;
+      setColorMappings((prev) => ({
+        ...prev,
+        [elementId]: linkingColorId,
+      }));
+      setLinkingColorId(null);
+    },
+    [linkingColorId]
+  );
+
+  // マッピング解除ハンドラー
+  const handleRemoveMapping = useCallback((elementId: string) => {
+    setColorMappings((prev) => {
+      const next = { ...prev };
+      delete next[elementId];
+      return next;
+    });
+  }, []);
+
+  // パレット自動生成ハンドラー
+  const handleAutoGeneratePalette = useCallback(
+    (preset: PalettePreset) => {
+      const newPaletteColors: SchemeColor[] = preset.colors.map((c) => ({
+        id: generateId(),
+        hex: c.hex,
+        name: c.name,
+        group: "palette" as const,
+      }));
+
+      const oldPaletteIds = new Set(
+        colors.filter((c) => c.group === "palette").map((c) => c.id)
+      );
+
+      setColors((prev) => [
+        ...newPaletteColors,
+        ...prev.filter((c) => c.group !== "palette"),
+      ]);
+
       setColorMappings((prev) => {
-        const next = { ...prev, [elementId]: linkingColorId };
-        // bg と border が同一 DOM の場合、border も同時に紐付ける
-        const pairedBorder = BG_BORDER_PAIRS[elementId];
-        if (pairedBorder) {
-          next[pairedBorder] = linkingColorId;
+        const next: Record<string, string> = {};
+        for (const [elementId, colorId] of Object.entries(prev)) {
+          if (!oldPaletteIds.has(colorId)) {
+            next[elementId] = colorId;
+          }
+        }
+        for (const [elementId, colorIndex] of Object.entries(preset.mappings)) {
+          next[elementId] = newPaletteColors[colorIndex].id;
         }
         return next;
       });
-      setLinkingColorId(null);
     },
-    [linkingColorId, BG_BORDER_PAIRS]
+    [colors]
+  );
+
+  // グレースケール自動生成ハンドラー
+  const handleAutoGenerateGrayscale = useCallback(
+    (preset: GrayscalePreset) => {
+      // プリセットから新しい SchemeColor を生成
+      const newGrayscaleColors: SchemeColor[] = preset.colors.map((c) => ({
+        id: generateId(),
+        hex: c.hex,
+        hex2: c.hex2,
+        name: c.name,
+        group: "grayscale" as const,
+      }));
+
+      // 旧グレースケール色 ID を記録（マッピング削除用）
+      const oldGrayscaleIds = new Set(
+        colors.filter((c) => c.group === "grayscale").map((c) => c.id)
+      );
+
+      // グレースケール色を差し替え
+      setColors((prev) => [
+        ...prev.filter((c) => c.group !== "grayscale"),
+        ...newGrayscaleColors,
+      ]);
+
+      // マッピングを更新: 旧グレースケール参照を除去し、プリセットの割り当てを追加
+      setColorMappings((prev) => {
+        const next: Record<string, string> = {};
+        for (const [elementId, colorId] of Object.entries(prev)) {
+          if (!oldGrayscaleIds.has(colorId)) {
+            next[elementId] = colorId;
+          }
+        }
+        for (const [elementId, colorIndex] of Object.entries(preset.mappings)) {
+          // パレット色で既に割り当て済みの要素は保持し、未割り当てのみプリセットで埋める
+          if (!(elementId in next)) {
+            next[elementId] = newGrayscaleColors[colorIndex].id;
+          }
+        }
+        return next;
+      });
+    },
+    [colors]
   );
 
   // --- スキーム管理ハンドラー ---
@@ -229,7 +311,7 @@ export default function ColorSchemeDesignerPage() {
   }, []);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] overflow-hidden">
       {/* ヘッダー */}
       <div className="px-4 pt-4">
         <Breadcrumbs items={[{ label: t("breadcrumb") }]} />
@@ -242,10 +324,10 @@ export default function ColorSchemeDesignerPage() {
       </div>
 
       {/* メインコンテンツ: 左プレビュー + 右プロパティパネル */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 pb-40 min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 min-h-0">
         {/* プレビュー領域 */}
-        <div className="hidden lg:block flex-1 min-w-0 overflow-y-auto">
-          <div className="flex justify-end mb-2">
+        <div className="hidden lg:flex lg:flex-col flex-1 min-w-0 pb-36">
+          <div className="flex justify-end mb-2 shrink-0">
             <Button
               variant="outline"
               size="sm"
@@ -260,8 +342,8 @@ export default function ColorSchemeDesignerPage() {
               {previewDark ? t("previewLight") : t("previewDark")}
             </Button>
           </div>
-          <div className={previewDark ? "dark" : ""}>
-            <LandingPreview
+          <div className={`flex-1 min-h-0 flex flex-col ${previewDark ? "dark" : ""}`}>
+            <BlogPreview
               colors={colors}
               colorMappings={colorMappings}
               linkingColorId={linkingColorId}
@@ -272,7 +354,7 @@ export default function ColorSchemeDesignerPage() {
         </div>
 
         {/* プロパティパネル */}
-        <div className="w-full lg:w-[400px] shrink-0 overflow-y-auto">
+        <div className="w-full lg:w-[400px] flex-1 lg:flex-none lg:shrink-0 overflow-y-auto min-h-0 pb-40">
           <PropertyPanel
             schemeName={schemeName}
             onSchemeNameChange={setSchemeName}
@@ -281,6 +363,10 @@ export default function ColorSchemeDesignerPage() {
             scheme={scheme}
             linkingColorId={linkingColorId}
             onStartLinking={handleStartLinking}
+            colorMappings={colorMappings}
+            onRemoveMapping={handleRemoveMapping}
+            onAutoGeneratePalette={handleAutoGeneratePalette}
+            onAutoGenerateGrayscale={handleAutoGenerateGrayscale}
             savedSchemes={storage.savedSchemes}
             activeSchemeId={storage.activeSchemeId}
             isDirty={isDirty}

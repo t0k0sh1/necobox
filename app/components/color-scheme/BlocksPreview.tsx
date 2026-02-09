@@ -121,9 +121,14 @@ export function BlocksPreview({ colors }: BlocksPreviewProps) {
           )}
         </div>
       ) : (
-        <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-2">
-          {t("addColor")}
-        </p>
+        <div className="space-y-1">
+          <span className="text-[10px] invisible px-1">&nbsp;</span>
+          <div className="flex h-20 items-center justify-center rounded">
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              {t("addColor")}
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );
