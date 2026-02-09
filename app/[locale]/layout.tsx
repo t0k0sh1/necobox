@@ -84,7 +84,7 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <Header />
-            <main className="flex-1 bg-zinc-50 dark:bg-black">{children}</main>
+            <main className="flex-1 flex flex-col bg-zinc-50 dark:bg-black">{children}</main>
             <Footer />
           </ThemeProvider>
         </NextIntlClientProvider>

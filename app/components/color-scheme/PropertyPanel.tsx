@@ -12,7 +12,7 @@ import type {
   ColorScheme,
   SavedColorScheme,
 } from "@/lib/utils/color-scheme-designer";
-import { PaletteEditor } from "./PaletteEditor";
+import { PaletteEditor, type GrayscalePreset, type PalettePreset } from "./PaletteEditor";
 import { AccessibilityInfo } from "./AccessibilityInfo";
 import { ExportSection } from "./ExportSection";
 import { SchemeSelector } from "./SchemeSelector";
@@ -28,6 +28,10 @@ interface PropertyPanelProps {
   scheme: ColorScheme;
   linkingColorId: string | null;
   onStartLinking: (colorId: string) => void;
+  colorMappings: Record<string, string>;
+  onRemoveMapping: (elementId: string) => void;
+  onAutoGeneratePalette: (preset: PalettePreset) => void;
+  onAutoGenerateGrayscale: (preset: GrayscalePreset) => void;
   // スキーム管理
   savedSchemes: SavedColorScheme[];
   activeSchemeId: string | null;
@@ -68,6 +72,10 @@ export function PropertyPanel({
   scheme,
   linkingColorId,
   onStartLinking,
+  colorMappings,
+  onRemoveMapping,
+  onAutoGeneratePalette,
+  onAutoGenerateGrayscale,
   savedSchemes,
   activeSchemeId,
   isDirty,
@@ -113,6 +121,10 @@ export function PropertyPanel({
           onChange={onColorsChange}
           linkingColorId={linkingColorId}
           onStartLinking={onStartLinking}
+          colorMappings={colorMappings}
+          onRemoveMapping={onRemoveMapping}
+          onAutoGeneratePalette={onAutoGeneratePalette}
+          onAutoGenerateGrayscale={onAutoGenerateGrayscale}
         />
       </div>
 

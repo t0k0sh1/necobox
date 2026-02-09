@@ -1222,6 +1222,18 @@
     "colorName": "名前",
     "delete": "削除",
     "accessibility": "アクセシビリティ",
+    "accessibilityInfo": {
+      "description": "前景色と背景色のコントラスト比を WCAG（ウェブコンテンツ・アクセシビリティ・ガイドライン）の基準で評価します。",
+      "aaTitle": "AA — 最低基準",
+      "aaDescription": "通常テキストでコントラスト比 4.5:1 以上が必要。法的なアクセシビリティ要件で最も多く参照される基準です。",
+      "aaaTitle": "AAA — 強化基準",
+      "aaaDescription": "通常テキストでコントラスト比 7:1 以上が必要。ロービジョンのユーザーにも読みやすい、より厳しい基準です。",
+      "aaTooltipPass": "AA 合格 (≥ 4.5:1)",
+      "aaTooltipFail": "AA 不合格 (< 4.5:1)",
+      "aaaTooltipPass": "AAA 合格 (≥ 7:1)",
+      "aaaTooltipFail": "AAA 不合格 (< 7:1)",
+      "noPairs": "コントラストを確認するには2色以上追加してください。"
+    },
     "export": "エクスポート",
     "exportText": "テキスト",
     "download": "ダウンロード",
@@ -1238,13 +1250,6 @@
     "linkColor": "プレビュー要素に紐付け",
     "previewLight": "ライトモード",
     "previewDark": "ダークモード",
-    "preview": {
-      "heroTitle": "素晴らしい製品を、もっと速く。",
-      "heroDescription": "チームの生産性を最大化するオールインワンプラットフォーム。",
-      "ctaTitle": "今すぐ始めましょう",
-      "ctaDescription": "無料トライアルでその違いを体感してください。",
-      "linkingHint": "プレビュー内の要素をクリックして色を紐付け"
-    },
     "schemeSelector": {
       "savedSchemes": "保存済みスキーム",
       "unsavedScheme": "（未保存）",
@@ -1261,7 +1266,20 @@
       "cancel": "キャンセル",
       "discard": "変更を破棄",
       "saveAndSwitch": "保存して切り替え"
-    }
+    },
+    "autoGenerate": "自動生成",
+    "autoGenerateConfirm": {
+      "title": "グレースケールの置換",
+      "description": "既存のグレースケールカラーとその要素割り当てが置換されます。続行しますか？",
+      "cancel": "キャンセル",
+      "replace": "置換"
+    },
+    "presetNeutral": "ニュートラル",
+    "presetWarm": "ウォーム",
+    "presetCool": "クール",
+    "presetOcean": "オーシャン",
+    "presetForest": "フォレスト",
+    "presetSunset": "サンセット"
   },
   "textProcessor": {
     "title": "テキスト処理",

@@ -1224,6 +1224,18 @@
     "colorName": "Name",
     "delete": "Delete",
     "accessibility": "Accessibility",
+    "accessibilityInfo": {
+      "description": "Contrast ratios between foreground and background colors are evaluated against WCAG (Web Content Accessibility Guidelines) standards.",
+      "aaTitle": "AA — Minimum",
+      "aaDescription": "Requires a contrast ratio of 4.5:1 or higher for normal text. This is the baseline standard referenced in most legal accessibility requirements.",
+      "aaaTitle": "AAA — Enhanced",
+      "aaaDescription": "Requires a contrast ratio of 7:1 or higher for normal text. A stricter standard that ensures readability for users with low vision.",
+      "aaTooltipPass": "AA Pass (≥ 4.5:1)",
+      "aaTooltipFail": "AA Fail (< 4.5:1)",
+      "aaaTooltipPass": "AAA Pass (≥ 7:1)",
+      "aaaTooltipFail": "AAA Fail (< 7:1)",
+      "noPairs": "Add at least 2 colors to check contrast."
+    },
     "export": "Export",
     "exportText": "Text",
     "download": "Download",
@@ -1238,13 +1250,6 @@
     "linkColor": "Link to preview element",
     "previewLight": "Light Mode",
     "previewDark": "Dark Mode",
-    "preview": {
-      "heroTitle": "Build great products, faster.",
-      "heroDescription": "An all-in-one platform to maximize your team's productivity.",
-      "ctaTitle": "Get started today",
-      "ctaDescription": "Experience the difference with a free trial.",
-      "linkingHint": "Click an element in the preview to link the color"
-    },
     "schemeSelector": {
       "savedSchemes": "Saved Schemes",
       "unsavedScheme": "(Unsaved)",
@@ -1261,7 +1266,20 @@
       "cancel": "Cancel",
       "discard": "Discard Changes",
       "saveAndSwitch": "Save & Switch"
-    }
+    },
+    "autoGenerate": "Auto-generate",
+    "autoGenerateConfirm": {
+      "title": "Replace Grayscale Colors",
+      "description": "Existing grayscale colors and their element mappings will be replaced. Continue?",
+      "cancel": "Cancel",
+      "replace": "Replace"
+    },
+    "presetNeutral": "Neutral",
+    "presetWarm": "Warm",
+    "presetCool": "Cool",
+    "presetOcean": "Ocean",
+    "presetForest": "Forest",
+    "presetSunset": "Sunset"
   },
   "textProcessor": {
     "title": "Text Processor",
