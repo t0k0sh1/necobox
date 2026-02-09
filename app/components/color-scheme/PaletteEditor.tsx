@@ -454,6 +454,7 @@ function ColorGroupSection({
             colorId={color.id}
             colorMappings={colorMappings}
             onRemoveMapping={onRemoveMapping}
+            t={t}
           />
         </div>
       ))}
@@ -475,18 +476,18 @@ function ColorGroupSection({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t("autoGenerateConfirm.title")}
+              {t("paletteAutoGenerateConfirm.title")}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t("autoGenerateConfirm.description")}
+              {t("paletteAutoGenerateConfirm.description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <Button variant="outline" onClick={() => setConfirmPreset(null)}>
-              {t("autoGenerateConfirm.cancel")}
+              {t("paletteAutoGenerateConfirm.cancel")}
             </Button>
             <Button onClick={handleConfirm}>
-              {t("autoGenerateConfirm.replace")}
+              {t("paletteAutoGenerateConfirm.replace")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -673,6 +674,7 @@ function GrayscaleGroupSection({
             colorId={color.id}
             colorMappings={colorMappings}
             onRemoveMapping={onRemoveMapping}
+            t={t}
           />
         </div>
       ))}
@@ -795,10 +797,12 @@ function ColorMappingsList({
   colorId,
   colorMappings,
   onRemoveMapping,
+  t,
 }: {
   colorId: string;
   colorMappings: Record<string, string>;
   onRemoveMapping: (elementId: string) => void;
+  t: ReturnType<typeof useTranslations<"colorSchemeDesigner">>;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -816,7 +820,7 @@ function ColorMappingsList({
         className="text-[11px] text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1"
         onClick={() => setOpen(!open)}
       >
-        {mappedElements.length} mapping{mappedElements.length > 1 ? "s" : ""}{" "}
+        {t("mappingCount", { count: mappedElements.length })}{" "}
         {open ? (
           <ChevronUp className="w-3 h-3" />
         ) : (
@@ -837,7 +841,7 @@ function ColorMappingsList({
                 type="button"
                 className="text-gray-400 hover:text-red-500 dark:hover:text-red-400 p-0.5"
                 onClick={() => onRemoveMapping(elementId)}
-                aria-label={`Remove ${ELEMENT_LABELS[elementId] ?? elementId}`}
+                aria-label={t("removeMapping", { element: ELEMENT_LABELS[elementId] ?? elementId })}
               >
                 <X className="w-3 h-3" />
               </button>

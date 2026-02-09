@@ -436,11 +436,17 @@ export function BlogPreview({
                   {["Design", "CSS", "Accessibility", "UI"].map((tag) => (
                     <span
                       key={tag}
-                      className={`px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 ${lc} ${mr("article-tag-bg")} ${mr("article-tag-text")}`}
-                      style={{ ...s("article-tag-bg"), ...s("article-tag-text", "text") }}
+                      className={`px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 ${lc} ${mr("article-tag-bg")}`}
+                      style={s("article-tag-bg")}
                       onClick={click("article-tag-bg")}
                     >
-                      {tag}
+                      <span
+                        className={`text-gray-600 dark:text-gray-300 ${lc} ${mr("article-tag-text")}`}
+                        style={s("article-tag-text", "text")}
+                        onClick={click("article-tag-text")}
+                      >
+                        {tag}
+                      </span>
                     </span>
                   ))}
                 </div>
@@ -488,15 +494,29 @@ export function BlogPreview({
                 style={s("article-body", "text")}
                 onClick={click("article-body")}
               >
-                With properties like <code
-                  className={`px-1 py-0.5 rounded text-xs bg-gray-50 dark:bg-gray-800 text-red-600 dark:text-red-400 ${lc} ${mr("article-code-bg")}`}
-                  style={{ ...s("article-code-bg"), ...s("article-code-text", "text") }}
+                With properties like{" "}
+                <span
+                  className={`px-1 py-0.5 rounded text-xs bg-gray-50 dark:bg-gray-800 ${lc} ${mr("article-code-bg")}`}
+                  style={s("article-code-bg")}
                   onClick={click("article-code-bg")}
-                >grid-template-columns</code> and <code
-                  className={`px-1 py-0.5 rounded text-xs bg-gray-50 dark:bg-gray-800 text-red-600 dark:text-red-400 ${lc} ${mr("article-code-bg")}`}
-                  style={{ ...s("article-code-bg"), ...s("article-code-text", "text") }}
+                >
+                  <code
+                    className={`text-red-600 dark:text-red-400 ${lc} ${mr("article-code-text")}`}
+                    style={s("article-code-text", "text")}
+                    onClick={click("article-code-text")}
+                  >grid-template-columns</code>
+                </span>{" "}and{" "}
+                <span
+                  className={`px-1 py-0.5 rounded text-xs bg-gray-50 dark:bg-gray-800 ${lc} ${mr("article-code-bg")}`}
+                  style={s("article-code-bg")}
                   onClick={click("article-code-bg")}
-                >grid-template-rows</code>, you can create complex layouts with minimal code.
+                >
+                  <code
+                    className={`text-red-600 dark:text-red-400 ${lc} ${mr("article-code-text")}`}
+                    style={s("article-code-text", "text")}
+                    onClick={click("article-code-text")}
+                  >grid-template-rows</code>
+                </span>, you can create complex layouts with minimal code.
               </p>
               <div className="border-t-2 border-gray-100 dark:border-gray-800 pt-3 mt-2">
                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -504,11 +524,17 @@ export function BlogPreview({
                   {["CSS", "Layout", "Tutorial"].map((tag) => (
                     <span
                       key={tag}
-                      className={`px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 ${lc} ${mr("article-tag-bg")} ${mr("article-tag-text")}`}
-                      style={{ ...s("article-tag-bg"), ...s("article-tag-text", "text") }}
+                      className={`px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 ${lc} ${mr("article-tag-bg")}`}
+                      style={s("article-tag-bg")}
                       onClick={click("article-tag-bg")}
                     >
-                      {tag}
+                      <span
+                        className={`text-gray-600 dark:text-gray-300 ${lc} ${mr("article-tag-text")}`}
+                        style={s("article-tag-text", "text")}
+                        onClick={click("article-tag-text")}
+                      >
+                        {tag}
+                      </span>
                     </span>
                   ))}
                 </div>
@@ -579,11 +605,17 @@ export function BlogPreview({
                   {["Accessibility", "WCAG", "HTML"].map((tag) => (
                     <span
                       key={tag}
-                      className={`px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 ${lc} ${mr("article-tag-bg")} ${mr("article-tag-text")}`}
-                      style={{ ...s("article-tag-bg"), ...s("article-tag-text", "text") }}
+                      className={`px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 ${lc} ${mr("article-tag-bg")}`}
+                      style={s("article-tag-bg")}
                       onClick={click("article-tag-bg")}
                     >
-                      {tag}
+                      <span
+                        className={`text-gray-600 dark:text-gray-300 ${lc} ${mr("article-tag-text")}`}
+                        style={s("article-tag-text", "text")}
+                        onClick={click("article-tag-text")}
+                      >
+                        {tag}
+                      </span>
                     </span>
                   ))}
                 </div>
@@ -701,12 +733,10 @@ export function BlogPreview({
                 <span key={item} className="flex items-center gap-3">
                   {i > 0 && (
                     <span
-                      className={`text-gray-300 dark:text-gray-600 ${lc} ${mr("footer-divider")}`}
+                      className={`border-l border-gray-300 dark:border-gray-600 h-4 ${lc} ${mr("footer-divider")}`}
                       style={s("footer-divider", "border")}
                       onClick={click("footer-divider")}
-                    >
-                      ·
-                    </span>
+                    />
                   )}
                   <span
                     className={`text-gray-400 dark:text-gray-500 hover:underline ${lc} ${mr("footer-link")}`}

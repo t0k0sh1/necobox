@@ -1274,6 +1274,14 @@
       "cancel": "キャンセル",
       "replace": "置換"
     },
+    "paletteAutoGenerateConfirm": {
+      "title": "パレットの置換",
+      "description": "既存のパレットカラーとその要素割り当てが置換されます。続行しますか？",
+      "cancel": "キャンセル",
+      "replace": "置換"
+    },
+    "mappingCount": "{count}件の割り当て",
+    "removeMapping": "{element} を解除",
     "presetNeutral": "ニュートラル",
     "presetWarm": "ウォーム",
     "presetCool": "クール",

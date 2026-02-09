@@ -26,6 +26,15 @@ import { useColorSchemeStorage } from "@/lib/hooks/useColorSchemeStorage";
 import { useTranslations } from "next-intl";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 
+/** main 要素の min-height を 0 にしてページ全体のスクロールを抑止する */
+function useOverrideMainMinHeight() {
+  useEffect(() => {
+    const main = document.querySelector("main");
+    if (main) main.style.minHeight = "0";
+    return () => { if (main) main.style.minHeight = ""; };
+  }, []);
+}
+
 type PendingAction =
   | { type: "load"; schemeId: string }
   | { type: "new" }
@@ -44,6 +53,7 @@ export default function ColorSchemeDesignerPage() {
   const [previewDark, setPreviewDark] = useState(false);
 
   const storage = useColorSchemeStorage();
+  useOverrideMainMinHeight();
 
   // ワーキングスキームを構築
   const workingScheme = useMemo<WorkingScheme>(
@@ -98,24 +108,6 @@ export default function ColorSchemeDesignerPage() {
     if (!restoredRef.current) return;
     saveDraftState(workingScheme);
   }, [workingScheme, saveDraftState]);
-
-  // ダッシュボード風レイアウト: ビューポートに制約しページスクロールを防止
-  useEffect(() => {
-    const html = document.documentElement;
-    const body = document.body;
-    const main = body.querySelector("main");
-    html.style.overflow = "hidden";
-    body.style.maxHeight = "100vh";
-    body.style.overflow = "hidden";
-    // main の min-height: auto がコンテンツサイズを強制するため 0 に上書き
-    if (main) main.style.minHeight = "0";
-    return () => {
-      html.style.overflow = "";
-      body.style.maxHeight = "";
-      body.style.overflow = "";
-      if (main) main.style.minHeight = "";
-    };
-  }, []);
 
   // スキームをUIに適用するヘルパー
   const applyScheme = useCallback(
@@ -222,8 +214,10 @@ export default function ColorSchemeDesignerPage() {
           }
         }
         for (const [elementId, colorIndex] of Object.entries(preset.mappings)) {
-          // パレット色で既に割り当て済みの要素は上書きする
-          next[elementId] = newGrayscaleColors[colorIndex].id;
+          // パレット色で既に割り当て済みの要素は保持し、未割り当てのみプリセットで埋める
+          if (!(elementId in next)) {
+            next[elementId] = newGrayscaleColors[colorIndex].id;
+          }
         }
         return next;
       });
@@ -317,7 +311,7 @@ export default function ColorSchemeDesignerPage() {
   }, []);
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] overflow-hidden">
       {/* ヘッダー */}
       <div className="px-4 pt-4">
         <Breadcrumbs items={[{ label: t("breadcrumb") }]} />

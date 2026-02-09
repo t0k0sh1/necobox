@@ -1274,6 +1274,14 @@
       "cancel": "Cancel",
       "replace": "Replace"
     },
+    "paletteAutoGenerateConfirm": {
+      "title": "Replace Palette Colors",
+      "description": "Existing palette colors and their element mappings will be replaced. Continue?",
+      "cancel": "Cancel",
+      "replace": "Replace"
+    },
+    "mappingCount": "{count, plural, one {# mapping} other {# mappings}}",
+    "removeMapping": "Remove {element}",
     "presetNeutral": "Neutral",
     "presetWarm": "Warm",
     "presetCool": "Cool",
