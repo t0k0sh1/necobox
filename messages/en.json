@@ -1287,7 +1287,13 @@
     "presetCool": "Cool",
     "presetOcean": "Ocean",
     "presetForest": "Forest",
-    "presetSunset": "Sunset"
+    "presetSunset": "Sunset",
+    "undo": "Undo",
+    "redo": "Redo",
+    "noUndo": "Nothing to undo",
+    "noRedo": "Nothing to redo",
+    "contrastWarnings": "Contrast",
+    "mobileUnsupported": "This tool requires a tablet-sized screen or larger. Please use a device with a screen width of 768px or more."
   },
   "textProcessor": {
     "title": "Text Processor",

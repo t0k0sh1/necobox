@@ -102,7 +102,7 @@ export function BlocksPreview({ colors }: BlocksPreviewProps) {
   const hasColors = colors.length > 0;
 
   return (
-    <div className="fixed bottom-[57px] left-0 right-0 z-50 bg-white/90 dark:bg-gray-950/90 backdrop-blur border-t px-4 py-2">
+    <div className="hidden md:block fixed bottom-[57px] left-0 right-0 z-50 bg-white/90 dark:bg-gray-950/90 backdrop-blur border-t px-4 py-2">
       {hasColors ? (
         <div className="flex gap-4 max-w-screen-xl mx-auto">
           <div className="flex-1 min-w-0">

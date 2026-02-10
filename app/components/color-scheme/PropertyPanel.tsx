@@ -12,11 +12,14 @@ import type {
   ColorScheme,
   SavedColorScheme,
 } from "@/lib/utils/color-scheme-designer";
-import { PaletteEditor, type GrayscalePreset, type PalettePreset } from "./PaletteEditor";
+import type { GrayscalePreset, PalettePreset } from "@/lib/utils/color-scheme-designer";
+import { PaletteEditor } from "./PaletteEditor";
 import { AccessibilityInfo } from "./AccessibilityInfo";
 import { ExportSection } from "./ExportSection";
 import { SchemeSelector } from "./SchemeSelector";
-import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ChevronDown, Undo2, Redo2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -41,6 +44,11 @@ interface PropertyPanelProps {
   onNew: () => void;
   onLoad: (schemeId: string) => void;
   onDelete: () => void;
+  // Undo/Redo
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
 }
 
 interface SectionProps {
@@ -84,13 +92,55 @@ export function PropertyPanel({
   onNew,
   onLoad,
   onDelete,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
 }: PropertyPanelProps) {
   const t = useTranslations("colorSchemeDesigner");
 
   return (
     <div className="space-y-1 bg-white dark:bg-black rounded-lg border p-4">
-      {/* スキーム管理 */}
+      {/* Undo/Redo ボタン + スキーム管理 */}
       <div className="pb-3 border-b">
+        <div className="flex items-center justify-end gap-1 mb-2">
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={onUndo}
+                  disabled={!canUndo}
+                  aria-label={t("undo")}
+                >
+                  <Undo2 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>{canUndo ? t("undo") : t("noUndo")}</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={onRedo}
+                  disabled={!canRedo}
+                  aria-label={t("redo")}
+                >
+                  <Redo2 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>{canRedo ? t("redo") : t("noRedo")}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <SchemeSelector
           savedSchemes={savedSchemes}
           activeSchemeId={activeSchemeId}
