@@ -1,7 +1,10 @@
 "use client";
 
-import type { SchemeColor } from "@/lib/utils/color-scheme-designer";
-import { getOptimalTextColor } from "@/lib/utils/color-scheme-designer";
+import type { SchemeColor, ElementContrastWarning } from "@/lib/utils/color-scheme-designer";
+import { getOptimalTextColor, resolveElementContrasts } from "@/lib/utils/color-scheme-designer";
+import { AlertTriangle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useMemo } from "react";
 
 /** プレビュー要素の色適用タイプ */
 type ElementColorType = "bg" | "text" | "border";
@@ -95,12 +98,42 @@ export const ELEMENT_LABELS: Record<string, string> = {
   "footer-divider": "Footer Divider",
 };
 
+/** テキスト要素 → 親背景要素のマッピング（コントラスト計算用） */
+const TEXT_PARENT_BG_MAP: Record<string, string> = {
+  "header-logo": "header-bg",
+  "header-nav-link": "header-bg",
+  "header-nav-active": "header-bg",
+  "article-title": "article-bg",
+  "article-meta": "article-bg",
+  "article-body": "article-bg",
+  "article-link": "article-bg",
+  "article-h2": "article-bg",
+  "article-blockquote-text": "article-blockquote-bg",
+  "article-code-text": "article-code-bg",
+  "article-tag-text": "article-tag-bg",
+  "sidebar-heading": "sidebar-bg",
+  "sidebar-profile-name": "sidebar-bg",
+  "sidebar-profile-bio": "sidebar-bg",
+  "sidebar-category-text": "sidebar-bg",
+  "sidebar-category-count": "sidebar-bg",
+  "footer-text": "footer-bg",
+  "footer-link": "footer-bg",
+};
+
+/** resolveElementContrasts に渡す要素リスト */
+const CONTRAST_CHECK_ELEMENTS = PREVIEW_ELEMENTS.map((el) => ({
+  id: el.id,
+  colorType: el.colorType,
+  parentBgId: TEXT_PARENT_BG_MAP[el.id],
+}));
+
 interface BlogPreviewProps {
   colors: SchemeColor[];
   colorMappings: Record<string, string>;
   linkingColorId: string | null;
   onElementClick?: (elementId: string) => void;
   previewDark?: boolean;
+  showContrastWarnings?: boolean;
 }
 
 /**
@@ -189,6 +222,7 @@ function SidebarWidget({
   click,
   lc,
   mr,
+  warnBadge,
   children,
 }: {
   title: string;
@@ -199,19 +233,37 @@ function SidebarWidget({
   click: (id: string) => (e: React.MouseEvent) => void;
   lc: string;
   mr: (id: string) => string;
+  warnBadge?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="mb-4">
       <div
-        className={`text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b-2 border-gray-200 dark:border-gray-700 pb-1.5 mb-2 ${lc} ${mr(titleId)}`}
+        className={`relative text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b-2 border-gray-200 dark:border-gray-700 pb-1.5 mb-2 ${lc} ${mr(titleId)}`}
         style={s(titleId, "text")}
         onClick={click(titleId)}
       >
+        {warnBadge}
         {title}
       </div>
       {children}
     </div>
+  );
+}
+
+/** コントラスト警告バッジ（親の TooltipProvider 内で使用） */
+function ContrastWarningBadge({ warning }: { warning: ElementContrastWarning }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="absolute -top-1 -right-1 z-10" tabIndex={0}>
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-500 drop-shadow-sm" />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs max-w-[200px]">
+        <p>Contrast {warning.ratio.toFixed(1)}:1 — WCAG AA fail</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -221,8 +273,24 @@ export function BlogPreview({
   linkingColorId,
   onElementClick,
   previewDark = false,
+  showContrastWarnings = false,
 }: BlogPreviewProps) {
   const isLinking = !!linkingColorId;
+
+  // コントラスト警告を計算（色・マッピング変更時のみ再計算）
+  const contrastWarnings = useMemo(() => {
+    if (!showContrastWarnings) return new Map<string, ElementContrastWarning>();
+    const warnings = resolveElementContrasts(colorMappings, colors, CONTRAST_CHECK_ELEMENTS, previewDark);
+    return new Map(warnings.map((w) => [w.elementId, w]));
+  }, [showContrastWarnings, colorMappings, colors, previewDark]);
+
+  // 要素に警告バッジを付ける関数
+  const warn = (elementId: string) => {
+    if (!showContrastWarnings) return null;
+    const w = contrastWarnings.get(elementId);
+    if (!w) return null;
+    return <ContrastWarningBadge warning={w} />;
+  };
 
   const getColor = (elementId: string): string | undefined => {
     const colorId = colorMappings[elementId];
@@ -264,6 +332,7 @@ export function BlogPreview({
   const swProps = { isLinking, colorMappings, getColor, onClick: click };
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="rounded-lg border-2 bg-white dark:bg-gray-900 overflow-y-auto shadow-sm text-[13px] leading-relaxed select-none flex-1 min-h-0">
       {/* ページ全体: 外側 div で直接スクロール、min-h-full で背景を埋める */}
       <SelectableWrapper
@@ -281,10 +350,11 @@ export function BlogPreview({
         >
           <div className="max-w-[720px] mx-auto px-5 py-3 flex items-center justify-between">
             <div
-              className={`flex items-center gap-2 ${lc} ${mr("header-logo")}`}
+              className={`relative flex items-center gap-2 ${lc} ${mr("header-logo")}`}
               style={s("header-logo", "text")}
               onClick={click("header-logo")}
             >
+              {warn("header-logo")}
               <div className="w-5 h-5 rounded-sm bg-gray-800 dark:bg-gray-200" />
               <span className="font-bold text-[15px] text-gray-800 dark:text-gray-100" style={s("header-logo", "text")}>
                 Dev Blog
@@ -322,19 +392,21 @@ export function BlogPreview({
             >
               {/* タイトル */}
               <h1
-                className={`text-lg font-bold leading-snug text-gray-900 dark:text-gray-50 mb-1 ${lc} ${mr("article-title")}`}
+                className={`relative text-lg font-bold leading-snug text-gray-900 dark:text-gray-50 mb-1 ${lc} ${mr("article-title")}`}
                 style={s("article-title", "text")}
                 onClick={click("article-title")}
               >
+                {warn("article-title")}
                 Building a Design System from Scratch
               </h1>
 
               {/* メタ情報 */}
               <div
-                className={`text-xs text-gray-400 dark:text-gray-500 mb-4 flex items-center gap-1.5 ${lc} ${mr("article-meta")}`}
+                className={`relative text-xs text-gray-400 dark:text-gray-500 mb-4 flex items-center gap-1.5 ${lc} ${mr("article-meta")}`}
                 style={s("article-meta", "text")}
                 onClick={click("article-meta")}
               >
+                {warn("article-meta")}
                 <div className="w-4 h-4 rounded-full bg-gray-300 dark:bg-gray-600 shrink-0" />
                 <span>John Doe</span>
                 <span>·</span>
@@ -350,19 +422,21 @@ export function BlogPreview({
 
               {/* 本文 */}
               <p
-                className={`text-gray-600 dark:text-gray-300 mb-3 leading-[1.8] ${lc} ${mr("article-body")}`}
+                className={`relative text-gray-600 dark:text-gray-300 mb-3 leading-[1.8] ${lc} ${mr("article-body")}`}
                 style={s("article-body", "text")}
                 onClick={click("article-body")}
               >
+                {warn("article-body")}
                 A design system is a collection of reusable components, guided by clear standards, that can be assembled to build applications.
               </p>
 
               {/* 見出し H2 */}
               <h2
-                className={`text-[15px] font-bold text-gray-800 dark:text-gray-100 mb-2 mt-4 border-b-2 border-gray-100 dark:border-gray-800 pb-1 ${lc} ${mr("article-h2")}`}
+                className={`relative text-[15px] font-bold text-gray-800 dark:text-gray-100 mb-2 mt-4 border-b-2 border-gray-100 dark:border-gray-800 pb-1 ${lc} ${mr("article-h2")}`}
                 style={s("article-h2", "text")}
                 onClick={click("article-h2")}
               >
+                {warn("article-h2")}
                 Getting Started
               </h2>
 
@@ -374,10 +448,11 @@ export function BlogPreview({
               >
                 First, define your color palette. Good color choices improve readability and{" "}
                 <span
-                  className={`underline decoration-1 underline-offset-2 text-blue-600 dark:text-blue-400 ${lc} ${mr("article-link")}`}
+                  className={`relative underline decoration-1 underline-offset-2 text-blue-600 dark:text-blue-400 ${lc} ${mr("article-link")}`}
                   style={s("article-link", "text")}
                   onClick={click("article-link")}
                 >
+                  {warn("article-link")}
                   accessibility guidelines
                 </span>
                 {" "}should always be considered.
@@ -391,10 +466,11 @@ export function BlogPreview({
                 className="border-l-4 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 rounded-r pl-4 pr-3 py-3 mb-4 italic"
               >
                 <span
-                  className={`text-gray-500 dark:text-gray-400 leading-[1.7] ${lc} ${mr("article-blockquote-text")}`}
+                  className={`relative text-gray-500 dark:text-gray-400 leading-[1.7] ${lc} ${mr("article-blockquote-text")}`}
                   style={s("article-blockquote-text", "text")}
                   onClick={click("article-blockquote-text")}
                 >
+                  {warn("article-blockquote-text")}
                   &ldquo;Design is not just what it looks like. Design is how it works.&rdquo;
                 </span>
               </SelectableWrapper>
@@ -406,10 +482,11 @@ export function BlogPreview({
                 onClick={click("article-code-bg")}
               >
                 <div
-                  className={`text-red-600 dark:text-red-400 ${lc} ${mr("article-code-text")}`}
+                  className={`relative text-red-600 dark:text-red-400 ${lc} ${mr("article-code-text")}`}
                   style={s("article-code-text", "text")}
                   onClick={click("article-code-text")}
                 >
+                  {warn("article-code-text")}
                   <span className="opacity-50">1</span>{"  :root { "}
                   <span className="text-blue-600 dark:text-blue-400">color-scheme</span>
                   {": light dark; }"}
@@ -632,7 +709,7 @@ export function BlogPreview({
               className="bg-white dark:bg-gray-900 rounded border-2 border-gray-200 dark:border-gray-700 p-4"
             >
               {/* About ウィジェット */}
-              <SidebarWidget title="About" titleId="sidebar-heading" isLinking={isLinking} colorMappings={colorMappings} s={s} click={click} lc={lc} mr={mr}>
+              <SidebarWidget title="About" titleId="sidebar-heading" isLinking={isLinking} colorMappings={colorMappings} s={s} click={click} lc={lc} mr={mr} warnBadge={warn("sidebar-heading")}>
                 <div className="text-center">
                   <div
                     className={`w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 mx-auto mb-2 ${lc} ${mr("sidebar-profile-avatar")}`}
@@ -657,7 +734,7 @@ export function BlogPreview({
               </SidebarWidget>
 
               {/* Categories ウィジェット */}
-              <SidebarWidget title="Categories" titleId="sidebar-heading" isLinking={isLinking} colorMappings={colorMappings} s={s} click={click} lc={lc} mr={mr}>
+              <SidebarWidget title="Categories" titleId="sidebar-heading" isLinking={isLinking} colorMappings={colorMappings} s={s} click={click} lc={lc} mr={mr} warnBadge={warn("sidebar-heading")}>
                 {[
                   { name: "Design", count: 12 },
                   { name: "Development", count: 24 },
@@ -690,7 +767,7 @@ export function BlogPreview({
               </SidebarWidget>
 
               {/* Recent Posts ウィジェット */}
-              <SidebarWidget title="Recent Posts" titleId="sidebar-heading" isLinking={isLinking} colorMappings={colorMappings} s={s} click={click} lc={lc} mr={mr}>
+              <SidebarWidget title="Recent Posts" titleId="sidebar-heading" isLinking={isLinking} colorMappings={colorMappings} s={s} click={click} lc={lc} mr={mr} warnBadge={warn("sidebar-heading")}>
                 {[
                   { title: "Understanding CSS Grid", date: "Jan 10" },
                   { title: "React Server Components", date: "Jan 5" },
@@ -722,10 +799,11 @@ export function BlogPreview({
         >
           <div className="max-w-[720px] mx-auto px-5 py-3 flex items-center justify-between">
             <span
-              className={`text-gray-400 dark:text-gray-500 ${lc} ${mr("footer-text")}`}
+              className={`relative text-gray-400 dark:text-gray-500 ${lc} ${mr("footer-text")}`}
               style={s("footer-text", "text")}
               onClick={click("footer-text")}
             >
+              {warn("footer-text")}
               © 2025 Dev Blog. All rights reserved.
             </span>
             <div className="flex gap-3">
@@ -752,5 +830,6 @@ export function BlogPreview({
         </SelectableWrapper>
       </SelectableWrapper>
     </div>
+    </TooltipProvider>
   );
 }

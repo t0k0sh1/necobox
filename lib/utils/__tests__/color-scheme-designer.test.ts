@@ -6,6 +6,7 @@ import {
   exportAsCssVariables,
   exportAsTailwindConfig,
   calculateContrastPairs,
+  resolveElementContrasts,
   type SchemeColor,
   type ColorScheme,
 } from "../color-scheme-designer";
@@ -205,6 +206,112 @@ describe("color-scheme-designer", () => {
       // hex（ライト側）と hex2（ダーク側）の両方が評価対象に含まれる
       expect(bgNames).toContain("Background");
       expect(bgNames).toContain("Background (Dark)");
+    });
+  });
+
+  // --- resolveElementContrasts ---
+  describe("resolveElementContrasts", () => {
+    const elements = [
+      { id: "title", colorType: "text", parentBgId: "page-bg" },
+      { id: "page-bg", colorType: "bg" },
+      { id: "border", colorType: "border" },
+    ];
+
+    it("WCAG AA 不合格のテキスト要素のみ警告を返す", () => {
+      // 黒背景に暗いグレー文字 → コントラスト不足
+      const colors: SchemeColor[] = [
+        { id: "c1", hex: "#333333", name: "DarkGray", group: "palette" },
+        { id: "c2", hex: "#000000", name: "Black", group: "palette" },
+      ];
+      const mappings = { "title": "c1", "page-bg": "c2" };
+      const warnings = resolveElementContrasts(mappings, colors, elements, false);
+      expect(warnings.length).toBe(1);
+      expect(warnings[0].elementId).toBe("title");
+      expect(warnings[0].ratio).toBeGreaterThan(0);
+      expect(warnings[0].ratio).toBeLessThan(4.5);
+    });
+
+    it("WCAG AA 合格の場合は警告を返さない", () => {
+      // 白背景に黒文字 → 21:1 で合格
+      const colors: SchemeColor[] = [
+        { id: "c1", hex: "#000000", name: "Black", group: "palette" },
+        { id: "c2", hex: "#ffffff", name: "White", group: "palette" },
+      ];
+      const mappings = { "title": "c1", "page-bg": "c2" };
+      const warnings = resolveElementContrasts(mappings, colors, elements, false);
+      expect(warnings.length).toBe(0);
+    });
+
+    it("parentBgId がない要素はスキップされる", () => {
+      const elementsNoBg = [
+        { id: "text-no-parent", colorType: "text" },
+      ];
+      const colors: SchemeColor[] = [
+        { id: "c1", hex: "#333333", name: "DarkGray", group: "palette" },
+      ];
+      const mappings = { "text-no-parent": "c1" };
+      const warnings = resolveElementContrasts(mappings, colors, elementsNoBg, false);
+      expect(warnings.length).toBe(0);
+    });
+
+    it("マッピングが未設定のテキスト要素はスキップされる", () => {
+      const colors: SchemeColor[] = [
+        { id: "c2", hex: "#000000", name: "Black", group: "palette" },
+      ];
+      // title にマッピングがない
+      const mappings = { "page-bg": "c2" };
+      const warnings = resolveElementContrasts(mappings, colors, elements, false);
+      expect(warnings.length).toBe(0);
+    });
+
+    it("背景のマッピングが未設定の場合はスキップされる", () => {
+      const colors: SchemeColor[] = [
+        { id: "c1", hex: "#333333", name: "DarkGray", group: "palette" },
+      ];
+      // page-bg にマッピングがない
+      const mappings = { "title": "c1" };
+      const warnings = resolveElementContrasts(mappings, colors, elements, false);
+      expect(warnings.length).toBe(0);
+    });
+
+    it("bg / border タイプの要素は評価対象外", () => {
+      const colors: SchemeColor[] = [
+        { id: "c1", hex: "#333333", name: "DarkGray", group: "palette" },
+      ];
+      const mappings = { "page-bg": "c1", "border": "c1" };
+      const warnings = resolveElementContrasts(mappings, colors, elements, false);
+      expect(warnings.length).toBe(0);
+    });
+
+    it("previewDark=true のとき hex2 が使用される", () => {
+      // ライト: 白背景に黒文字 → 合格
+      // ダーク: 黒背景に暗いグレー文字 → 不合格
+      const colors: SchemeColor[] = [
+        { id: "c1", hex: "#000000", hex2: "#333333", name: "Text", group: "grayscale" },
+        { id: "c2", hex: "#ffffff", hex2: "#000000", name: "BG", group: "grayscale" },
+      ];
+      const mappings = { "title": "c1", "page-bg": "c2" };
+
+      // ライトモード → 合格
+      const warningsLight = resolveElementContrasts(mappings, colors, elements, false);
+      expect(warningsLight.length).toBe(0);
+
+      // ダークモード → hex2 (#333333 on #000000) は不合格
+      const warningsDark = resolveElementContrasts(mappings, colors, elements, true);
+      expect(warningsDark.length).toBe(1);
+      expect(warningsDark[0].fgHex).toBe("#333333");
+      expect(warningsDark[0].bgHex).toBe("#000000");
+    });
+
+    it("hex2 がない場合 previewDark=true でも hex を使う", () => {
+      const colors: SchemeColor[] = [
+        { id: "c1", hex: "#000000", name: "Text", group: "palette" },
+        { id: "c2", hex: "#ffffff", name: "BG", group: "palette" },
+      ];
+      const mappings = { "title": "c1", "page-bg": "c2" };
+      const warnings = resolveElementContrasts(mappings, colors, elements, true);
+      // #000000 on #ffffff → 21:1 合格
+      expect(warnings.length).toBe(0);
     });
   });
 });

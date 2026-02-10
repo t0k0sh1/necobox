@@ -58,6 +58,20 @@ export interface WorkingScheme {
   colorMappings: Record<string, string>;
 }
 
+// --- プリセット型定義 ---
+
+export interface GrayscalePreset {
+  key: string;
+  colors: Array<{ name: string; hex: string; hex2: string }>;
+  mappings: Record<string, number>;
+}
+
+export interface PalettePreset {
+  key: string;
+  colors: Array<{ name: string; hex: string }>;
+  mappings: Record<string, number>;
+}
+
 // --- ヘルパー関数 ---
 
 /** HSLからHEXに変換 */
@@ -335,6 +349,69 @@ export interface ContrastPair {
   ratio: number;
   wcagAA: boolean;
   wcagAAA: boolean;
+}
+
+/**
+ * テキスト要素のコントラスト警告を計算する。
+ * colorMappings を使って、各テキスト要素が紐付いている色と、
+ * 最も近い親要素の背景色のコントラスト比を計算する。
+ */
+export interface ElementContrastWarning {
+  elementId: string;
+  ratio: number;
+  fgHex: string;
+  bgHex: string;
+}
+
+export function resolveElementContrasts(
+  colorMappings: Record<string, string>,
+  colors: SchemeColor[],
+  previewElements: Array<{ id: string; colorType: string; parentBgId?: string }>,
+  previewDark: boolean,
+): ElementContrastWarning[] {
+  const warnings: ElementContrastWarning[] = [];
+  const colorById = new Map<string, SchemeColor>();
+  for (const c of colors) colorById.set(c.id, c);
+
+  const resolveHex = (colorId: string): string | null => {
+    const c = colorById.get(colorId);
+    if (!c) return null;
+    return (previewDark && c.hex2) ? c.hex2 : c.hex;
+  };
+
+  for (const el of previewElements) {
+    if (el.colorType !== "text") continue;
+    const fgColorId = colorMappings[el.id];
+    if (!fgColorId) continue;
+    const fgHex = resolveHex(fgColorId);
+    if (!fgHex) continue;
+
+    // 親背景を探す
+    let bgHex: string | null = null;
+    if (el.parentBgId) {
+      const bgColorId = colorMappings[el.parentBgId];
+      if (bgColorId) {
+        bgHex = resolveHex(bgColorId);
+      }
+    }
+    if (!bgHex) continue;
+
+    const fgRgb = hexToRgb(fgHex);
+    const bgRgb = hexToRgb(bgHex);
+    if (!fgRgb || !bgRgb) continue;
+
+    const result = getContrastRatio(fgRgb, bgRgb);
+    if (!result.wcagAA) {
+      warnings.push({
+        elementId: el.id,
+        ratio: result.ratio,
+        fgHex,
+        bgHex,
+      });
+    }
+  }
+
+  return warnings;
 }
 
 /** パレット内の色同士 + 白/黒テキストとのコントラスト比を計算 */

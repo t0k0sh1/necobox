@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, AlertTriangle, Monitor } from "lucide-react";
 import {
   type SchemeColor,
   type ColorScheme,
@@ -21,8 +21,9 @@ import {
   DEFAULT_SCHEME_NAME,
   generateId,
 } from "@/lib/utils/color-scheme-designer";
-import type { GrayscalePreset, PalettePreset } from "@/app/components/color-scheme/PaletteEditor";
+import type { GrayscalePreset, PalettePreset } from "@/lib/utils/color-scheme-designer";
 import { useColorSchemeStorage } from "@/lib/hooks/useColorSchemeStorage";
+import { useUndoRedo } from "@/lib/hooks/useUndoRedo";
 import { useTranslations } from "next-intl";
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 
@@ -51,8 +52,11 @@ export default function ColorSchemeDesignerPage() {
   const [linkingColorId, setLinkingColorId] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [previewDark, setPreviewDark] = useState(false);
+  const [showContrastWarnings, setShowContrastWarnings] = useState(false);
 
   const storage = useColorSchemeStorage();
+  const undoRedo = useUndoRedo<WorkingScheme>();
+  const [undoRedoVersion, setUndoRedoVersion] = useState(0);
   useOverrideMainMinHeight();
 
   // ワーキングスキームを構築
@@ -109,15 +113,141 @@ export default function ColorSchemeDesignerPage() {
     saveDraftState(workingScheme);
   }, [workingScheme, saveDraftState]);
 
-  // スキームをUIに適用するヘルパー
+  // --- Undo/Redo ---
+
+  // デバウンス付き履歴保存（カラーピッカーの連続操作を1つにまとめる）
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastPushedRef = useRef<WorkingScheme | null>(null);
+  const pendingFirstRef = useRef<WorkingScheme | null>(null);
+
+  const clearDebounceTimer = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    pendingFirstRef.current = null;
+  }, []);
+
+  const pushUndoDebounced = useCallback(
+    (ws: WorkingScheme) => {
+      // デバウンスウィンドウの最初の値をキャプチャ
+      if (!debounceTimerRef.current) {
+        pendingFirstRef.current = ws;
+      }
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = setTimeout(() => {
+        debounceTimerRef.current = null;
+        const first = pendingFirstRef.current;
+        pendingFirstRef.current = null;
+        if (!first) return;
+        // lastPushedRef と同一ならスキップ（重複防止）
+        const last = lastPushedRef.current;
+        if (last && last.name === first.name && last.colors === first.colors && last.colorMappings === first.colorMappings) {
+          return;
+        }
+        undoRedo.push(first);
+        lastPushedRef.current = first;
+        setUndoRedoVersion((v) => v + 1);
+      }, 300);
+    },
+    [undoRedo]
+  );
+
+  // アンマウント時にデバウンスタイマーをクリア
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  // ワーキングスキーム変更時に履歴保存（復元後のみ）
+  const prevWorkingRef = useRef<WorkingScheme | null>(null);
+  const isUndoRedoingRef = useRef(false);
+
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    // undo/redo 操作中はスキップ
+    if (isUndoRedoingRef.current) {
+      isUndoRedoingRef.current = false;
+      prevWorkingRef.current = workingScheme;
+      return;
+    }
+    // 前回の状態を push（現在の変更前の状態を保存）
+    const prev = prevWorkingRef.current;
+    if (prev && (prev.name !== workingScheme.name || prev.colors !== workingScheme.colors || prev.colorMappings !== workingScheme.colorMappings)) {
+      pushUndoDebounced(prev);
+    }
+    prevWorkingRef.current = workingScheme;
+  }, [workingScheme, pushUndoDebounced]);
+
+  const handleUndo = useCallback(() => {
+    clearDebounceTimer();
+    const prev = undoRedo.undo(workingScheme);
+    if (!prev) return;
+    isUndoRedoingRef.current = true;
+    setSchemeName(prev.name);
+    setColors(prev.colors);
+    setColorMappings(prev.colorMappings);
+    lastPushedRef.current = null;
+    setUndoRedoVersion((v) => v + 1);
+  }, [undoRedo, workingScheme, clearDebounceTimer]);
+
+  const handleRedo = useCallback(() => {
+    clearDebounceTimer();
+    const next = undoRedo.redo(workingScheme);
+    if (!next) return;
+    isUndoRedoingRef.current = true;
+    setSchemeName(next.name);
+    setColors(next.colors);
+    setColorMappings(next.colorMappings);
+    lastPushedRef.current = null;
+    setUndoRedoVersion((v) => v + 1);
+  }, [undoRedo, workingScheme, clearDebounceTimer]);
+
+  // キーボードショートカット: Ctrl+Z / Ctrl+Shift+Z (Cmd on Mac)
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod || e.key.toLowerCase() !== "z") return;
+      // 入力フィールド内ではブラウザのデフォルト undo を優先
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      e.preventDefault();
+      if (e.shiftKey) {
+        handleRedo();
+      } else {
+        handleUndo();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [handleUndo, handleRedo]);
+
+  // canUndo / canRedo の状態（undoRedoVersion で再評価）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const canUndo = useMemo(() => undoRedo.canUndo(), [undoRedoVersion]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const canRedo = useMemo(() => undoRedo.canRedo(), [undoRedoVersion]);
+
+  // スキームをUIに適用するヘルパー（履歴もクリア）
   const applyScheme = useCallback(
     (ws: WorkingScheme) => {
+      clearDebounceTimer();
+      isUndoRedoingRef.current = true;
       setSchemeName(ws.name);
       setColors(ws.colors);
       setColorMappings(ws.colorMappings);
       storage.markAsSaved(ws);
+      undoRedo.clear();
+      lastPushedRef.current = null;
+      prevWorkingRef.current = null;
+      setUndoRedoVersion((v) => v + 1);
     },
-    [storage]
+    [storage, undoRedo, clearDebounceTimer]
   );
 
   // リンクモード開始/解除（トグル）
@@ -242,12 +372,18 @@ export default function ColorSchemeDesignerPage() {
       setPendingAction({ type: "new" });
       return;
     }
+    clearDebounceTimer();
+    isUndoRedoingRef.current = true;
     storage.setActiveSchemeId(null);
     setSchemeName(DEFAULT_SCHEME_NAME);
     setColors([]);
     setColorMappings({});
     storage.markAsSaved({ name: DEFAULT_SCHEME_NAME, colors: [], colorMappings: {} });
-  }, [isDirty, storage]);
+    undoRedo.clear();
+    lastPushedRef.current = null;
+    prevWorkingRef.current = null;
+    setUndoRedoVersion((v) => v + 1);
+  }, [isDirty, storage, undoRedo, clearDebounceTimer]);
 
   const handleLoad = useCallback(
     (schemeId: string) => {
@@ -323,11 +459,30 @@ export default function ColorSchemeDesignerPage() {
         </div>
       </div>
 
-      {/* メインコンテンツ: 左プレビュー + 右プロパティパネル */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 min-h-0">
+      {/* モバイル非対応メッセージ（768px未満） */}
+      <div className="flex md:hidden flex-1 items-center justify-center p-8">
+        <div className="text-center space-y-3">
+          <Monitor className="w-10 h-10 text-gray-400 dark:text-gray-500 mx-auto" />
+          <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+            {t("mobileUnsupported")}
+          </p>
+        </div>
+      </div>
+
+      {/* メインコンテンツ: 左プレビュー + 右プロパティパネル（768px以上） */}
+      <div className="hidden md:flex flex-1 flex-col md:flex-row gap-4 p-4 min-h-0">
         {/* プレビュー領域 */}
-        <div className="hidden lg:flex lg:flex-col flex-1 min-w-0 pb-36">
-          <div className="flex justify-end mb-2 shrink-0">
+        <div className="hidden md:flex md:flex-col flex-1 min-w-0 pb-36">
+          <div className="flex justify-end gap-2 mb-2 shrink-0">
+            <Button
+              variant={showContrastWarnings ? "default" : "outline"}
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+              onClick={() => setShowContrastWarnings((v) => !v)}
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              {t("contrastWarnings")}
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -349,12 +504,13 @@ export default function ColorSchemeDesignerPage() {
               linkingColorId={linkingColorId}
               onElementClick={handleElementClick}
               previewDark={previewDark}
+              showContrastWarnings={showContrastWarnings}
             />
           </div>
         </div>
 
         {/* プロパティパネル */}
-        <div className="w-full lg:w-[400px] flex-1 lg:flex-none lg:shrink-0 overflow-y-auto min-h-0 pb-40">
+        <div className="w-full md:w-[360px] flex-1 md:flex-none md:shrink-0 overflow-y-auto min-h-0 pb-40">
           <PropertyPanel
             schemeName={schemeName}
             onSchemeNameChange={setSchemeName}
@@ -375,6 +531,10 @@ export default function ColorSchemeDesignerPage() {
             onNew={handleNew}
             onLoad={handleLoad}
             onDelete={handleDelete}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
           />
         </div>
       </div>

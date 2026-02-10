@@ -1287,7 +1287,13 @@
     "presetCool": "クール",
     "presetOcean": "オーシャン",
     "presetForest": "フォレスト",
-    "presetSunset": "サンセット"
+    "presetSunset": "サンセット",
+    "undo": "元に戻す",
+    "redo": "やり直す",
+    "noUndo": "元に戻す操作はありません",
+    "noRedo": "やり直す操作はありません",
+    "contrastWarnings": "コントラスト",
+    "mobileUnsupported": "このツールはタブレット以上の画面サイズで利用できます。画面幅 768px 以上のデバイスでお使いください。"
   },
   "textProcessor": {
     "title": "テキスト処理",
