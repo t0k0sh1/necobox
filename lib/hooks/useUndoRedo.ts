@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 
 /** Undo/Redo 履歴上限 */
 const MAX_HISTORY = 50;
@@ -71,5 +71,8 @@ export function useUndoRedo<T>(): UndoRedoActions<T> {
   const canUndo = useCallback(() => historyRef.current.past.length > 0, []);
   const canRedo = useCallback(() => historyRef.current.future.length > 0, []);
 
-  return { push, undo, redo, clear, canUndo, canRedo };
+  return useMemo(
+    () => ({ push, undo, redo, clear, canUndo, canRedo }),
+    [push, undo, redo, clear, canUndo, canRedo]
+  );
 }

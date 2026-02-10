@@ -118,25 +118,51 @@ export default function ColorSchemeDesignerPage() {
   // デバウンス付き履歴保存（カラーピッカーの連続操作を1つにまとめる）
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastPushedRef = useRef<WorkingScheme | null>(null);
+  const pendingFirstRef = useRef<WorkingScheme | null>(null);
+
+  const clearDebounceTimer = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    pendingFirstRef.current = null;
+  }, []);
 
   const pushUndoDebounced = useCallback(
     (ws: WorkingScheme) => {
+      // デバウンスウィンドウの最初の値をキャプチャ
+      if (!debounceTimerRef.current) {
+        pendingFirstRef.current = ws;
+      }
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
       debounceTimerRef.current = setTimeout(() => {
+        debounceTimerRef.current = null;
+        const first = pendingFirstRef.current;
+        pendingFirstRef.current = null;
+        if (!first) return;
         // lastPushedRef と同一ならスキップ（重複防止）
         const last = lastPushedRef.current;
-        if (last && last.name === ws.name && last.colors === ws.colors && last.colorMappings === ws.colorMappings) {
+        if (last && last.name === first.name && last.colors === first.colors && last.colorMappings === first.colorMappings) {
           return;
         }
-        undoRedo.push(ws);
-        lastPushedRef.current = ws;
+        undoRedo.push(first);
+        lastPushedRef.current = first;
         setUndoRedoVersion((v) => v + 1);
       }, 300);
     },
     [undoRedo]
   );
+
+  // アンマウント時にデバウンスタイマーをクリア
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // ワーキングスキーム変更時に履歴保存（復元後のみ）
   const prevWorkingRef = useRef<WorkingScheme | null>(null);
@@ -159,6 +185,7 @@ export default function ColorSchemeDesignerPage() {
   }, [workingScheme, pushUndoDebounced]);
 
   const handleUndo = useCallback(() => {
+    clearDebounceTimer();
     const prev = undoRedo.undo(workingScheme);
     if (!prev) return;
     isUndoRedoingRef.current = true;
@@ -167,9 +194,10 @@ export default function ColorSchemeDesignerPage() {
     setColorMappings(prev.colorMappings);
     lastPushedRef.current = null;
     setUndoRedoVersion((v) => v + 1);
-  }, [undoRedo, workingScheme]);
+  }, [undoRedo, workingScheme, clearDebounceTimer]);
 
   const handleRedo = useCallback(() => {
+    clearDebounceTimer();
     const next = undoRedo.redo(workingScheme);
     if (!next) return;
     isUndoRedoingRef.current = true;
@@ -178,7 +206,7 @@ export default function ColorSchemeDesignerPage() {
     setColorMappings(next.colorMappings);
     lastPushedRef.current = null;
     setUndoRedoVersion((v) => v + 1);
-  }, [undoRedo, workingScheme]);
+  }, [undoRedo, workingScheme, clearDebounceTimer]);
 
   // キーボードショートカット: Ctrl+Z / Ctrl+Shift+Z (Cmd on Mac)
   useEffect(() => {
@@ -208,6 +236,7 @@ export default function ColorSchemeDesignerPage() {
   // スキームをUIに適用するヘルパー（履歴もクリア）
   const applyScheme = useCallback(
     (ws: WorkingScheme) => {
+      clearDebounceTimer();
       isUndoRedoingRef.current = true;
       setSchemeName(ws.name);
       setColors(ws.colors);
@@ -218,7 +247,7 @@ export default function ColorSchemeDesignerPage() {
       prevWorkingRef.current = null;
       setUndoRedoVersion((v) => v + 1);
     },
-    [storage, undoRedo]
+    [storage, undoRedo, clearDebounceTimer]
   );
 
   // リンクモード開始/解除（トグル）
@@ -343,6 +372,7 @@ export default function ColorSchemeDesignerPage() {
       setPendingAction({ type: "new" });
       return;
     }
+    clearDebounceTimer();
     isUndoRedoingRef.current = true;
     storage.setActiveSchemeId(null);
     setSchemeName(DEFAULT_SCHEME_NAME);
@@ -353,7 +383,7 @@ export default function ColorSchemeDesignerPage() {
     lastPushedRef.current = null;
     prevWorkingRef.current = null;
     setUndoRedoVersion((v) => v + 1);
-  }, [isDirty, storage, undoRedo]);
+  }, [isDirty, storage, undoRedo, clearDebounceTimer]);
 
   const handleLoad = useCallback(
     (schemeId: string) => {

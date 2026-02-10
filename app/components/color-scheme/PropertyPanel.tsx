@@ -107,16 +107,18 @@ export function PropertyPanel({
           <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={onUndo}
-                  disabled={!canUndo}
-                  aria-label={t("undo")}
-                >
-                  <Undo2 className="w-4 h-4" />
-                </Button>
+                <span tabIndex={0}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={onUndo}
+                    disabled={!canUndo}
+                    aria-label={t("undo")}
+                  >
+                    <Undo2 className="w-4 h-4" />
+                  </Button>
+                </span>
               </TooltipTrigger>
               <TooltipContent side="bottom">
                 <p>{canUndo ? t("undo") : t("noUndo")}</p>
@@ -124,16 +126,18 @@ export function PropertyPanel({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={onRedo}
-                  disabled={!canRedo}
-                  aria-label={t("redo")}
-                >
-                  <Redo2 className="w-4 h-4" />
-                </Button>
+                <span tabIndex={0}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={onRedo}
+                    disabled={!canRedo}
+                    aria-label={t("redo")}
+                  >
+                    <Redo2 className="w-4 h-4" />
+                  </Button>
+                </span>
               </TooltipTrigger>
               <TooltipContent side="bottom">
                 <p>{canRedo ? t("redo") : t("noRedo")}</p>

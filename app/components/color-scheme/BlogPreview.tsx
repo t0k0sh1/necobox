@@ -251,21 +251,19 @@ function SidebarWidget({
   );
 }
 
-/** コントラスト警告バッジ */
+/** コントラスト警告バッジ（親の TooltipProvider 内で使用） */
 function ContrastWarningBadge({ warning }: { warning: ElementContrastWarning }) {
   return (
-    <TooltipProvider delayDuration={200}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="absolute -top-1 -right-1 z-10">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 drop-shadow-sm" />
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="top" className="text-xs max-w-[200px]">
-          <p>Contrast {warning.ratio.toFixed(1)}:1 — WCAG AA fail</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="absolute -top-1 -right-1 z-10" tabIndex={0}>
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-500 drop-shadow-sm" />
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="text-xs max-w-[200px]">
+        <p>Contrast {warning.ratio.toFixed(1)}:1 — WCAG AA fail</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -334,6 +332,7 @@ export function BlogPreview({
   const swProps = { isLinking, colorMappings, getColor, onClick: click };
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="rounded-lg border-2 bg-white dark:bg-gray-900 overflow-y-auto shadow-sm text-[13px] leading-relaxed select-none flex-1 min-h-0">
       {/* ページ全体: 外側 div で直接スクロール、min-h-full で背景を埋める */}
       <SelectableWrapper
@@ -831,5 +830,6 @@ export function BlogPreview({
         </SelectableWrapper>
       </SelectableWrapper>
     </div>
+    </TooltipProvider>
   );
 }
