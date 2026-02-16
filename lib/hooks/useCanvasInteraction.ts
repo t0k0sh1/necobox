@@ -68,7 +68,7 @@ export function useCanvasInteraction(
         setIsPanning(true);
         panStartRef.current = { x: e.clientX, y: e.clientY };
         viewportAtPanStartRef.current = { ...viewport };
-        (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
       }
     },
     [viewport]
@@ -94,7 +94,7 @@ export function useCanvasInteraction(
         setIsPanning(false);
         panStartRef.current = null;
         viewportAtPanStartRef.current = null;
-        (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
+        (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
       }
     },
     [isPanning]

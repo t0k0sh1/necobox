@@ -138,9 +138,6 @@ export const SLOT_ORDER: SlotType[] = [
   "events",
 ];
 
-/** ポリシーは events の右下に表示するため別扱い */
-export const POLICY_SLOT: SlotType = "policies";
-
 /** セルサイズ（全スロット共通） */
 export const CELL_SIZE = { width: 140, height: 90 };
 
@@ -313,6 +310,16 @@ export function getFlowCenter(flow: EventFlow): { x: number; y: number } {
   };
 }
 
+/** 配列の各要素が id: string を持つことを検証 */
+function hasStringIdArray(value: unknown): boolean {
+  if (!Array.isArray(value)) return false;
+  return value.every((item) => {
+    if (typeof item !== "object" || item === null) return false;
+    const rec = item as Record<string, unknown>;
+    return typeof rec.id === "string";
+  });
+}
+
 /** エクスポートデータのバリデーション */
 export function validateExportData(data: unknown): data is ExportData {
   if (typeof data !== "object" || data === null) return false;
@@ -323,11 +330,11 @@ export function validateExportData(data: unknown): data is ExportData {
   return (
     typeof board.id === "string" &&
     typeof board.name === "string" &&
-    Array.isArray(board.flows) &&
-    Array.isArray(board.contexts) &&
-    Array.isArray(board.domains) &&
-    Array.isArray(board.connections) &&
-    Array.isArray(board.hotspots)
+    hasStringIdArray(board.flows) &&
+    hasStringIdArray(board.contexts) &&
+    hasStringIdArray(board.domains) &&
+    hasStringIdArray(board.connections) &&
+    hasStringIdArray(board.hotspots)
   );
 }
 

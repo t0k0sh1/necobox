@@ -1372,6 +1372,57 @@
     "importConfirmTitle": "Import Board",
     "importConfirmDescription": "The current board will be replaced with the imported data. This action cannot be undone.",
     "cancel": "Cancel",
-    "importConfirm": "Import"
+    "importConfirm": "Import",
+    "toolbar": {
+      "select": "Select",
+      "addFlow": "Add Flow",
+      "addContext": "Add Context",
+      "addDomain": "Add Domain",
+      "addConnection": "Add Connection",
+      "addHotspot": "Add Hotspot",
+      "zoomOut": "Zoom Out",
+      "zoomIn": "Zoom In",
+      "resetView": "Reset View",
+      "undo": "Undo",
+      "redo": "Redo",
+      "export": "Export",
+      "import": "Import"
+    },
+    "slots": {
+      "views": "View",
+      "actors": "Actor",
+      "commands": "Command",
+      "aggregates": "Aggregate",
+      "events": "Event",
+      "externalSystems": "External System",
+      "policies": "Policy"
+    },
+    "addSlot": "Add {slot}",
+    "legend": {
+      "toggle": "Legend & Guide",
+      "colors": "Sticky Note Colors",
+      "operations": "Controls",
+      "domainEvent": "Domain Event",
+      "command": "Command",
+      "aggregate": "Aggregate",
+      "actor": "Actor",
+      "policy": "Policy",
+      "readModelView": "Read Model / View",
+      "externalSystem": "External System",
+      "hotspot": "Hotspot",
+      "panCanvas": "Pan canvas",
+      "zoom": "Zoom",
+      "editText": "Edit text",
+      "deleteNote": "Delete note",
+      "deleteSelected": "Delete selected",
+      "undo": "Undo"
+    },
+    "emptyHint": {
+      "title": "Start Event Storming",
+      "addFlow": "Place event flows with {addFlowLabel} in the toolbar",
+      "addBoundary": "Draw boundaries with {addContextLabel} or {addDomainLabel}",
+      "addConnection": "Connect flows with {addConnectionLabel}",
+      "legendHint": "Check the \"Legend & Guide\" at the bottom left for color meanings and shortcuts"
+    }
   }
 }

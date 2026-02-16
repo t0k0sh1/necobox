@@ -11,6 +11,7 @@ interface FlowSlotCellProps {
   slotType: SlotType;
   noteId: string;
   text: string;
+  label: string;
   onDoubleClick: (domRect: DOMRect) => void;
   onContextMenu: (e: React.MouseEvent) => void;
 }
@@ -19,6 +20,7 @@ export function FlowSlotCell({
   slotType,
   noteId,
   text,
+  label,
   onDoubleClick,
   onContextMenu,
 }: FlowSlotCellProps) {
@@ -45,9 +47,11 @@ export function FlowSlotCell({
         e.stopPropagation();
         onContextMenu(e);
       }}
+      role="button"
+      aria-label={`${label}: ${text || label}`}
     >
       <span className="text-xs font-medium text-center px-1.5 leading-tight line-clamp-4 break-all">
-        {text || slotLabel(slotType)}
+        {text || label}
       </span>
     </div>
   );
@@ -57,9 +61,10 @@ export function FlowSlotCell({
 interface SlotAddButtonProps {
   slotType: SlotType;
   onAdd: () => void;
+  title?: string;
 }
 
-export function SlotAddButton({ slotType, onAdd }: SlotAddButtonProps) {
+export function SlotAddButton({ slotType, onAdd, title }: SlotAddButtonProps) {
   const colors = SLOT_COLORS[slotType];
 
   return (
@@ -75,23 +80,9 @@ export function SlotAddButton({ slotType, onAdd }: SlotAddButtonProps) {
         e.stopPropagation();
         onAdd();
       }}
-      title={`${slotLabel(slotType)}を追加`}
+      title={title}
     >
       <Plus className="w-3 h-3 opacity-50" />
     </button>
   );
-}
-
-/** スロット種別の日本語ラベル */
-function slotLabel(type: SlotType): string {
-  const labels: Record<SlotType, string> = {
-    views: "ビュー",
-    actors: "アクター",
-    commands: "コマンド",
-    aggregates: "集約",
-    events: "イベント",
-    externalSystems: "外部システム",
-    policies: "ポリシー",
-  };
-  return labels[type];
 }

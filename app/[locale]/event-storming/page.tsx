@@ -130,6 +130,7 @@ export default function EventStormingPage() {
           board={board}
           toolMode={toolMode}
           onBoardChange={updateBoard}
+          onBoardSet={setBoard}
           onToolModeReset={handleToolModeReset}
         />
       </div>

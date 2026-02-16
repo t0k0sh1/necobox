@@ -9,6 +9,7 @@ import {
 } from "@/lib/utils/event-storming";
 import { FlowSlotCell, SlotAddButton } from "./FlowSlotCell";
 import { Plus } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface EventFlowProps {
   flow: EventFlow;
@@ -29,17 +30,6 @@ interface EventFlowProps {
   onAddNote: (slotType: SlotType) => void;
 }
 
-/** スロット種別の日本語ラベル */
-const SLOT_LABELS: Record<SlotType, string> = {
-  views: "ビュー",
-  actors: "アクター",
-  commands: "コマンド",
-  aggregates: "集約",
-  events: "イベント",
-  externalSystems: "外部システム",
-  policies: "ポリシー",
-};
-
 export function EventFlowComponent({
   flow,
   isSelected,
@@ -50,6 +40,8 @@ export function EventFlowComponent({
   onNoteContextMenu,
   onAddNote,
 }: EventFlowProps) {
+  const t = useTranslations("eventStorming");
+
   return (
     <div
       className="absolute group"
@@ -67,6 +59,8 @@ export function EventFlowComponent({
         e.stopPropagation();
         onClick();
       }}
+      role="group"
+      aria-label="Event Flow"
     >
       {/* 選択/接続ソース枠 */}
       {(isSelected || isConnectionSource) && (
@@ -96,6 +90,7 @@ export function EventFlowComponent({
                   slotType={slotType}
                   noteId={note.id}
                   text={note.text}
+                  label={t(`slots.${slotType}`)}
                   onDoubleClick={(domRect) =>
                     onNoteDoubleClick(slotType, note.id, domRect)
                   }
@@ -110,6 +105,7 @@ export function EventFlowComponent({
                 <SlotAddButton
                   slotType={slotType}
                   onAdd={() => onAddNote(slotType)}
+                  title={t("addSlot", { slot: t(`slots.${slotType}`) })}
                 />
               </div>
             </div>
@@ -133,14 +129,14 @@ export function EventFlowComponent({
                   e.stopPropagation();
                   onAddNote(slotType);
                 }}
-                title={`${SLOT_LABELS[slotType]}を追加`}
+                title={t("addSlot", { slot: t(`slots.${slotType}`) })}
               >
                 <Plus className="w-3 h-3 opacity-50" />
                 <span
                   className="text-[8px] leading-tight opacity-60"
                   style={{ writingMode: "vertical-rl" }}
                 >
-                  {SLOT_LABELS[slotType]}
+                  {t(`slots.${slotType}`)}
                 </span>
               </button>
             )
@@ -163,6 +159,7 @@ export function EventFlowComponent({
               slotType="policies"
               noteId={note.id}
               text={note.text}
+              label={t("slots.policies")}
               onDoubleClick={(domRect) =>
                 onNoteDoubleClick("policies", note.id, domRect)
               }
@@ -190,7 +187,7 @@ export function EventFlowComponent({
             onAddNote("policies");
           }}
         >
-          ポリシー
+          {t("slots.policies")}
         </button>
       </div>
     </div>

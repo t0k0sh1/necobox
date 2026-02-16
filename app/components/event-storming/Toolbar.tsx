@@ -23,6 +23,7 @@ import {
   Download,
   Upload,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ToolbarProps {
   toolMode: ToolMode;
@@ -42,14 +43,14 @@ interface ToolbarProps {
 const TOOL_ITEMS: {
   mode: ToolMode;
   icon: React.ComponentType<{ className?: string }>;
-  label: string;
+  i18nKey: string;
 }[] = [
-  { mode: "select", icon: MousePointer2, label: "選択" },
-  { mode: "addFlow", icon: Plus, label: "フロー追加" },
-  { mode: "addContext", icon: Square, label: "コンテキスト追加" },
-  { mode: "addDomain", icon: Layers, label: "ドメイン追加" },
-  { mode: "addConnection", icon: ArrowRight, label: "接続追加" },
-  { mode: "addHotspot", icon: MessageCircleWarning, label: "ホットスポット追加" },
+  { mode: "select", icon: MousePointer2, i18nKey: "select" },
+  { mode: "addFlow", icon: Plus, i18nKey: "addFlow" },
+  { mode: "addContext", icon: Square, i18nKey: "addContext" },
+  { mode: "addDomain", icon: Layers, i18nKey: "addDomain" },
+  { mode: "addConnection", icon: ArrowRight, i18nKey: "addConnection" },
+  { mode: "addHotspot", icon: MessageCircleWarning, i18nKey: "addHotspot" },
 ];
 
 export function Toolbar({
@@ -66,11 +67,13 @@ export function Toolbar({
   onExport,
   onImport,
 }: ToolbarProps) {
+  const t = useTranslations("eventStorming.toolbar");
+
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex items-center gap-1 px-2 py-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm">
         {/* ツールモード */}
-        {TOOL_ITEMS.map(({ mode, icon: Icon, label }) => (
+        {TOOL_ITEMS.map(({ mode, icon: Icon, i18nKey }) => (
           <Tooltip key={mode}>
             <TooltipTrigger asChild>
               <Button
@@ -83,7 +86,7 @@ export function Toolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">
-              <p>{label}</p>
+              <p>{t(i18nKey)}</p>
             </TooltipContent>
           </Tooltip>
         ))}
@@ -97,7 +100,7 @@ export function Toolbar({
               <ZoomOut className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom"><p>ズームアウト</p></TooltipContent>
+          <TooltipContent side="bottom"><p>{t("zoomOut")}</p></TooltipContent>
         </Tooltip>
 
         <span className="text-xs text-gray-500 dark:text-gray-400 min-w-[3rem] text-center tabular-nums">
@@ -110,7 +113,7 @@ export function Toolbar({
               <ZoomIn className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom"><p>ズームイン</p></TooltipContent>
+          <TooltipContent side="bottom"><p>{t("zoomIn")}</p></TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -119,7 +122,7 @@ export function Toolbar({
               <RotateCcw className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom"><p>表示リセット</p></TooltipContent>
+          <TooltipContent side="bottom"><p>{t("resetView")}</p></TooltipContent>
         </Tooltip>
 
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
@@ -137,7 +140,7 @@ export function Toolbar({
               <Undo2 className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom"><p>元に戻す</p></TooltipContent>
+          <TooltipContent side="bottom"><p>{t("undo")}</p></TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -152,7 +155,7 @@ export function Toolbar({
               <Redo2 className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom"><p>やり直す</p></TooltipContent>
+          <TooltipContent side="bottom"><p>{t("redo")}</p></TooltipContent>
         </Tooltip>
 
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
@@ -164,7 +167,7 @@ export function Toolbar({
               <Download className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom"><p>エクスポート</p></TooltipContent>
+          <TooltipContent side="bottom"><p>{t("export")}</p></TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -173,7 +176,7 @@ export function Toolbar({
               <Upload className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="bottom"><p>インポート</p></TooltipContent>
+          <TooltipContent side="bottom"><p>{t("import")}</p></TooltipContent>
         </Tooltip>
       </div>
     </TooltipProvider>

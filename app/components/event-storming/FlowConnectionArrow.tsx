@@ -12,6 +12,7 @@ interface FlowConnectionArrowProps {
   flows: EventFlow[];
   isSelected: boolean;
   onClick: () => void;
+  arrowheadId: string;
 }
 
 export function FlowConnectionArrow({
@@ -19,6 +20,7 @@ export function FlowConnectionArrow({
   flows,
   isSelected,
   onClick,
+  arrowheadId,
 }: FlowConnectionArrowProps) {
   const fromFlow = flows.find((f) => f.id === connection.fromFlowId);
   const toFlow = flows.find((f) => f.id === connection.toFlowId);
@@ -66,7 +68,7 @@ export function FlowConnectionArrow({
         }
         strokeWidth={isSelected ? 2.5 : 1.5}
         strokeDasharray={isSelected ? undefined : "6 3"}
-        markerEnd="url(#arrowhead)"
+        markerEnd={`url(#${arrowheadId})`}
       />
       {/* ラベル */}
       {connection.label && (

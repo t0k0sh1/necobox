@@ -14,7 +14,8 @@ import {
   createFlowConnection,
   createFlowNote,
 } from "@/lib/utils/event-storming";
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { EventFlowComponent } from "./EventFlow";
 import { BoundedContextRect } from "./BoundedContextRect";
 import { DomainRect } from "./DomainRect";
@@ -33,7 +34,10 @@ export interface CanvasHandle {
 interface EventStormingCanvasProps {
   board: EventStormingBoard;
   toolMode: ToolMode;
+  /** 確定的な変更（Undo/Redo スナップショット付き） */
   onBoardChange: (board: EventStormingBoard) => void;
+  /** 中間的な変更（ドラッグ中など、Undo スナップショットなし） */
+  onBoardSet: (board: EventStormingBoard) => void;
   onToolModeReset: () => void;
 }
 
@@ -46,9 +50,9 @@ interface EditingNote {
   rect: { x: number; y: number; width: number; height: number };
 }
 
-/** 編集中ラベルの情報 */
+/** 編集中ラベルの情報（コンテキスト・ドメイン・ホットスポット共通） */
 interface EditingLabel {
-  type: "context" | "domain";
+  type: "context" | "domain" | "hotspot";
   id: string;
   text: string;
   rect: { x: number; y: number; width: number; height: number };
@@ -64,9 +68,14 @@ interface DrawingRect {
 
 export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasProps>(
   function EventStormingCanvas(
-    { board, toolMode, onBoardChange, onToolModeReset },
+    { board, toolMode, onBoardChange, onBoardSet, onToolModeReset },
     ref
   ) {
+  const t = useTranslations("eventStorming");
+  const uniqueId = useId();
+  const dotGridId = `dot-grid-${uniqueId}`;
+  const arrowheadId = `arrowhead-${uniqueId}`;
+
   // 安定したコールバック用 ref（useEffect でレンダー後に同期）
   const boardRef = useRef(board);
   const onBoardChangeRef = useRef(onBoardChange);
@@ -185,7 +194,7 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
     [toolMode, getCanvasCoords]
   );
 
-  // ポインタ移動の統合ハンドラ
+  // ポインタ移動の統合ハンドラ（ドラッグ/リサイズ中は onBoardSet で中間更新）
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       // 矩形描画中
@@ -195,7 +204,7 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
         return;
       }
 
-      // 要素ドラッグ中
+      // 要素ドラッグ中（中間更新: Undo スナップショットなし）
       if (dragRef.current) {
         const dx = (e.clientX - dragRef.current.startX) / viewport.zoom;
         const dy = (e.clientY - dragRef.current.startY) / viewport.zoom;
@@ -204,42 +213,38 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
 
         const { type, id } = dragRef.current;
         if (type === "flow") {
-          onBoardChange({
+          onBoardSet({
             ...board,
             flows: board.flows.map((f) =>
               f.id === id ? { ...f, position: { x: newX, y: newY } } : f
             ),
-            updatedAt: new Date().toISOString(),
           });
         } else if (type === "context") {
-          onBoardChange({
+          onBoardSet({
             ...board,
             contexts: board.contexts.map((c) =>
               c.id === id ? { ...c, position: { x: newX, y: newY } } : c
             ),
-            updatedAt: new Date().toISOString(),
           });
         } else if (type === "domain") {
-          onBoardChange({
+          onBoardSet({
             ...board,
             domains: board.domains.map((d) =>
               d.id === id ? { ...d, position: { x: newX, y: newY } } : d
             ),
-            updatedAt: new Date().toISOString(),
           });
         } else if (type === "hotspot") {
-          onBoardChange({
+          onBoardSet({
             ...board,
             hotspots: board.hotspots.map((h) =>
               h.id === id ? { ...h, position: { x: newX, y: newY } } : h
             ),
-            updatedAt: new Date().toISOString(),
           });
         }
         return;
       }
 
-      // リサイズ中
+      // リサイズ中（中間更新: Undo スナップショットなし）
       if (resizeRef.current) {
         const dx = (e.clientX - resizeRef.current.startX) / viewport.zoom;
         const dy = (e.clientY - resizeRef.current.startY) / viewport.zoom;
@@ -262,24 +267,22 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
         }
 
         if (type === "context") {
-          onBoardChange({
+          onBoardSet({
             ...board,
             contexts: board.contexts.map((c) =>
               c.id === id
                 ? { ...c, position: { x: newX, y: newY }, size: { width: newW, height: newH } }
                 : c
             ),
-            updatedAt: new Date().toISOString(),
           });
         } else if (type === "domain") {
-          onBoardChange({
+          onBoardSet({
             ...board,
             domains: board.domains.map((d) =>
               d.id === id
                 ? { ...d, position: { x: newX, y: newY }, size: { width: newW, height: newH } }
                 : d
             ),
-            updatedAt: new Date().toISOString(),
           });
         }
         return;
@@ -292,7 +295,7 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
       getCanvasCoords,
       viewport.zoom,
       board,
-      onBoardChange,
+      onBoardSet,
       canvasPointerMove,
     ]
   );
@@ -329,14 +332,16 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
         return;
       }
 
-      // ドラッグ終了
+      // ドラッグ終了（最終位置を確定的に反映 → Undo スナップショット作成）
       if (dragRef.current) {
+        onBoardChange({ ...boardRef.current, updatedAt: new Date().toISOString() });
         dragRef.current = null;
         return;
       }
 
-      // リサイズ終了
+      // リサイズ終了（最終サイズを確定的に反映 → Undo スナップショット作成）
       if (resizeRef.current) {
+        onBoardChange({ ...boardRef.current, updatedAt: new Date().toISOString() });
         resizeRef.current = null;
         return;
       }
@@ -689,7 +694,7 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
       const hs = board.hotspots.find((h) => h.id === id);
       if (!hs) return;
       setEditingLabel({
-        type: "context", // ラベル編集として再利用
+        type: "hotspot",
         id,
         text: hs.text,
         rect: {
@@ -712,9 +717,8 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
       }
       if (!editingLabel) return;
 
-      // ホットスポットかどうか判定
-      const isHotspot = board.hotspots.some((h) => h.id === editingLabel.id);
-      if (isHotspot) {
+      // ホットスポット編集
+      if (editingLabel.type === "hotspot") {
         onBoardChange({
           ...board,
           hotspots: board.hotspots.map((h) =>
@@ -759,6 +763,8 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
       ref={containerRef}
       className={`relative w-full h-full overflow-hidden bg-gray-50 dark:bg-gray-950 ${cursorClass} outline-none`}
       tabIndex={0}
+      role="application"
+      aria-label={t("title")}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -771,7 +777,7 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
       <svg className="absolute inset-0 w-full h-full pointer-events-none">
         <defs>
           <pattern
-            id="dot-grid"
+            id={dotGridId}
             x={viewport.x % (20 * viewport.zoom)}
             y={viewport.y % (20 * viewport.zoom)}
             width={20 * viewport.zoom}
@@ -786,7 +792,7 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
             />
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#dot-grid)" />
+        <rect width="100%" height="100%" fill={`url(#${dotGridId})`} />
       </svg>
 
       {/* 描画中の矩形プレビュー */}
@@ -858,11 +864,11 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
         {/* SVG矢印オーバーレイ */}
         <svg
           className="absolute top-0 left-0 pointer-events-none"
-          style={{ width: "10000px", height: "10000px", overflow: "visible" }}
+          style={{ width: "100%", height: "100%", overflow: "visible" }}
         >
           <defs>
             <marker
-              id="arrowhead"
+              id={arrowheadId}
               markerWidth="10"
               markerHeight="7"
               refX="10"
@@ -882,6 +888,7 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
               flows={board.flows}
               isSelected={selectedId === conn.id}
               onClick={() => handleConnectionClick(conn.id)}
+              arrowheadId={arrowheadId}
             />
           ))}
         </svg>
@@ -922,21 +929,24 @@ export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasP
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="text-center space-y-3 max-w-md">
             <p className="text-gray-400 dark:text-gray-500 text-lg font-medium">
-              イベントストーミングを始めましょう
+              {t("emptyHint.title")}
             </p>
             <div className="text-gray-400/80 dark:text-gray-600 text-sm space-y-1">
               <p>
-                ツールバーの <span className="font-semibold text-gray-500 dark:text-gray-400">+ フロー追加</span> でイベントフローを配置
+                {t("emptyHint.addFlow", { addFlowLabel: `+ ${t("toolbar.addFlow")}` })}
               </p>
               <p>
-                <span className="font-semibold text-gray-500 dark:text-gray-400">□ コンテキスト追加</span> や <span className="font-semibold text-gray-500 dark:text-gray-400">◫ ドメイン追加</span> で境界を描画
+                {t("emptyHint.addBoundary", {
+                  addContextLabel: `□ ${t("toolbar.addContext")}`,
+                  addDomainLabel: `◫ ${t("toolbar.addDomain")}`,
+                })}
               </p>
               <p>
-                <span className="font-semibold text-gray-500 dark:text-gray-400">→ 接続追加</span> でフロー間を矢印で接続
+                {t("emptyHint.addConnection", { addConnectionLabel: `→ ${t("toolbar.addConnection")}` })}
               </p>
             </div>
             <p className="text-gray-400/60 dark:text-gray-600 text-xs pt-1">
-              左下の「凡例・操作ガイド」で色の意味やショートカットを確認できます
+              {t("emptyHint.legendHint")}
             </p>
           </div>
         </div>

@@ -1372,6 +1372,57 @@
     "importConfirmTitle": "ボードをインポート",
     "importConfirmDescription": "現在のボードの内容がインポートしたデータで置き換えられます。この操作は元に戻せません。",
     "cancel": "キャンセル",
-    "importConfirm": "インポートする"
+    "importConfirm": "インポートする",
+    "toolbar": {
+      "select": "選択",
+      "addFlow": "フロー追加",
+      "addContext": "コンテキスト追加",
+      "addDomain": "ドメイン追加",
+      "addConnection": "接続追加",
+      "addHotspot": "ホットスポット追加",
+      "zoomOut": "ズームアウト",
+      "zoomIn": "ズームイン",
+      "resetView": "表示リセット",
+      "undo": "元に戻す",
+      "redo": "やり直す",
+      "export": "エクスポート",
+      "import": "インポート"
+    },
+    "slots": {
+      "views": "ビュー",
+      "actors": "アクター",
+      "commands": "コマンド",
+      "aggregates": "集約",
+      "events": "イベント",
+      "externalSystems": "外部システム",
+      "policies": "ポリシー"
+    },
+    "addSlot": "{slot}を追加",
+    "legend": {
+      "toggle": "凡例・操作ガイド",
+      "colors": "付箋の色",
+      "operations": "操作",
+      "domainEvent": "ドメインイベント",
+      "command": "コマンド",
+      "aggregate": "集約",
+      "actor": "アクター",
+      "policy": "ポリシー",
+      "readModelView": "リードモデル / ビュー",
+      "externalSystem": "外部システム",
+      "hotspot": "ホットスポット",
+      "panCanvas": "キャンバスをパン",
+      "zoom": "ズーム",
+      "editText": "テキスト編集",
+      "deleteNote": "ノート削除",
+      "deleteSelected": "選択要素を削除",
+      "undo": "元に戻す"
+    },
+    "emptyHint": {
+      "title": "イベントストーミングを始めましょう",
+      "addFlow": "ツールバーの {addFlowLabel} でイベントフローを配置",
+      "addBoundary": "{addContextLabel} や {addDomainLabel} で境界を描画",
+      "addConnection": "{addConnectionLabel} でフロー間を矢印で接続",
+      "legendHint": "左下の「凡例・操作ガイド」で色の意味やショートカットを確認できます"
+    }
   }
 }

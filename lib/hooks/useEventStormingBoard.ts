@@ -17,6 +17,7 @@ import {
 import { useUndoRedo } from "@/lib/hooks/useUndoRedo";
 
 const STORAGE_KEY = "necobox-event-storming-board";
+const MAX_IMPORT_SIZE = 10 * 1024 * 1024; // 10MB
 
 /** Undo/Redo 用のスナップショット（viewport を除くボード状態） */
 type BoardSnapshot = Omit<EventStormingBoard, "viewport">;
@@ -48,11 +49,13 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
   // SSR/クライアントで同じ初期値を使い、ハイドレーション不一致を防ぐ
   const [board, setBoardState] = useState<EventStormingBoard>(createEmptyBoard);
   const undoRedo = useUndoRedo<BoardSnapshot>();
-  const isInitialLoad = useRef(true);
+  const initializedRef = useRef(false);
   const lastSnapshotRef = useRef<string>("");
 
   // マウント後に localStorage から復元（SSR → クライアント同期のため初回mountでのsetStateは必要）
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -65,12 +68,11 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
     } catch {
       // 読み込み失敗時は初期状態を維持
     }
-    isInitialLoad.current = false;
   }, []);
 
   // localStorage へ保存（デバウンス）
   useEffect(() => {
-    if (isInitialLoad.current) return;
+    if (!initializedRef.current) return;
     const timer = setTimeout(() => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(board));
@@ -133,6 +135,7 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
   const importFromJson = useCallback(
     async (file: File): Promise<EventStormingBoard | null> => {
       try {
+        if (file.size > MAX_IMPORT_SIZE) return null;
         const text = await file.text();
         const parsed = JSON.parse(text) as unknown;
         if (!validateExportData(parsed)) return null;
