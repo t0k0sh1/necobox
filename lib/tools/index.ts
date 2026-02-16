@@ -36,7 +36,8 @@ export type IconName =
   | "TextCursorInput"
   | "Paintbrush"
   | "Timer"
-  | "Type";
+  | "Type"
+  | "Workflow";
 
 export interface ToolDefinition {
   id: string;
@@ -197,6 +198,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "Paintbrush",
     category: "editors",
     i18nKey: "colorSchemeDesigner",
+  },
+  {
+    id: "event-storming",
+    path: "/event-storming",
+    icon: "Workflow",
+    category: "editors",
+    i18nKey: "eventStorming",
   },
   // Tasks（タスク管理）
   {
