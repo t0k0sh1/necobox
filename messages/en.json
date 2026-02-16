@@ -364,7 +364,8 @@
     "lastChecked": "Last checked: {time}",
     "components": "Components",
     "componentsCount": "{ok}/{total} normal",
-    "viewDownDetector": "View on DownDetector"
+    "viewDownDetector": "View on DownDetector",
+    "viewStatusGator": "View on StatusGator"
   },
   "textViewer": {
     "title": "Text File Viewer",

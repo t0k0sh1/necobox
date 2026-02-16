@@ -277,3 +277,65 @@ describe("fetchServiceStatus - Stripe", () => {
     expect(result?.status).toBe("operational");
   });
 });
+
+describe("X (Twitter) ステータスチェック", () => {
+  it("200レスポンスの場合 operational を返す", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => "",
+    });
+
+    const result = await fetchServiceStatus("x");
+    expect(result?.status).toBe("operational");
+  });
+
+  it("500レスポンスの場合 down を返す", async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => "",
+    });
+
+    const result = await fetchServiceStatus("x");
+    expect(result?.status).toBe("down");
+  });
+
+  it("503レスポンスの場合 down を返す", async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 503,
+      text: async () => "",
+    });
+
+    const result = await fetchServiceStatus("x");
+    expect(result?.status).toBe("down");
+  });
+
+  it("403レスポンスの場合 degraded を返す", async () => {
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 403,
+      text: async () => "",
+    });
+
+    const result = await fetchServiceStatus("x");
+    expect(result?.status).toBe("degraded");
+  });
+
+  it("ネットワークエラーの場合 unknown を返す", async () => {
+    mockFetch.mockRejectedValue(new Error("Network error"));
+
+    const result = await fetchServiceStatus("x");
+    expect(result?.status).toBe("unknown");
+  });
+
+  it("タイムアウトの場合 unknown を返す", async () => {
+    const abortError = new Error("Request timeout");
+    abortError.name = "AbortError";
+    mockFetch.mockRejectedValue(abortError);
+
+    const result = await fetchServiceStatus("x");
+    expect(result?.status).toBe("unknown");
+  });
+});

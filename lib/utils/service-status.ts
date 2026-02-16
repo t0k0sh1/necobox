@@ -40,6 +40,7 @@ export interface ServiceStatusInfo {
   responseTimeMs?: number;
   components?: ServiceComponent[];
   downdetectorUrl?: string;
+  statusGatorUrl?: string;
 }
 
 interface ServiceConfig {
@@ -49,6 +50,7 @@ interface ServiceConfig {
   url: string;
   statusUrl: string;
   downdetectorSlug?: string;
+  statusGatorSlug?: string;
   fetchFn: () => Promise<ServiceStatus>;
   fetchRichFn?: () => Promise<{
     status: ServiceStatus;
@@ -507,6 +509,28 @@ async function fetchStripeStatus(): Promise<ServiceStatus> {
   }
 }
 
+// X (Twitter) ステータスチェック
+// 公式ステータスページ (api.twitterstat.us) は無効化されているため、
+// x.com への直接アクセスでレスポンスを確認する簡易チェック
+async function fetchXStatus(): Promise<ServiceStatus> {
+  try {
+    // x.com は HEAD リクエストを 403 で拒否するため GET を使用
+    const response = await fetchWithTimeout("https://x.com");
+    // レスポンスボディを消費してソケットを解放
+    await response.text();
+    if (response.ok) {
+      return "operational";
+    }
+    if (response.status >= 500) {
+      return "down";
+    }
+    return "degraded";
+  } catch (error) {
+    console.error("X status fetch error:", error);
+    return "unknown";
+  }
+}
+
 // Statuspage APIレスポンスからステータスを判定するヘルパー関数
 function determineStatuspageStatus(data: {
   incidents?: Array<{ status?: string; impact?: string }>;
@@ -704,6 +728,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://aws.amazon.com",
     statusUrl: "https://status.aws.amazon.com",
     downdetectorSlug: "aws-amazon-web-services",
+    statusGatorSlug: "aws",
     fetchFn: fetchAWSStatus,
   },
   {
@@ -713,6 +738,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://azure.microsoft.com",
     statusUrl: "https://status.azure.com",
     downdetectorSlug: "windows-azure",
+    statusGatorSlug: "azure",
     fetchFn: fetchAzureStatus,
   },
   {
@@ -722,6 +748,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://cloud.google.com",
     statusUrl: "https://status.cloud.google.com",
     downdetectorSlug: "google-cloud",
+    statusGatorSlug: "google-cloud-platform",
     fetchFn: fetchGCPStatus,
   },
   {
@@ -731,6 +758,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://www.box.com",
     statusUrl: "https://status.box.com",
     downdetectorSlug: "box",
+    statusGatorSlug: "box",
     fetchFn: () =>
       fetchStatuspageStatus("https://status.box.com/api/v2/summary.json"),
     fetchRichFn: () =>
@@ -743,6 +771,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://www.dropbox.com",
     statusUrl: "https://status.dropbox.com",
     downdetectorSlug: "dropbox",
+    statusGatorSlug: "dropbox",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://status.dropbox.com/api/v2/summary.json"
@@ -759,6 +788,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://github.com",
     statusUrl: "https://www.githubstatus.com",
     downdetectorSlug: "github",
+    statusGatorSlug: "github",
     fetchFn: fetchGitHubStatus,
   },
   {
@@ -768,6 +798,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://circleci.com",
     statusUrl: "https://status.circleci.com",
     downdetectorSlug: "circleci",
+    statusGatorSlug: "circleci",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://status.circleci.com/api/v2/summary.json"
@@ -784,6 +815,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://www.atlassian.com/software/jira",
     statusUrl: "https://jira-software.status.atlassian.com",
     downdetectorSlug: "jira",
+    statusGatorSlug: "jira",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://jira-software.status.atlassian.com/api/v2/summary.json"
@@ -800,6 +832,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://slack.com",
     statusUrl: "https://slack-status.com",
     downdetectorSlug: "slack",
+    statusGatorSlug: "slack",
     fetchFn: fetchSlackStatus,
   },
   {
@@ -809,6 +842,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://zoom.us",
     statusUrl: "https://status.zoom.us",
     downdetectorSlug: "zoom",
+    statusGatorSlug: "zoom",
     fetchFn: () =>
       fetchStatuspageStatus("https://status.zoom.us/api/v2/summary.json"),
     fetchRichFn: () =>
@@ -823,6 +857,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://discord.com",
     statusUrl: "https://discordstatus.com",
     downdetectorSlug: "discord",
+    statusGatorSlug: "discord",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://discordstatus.com/api/v2/summary.json"
@@ -839,6 +874,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://www.notion.so",
     statusUrl: "https://www.notion-status.com",
     downdetectorSlug: "notion",
+    statusGatorSlug: "notion",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://www.notion-status.com/api/v2/summary.json"
@@ -849,12 +885,23 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
       ),
   },
   {
+    id: "x",
+    name: "X (Twitter)",
+    category: "communication",
+    url: "https://x.com",
+    statusUrl: "https://api.twitterstat.us",
+    downdetectorSlug: "twitter",
+    statusGatorSlug: "twitter",
+    fetchFn: fetchXStatus,
+  },
+  {
     id: "vercel",
     name: "Vercel",
     category: "hosting-cdn",
     url: "https://vercel.com",
     statusUrl: "https://www.vercel-status.com",
     downdetectorSlug: "vercel",
+    statusGatorSlug: "vercel",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://www.vercel-status.com/api/v2/summary.json"
@@ -871,6 +918,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://www.netlify.com",
     statusUrl: "https://www.netlifystatus.com",
     downdetectorSlug: "netlify",
+    statusGatorSlug: "netlify",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://www.netlifystatus.com/api/v2/summary.json"
@@ -887,6 +935,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://www.cloudflare.com",
     statusUrl: "https://www.cloudflarestatus.com",
     downdetectorSlug: "cloudflare",
+    statusGatorSlug: "cloudflare",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://www.cloudflarestatus.com/api/v2/summary.json"
@@ -903,6 +952,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://openai.com",
     statusUrl: "https://status.openai.com",
     downdetectorSlug: "openai",
+    statusGatorSlug: "openai",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://status.openai.com/api/v2/summary.json"
@@ -919,6 +969,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://www.anthropic.com",
     statusUrl: "https://status.anthropic.com",
     downdetectorSlug: "anthropic",
+    statusGatorSlug: "anthropic",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://status.anthropic.com/api/v2/summary.json"
@@ -935,6 +986,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://www.figma.com",
     statusUrl: "https://status.figma.com",
     downdetectorSlug: "figma",
+    statusGatorSlug: "figma",
     fetchFn: () =>
       fetchStatuspageStatus(
         "https://status.figma.com/api/v2/summary.json"
@@ -951,6 +1003,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     url: "https://stripe.com",
     statusUrl: "https://status.stripe.com",
     downdetectorSlug: "stripe",
+    statusGatorSlug: "stripe",
     fetchFn: fetchStripeStatus,
   },
 ];
@@ -989,6 +1042,9 @@ export async function fetchAllServiceStatuses(): Promise<ServiceStatusInfo[]> {
         downdetectorUrl: config.downdetectorSlug
           ? `https://downdetector.com/status/${config.downdetectorSlug}/`
           : undefined,
+        statusGatorUrl: config.statusGatorSlug
+          ? `https://statusgator.com/services/${config.statusGatorSlug}`
+          : undefined,
       };
     } catch (error) {
       console.error(`Error fetching status for ${config.id}:`, error);
@@ -1004,6 +1060,9 @@ export async function fetchAllServiceStatuses(): Promise<ServiceStatusInfo[]> {
         responseTimeMs,
         downdetectorUrl: config.downdetectorSlug
           ? `https://downdetector.com/status/${config.downdetectorSlug}/`
+          : undefined,
+        statusGatorUrl: config.statusGatorSlug
+          ? `https://statusgator.com/services/${config.statusGatorSlug}`
           : undefined,
       };
     }
@@ -1052,6 +1111,9 @@ export async function fetchServiceStatus(
       downdetectorUrl: config.downdetectorSlug
         ? `https://downdetector.com/status/${config.downdetectorSlug}/`
         : undefined,
+      statusGatorUrl: config.statusGatorSlug
+        ? `https://statusgator.com/services/${config.statusGatorSlug}`
+        : undefined,
     };
   } catch (error) {
     console.error(`Error fetching status for ${serviceId}:`, error);
@@ -1067,6 +1129,9 @@ export async function fetchServiceStatus(
       responseTimeMs,
       downdetectorUrl: config.downdetectorSlug
         ? `https://downdetector.com/status/${config.downdetectorSlug}/`
+        : undefined,
+      statusGatorUrl: config.statusGatorSlug
+        ? `https://statusgator.com/services/${config.statusGatorSlug}`
         : undefined,
     };
   }

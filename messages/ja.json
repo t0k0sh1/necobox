@@ -364,7 +364,8 @@
     "lastChecked": "最終確認: {time}",
     "components": "コンポーネント",
     "componentsCount": "{ok}/{total} 正常",
-    "viewDownDetector": "DownDetectorで確認"
+    "viewDownDetector": "DownDetectorで確認",
+    "viewStatusGator": "StatusGatorで確認"
   },
   "textViewer": {
     "title": "テキストファイルビューア",
