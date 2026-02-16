@@ -51,6 +51,7 @@
     "knowledgeHub": "Knowledge Hub",
     "textProcessor": "Text Processor",
     "colorSchemeDesigner": "Color Scheme Designer β",
+    "eventStorming": "Event Storming",
     "sectionGenerators": "Random Generation",
     "sectionConverters": "Conversion & Calculation",
     "sectionEditors": "Data Editors",
@@ -1363,5 +1364,14 @@
       "clearAll": "Clear All",
       "removeStep": "Remove step"
     }
+  },
+  "eventStorming": {
+    "title": "Event Storming",
+    "description": "A design tool for DDD Event Storming",
+    "breadcrumb": "Event Storming",
+    "importConfirmTitle": "Import Board",
+    "importConfirmDescription": "The current board will be replaced with the imported data. This action cannot be undone.",
+    "cancel": "Cancel",
+    "importConfirm": "Import"
   }
 }

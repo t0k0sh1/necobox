@@ -47,6 +47,7 @@ import {
   TextCursorInput,
   Timer,
   Type,
+  Workflow,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -84,6 +85,7 @@ const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   TextCursorInput,
   Timer,
   Type,
+  Workflow,
 };
 
 // ツールID → ToolDefinition のルックアップ（TOOLS は静的なのでモジュールレベルで生成）

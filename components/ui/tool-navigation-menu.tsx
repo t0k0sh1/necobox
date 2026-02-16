@@ -52,6 +52,7 @@ import {
   TextCursorInput,
   Timer,
   Type,
+  Workflow,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -89,6 +90,7 @@ const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   TextCursorInput,
   Timer,
   Type,
+  Workflow,
 };
 
 interface ToolNavItemProps {
