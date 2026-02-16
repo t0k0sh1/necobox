@@ -516,6 +516,8 @@ async function fetchXStatus(): Promise<ServiceStatus> {
   try {
     // x.com は HEAD リクエストを 403 で拒否するため GET を使用
     const response = await fetchWithTimeout("https://x.com");
+    // レスポンスボディを消費してソケットを解放
+    await response.text();
     if (response.ok) {
       return "operational";
     }
@@ -812,6 +814,7 @@ const SERVICE_CONFIGS: ServiceConfig[] = [
     category: "dev-tools",
     url: "https://www.atlassian.com/software/jira",
     statusUrl: "https://jira-software.status.atlassian.com",
+    downdetectorSlug: "jira",
     statusGatorSlug: "jira",
     fetchFn: () =>
       fetchStatuspageStatus(

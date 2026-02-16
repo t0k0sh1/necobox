@@ -21,6 +21,11 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
+// DownDetector のページが存在しないサービス
+const SERVICES_WITHOUT_DOWNDETECTOR = new Set(["jira"]);
+// ステータスページが無効化されているサービス
+const SERVICES_WITHOUT_STATUS_PAGE = new Set(["x"]);
+
 interface ServiceStatusCardProps {
   service: ServiceStatusInfo;
   onRefresh?: (serviceId: string) => Promise<void>;
@@ -149,11 +154,6 @@ export function ServiceStatusCard({
   };
 
   const ServiceIcon = getServiceIcon(service.id);
-
-  // DownDetector のページが存在しないサービス
-  const SERVICES_WITHOUT_DOWNDETECTOR = new Set(["jira"]);
-  // ステータスページが無効化されているサービス
-  const SERVICES_WITHOUT_STATUS_PAGE = new Set(["x"]);
 
   // ロケールに応じた DownDetector URL
   const downdetectorUrl = useMemo(() => {
