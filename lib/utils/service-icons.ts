@@ -15,6 +15,7 @@ import {
   Rocket,
   Shield,
   Sparkles,
+  Twitter,
   Video,
   Zap,
   CreditCard,
@@ -41,6 +42,7 @@ const SERVICE_ICON_MAP: Record<string, LucideIcon> = {
   anthropic: Sparkles,
   figma: Figma,
   stripe: CreditCard,
+  x: Twitter,
 };
 
 export function getServiceIcon(serviceId: string): LucideIcon {

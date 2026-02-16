@@ -11,6 +11,7 @@ import { getServiceIcon } from "@/lib/utils/service-icons";
 import { ServiceStatusInfo } from "@/lib/utils/service-status";
 import {
   Activity,
+  BarChart3,
   ChevronDown,
   ChevronRight,
   ExternalLink,
@@ -149,9 +150,14 @@ export function ServiceStatusCard({
 
   const ServiceIcon = getServiceIcon(service.id);
 
+  // DownDetector のページが存在しないサービス
+  const SERVICES_WITHOUT_DOWNDETECTOR = new Set(["jira"]);
+  // ステータスページが無効化されているサービス
+  const SERVICES_WITHOUT_STATUS_PAGE = new Set(["x"]);
+
   // ロケールに応じた DownDetector URL
   const downdetectorUrl = useMemo(() => {
-    if (!service.downdetectorUrl) return undefined;
+    if (!service.downdetectorUrl || SERVICES_WITHOUT_DOWNDETECTOR.has(service.id)) return undefined;
     if (locale === "ja") {
       return service.downdetectorUrl
         .replace("downdetector.com", "downdetector.jp")
@@ -218,13 +224,15 @@ export function ServiceStatusCard({
             </div>
 
             {/* ステータス + レスポンスタイム */}
-            <div className="flex items-center gap-2 mb-1">
-              <div
-                className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getStatusColor(service.status)}`}
-              />
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {getStatusText(service.status)}
-              </span>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <div
+                  className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getStatusColor(service.status)}`}
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {getStatusText(service.status)}
+                </span>
+              </div>
               {service.responseTimeMs !== undefined && (
                 <span
                   className={`text-xs tabular-nums ${getResponseTimeColor(service.responseTimeMs)}`}
@@ -250,7 +258,7 @@ export function ServiceStatusCard({
 
         {/* アクションボタン */}
         <div className="flex items-center gap-1 flex-shrink-0">
-          {downdetectorUrl && (
+          {downdetectorUrl ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <a
@@ -264,6 +272,25 @@ export function ServiceStatusCard({
               </TooltipTrigger>
               <TooltipContent>{t("viewDownDetector")}</TooltipContent>
             </Tooltip>
+          ) : (
+            <div className="w-8 h-8" />
+          )}
+          {service.statusGatorUrl ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <a
+                  href={service.statusGatorUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-md w-8 h-8 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                </a>
+              </TooltipTrigger>
+              <TooltipContent>{t("viewStatusGator")}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <div className="w-8 h-8" />
           )}
           {onRefresh && (
             <Button
@@ -278,15 +305,19 @@ export function ServiceStatusCard({
               />
             </Button>
           )}
-          <a
-            href={service.statusUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-md w-8 h-8 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            title={t("viewStatusPage")}
-          >
-            <ExternalLink className="w-4 h-4" />
-          </a>
+          {!SERVICES_WITHOUT_STATUS_PAGE.has(service.id) ? (
+            <a
+              href={service.statusUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-md w-8 h-8 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title={t("viewStatusPage")}
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          ) : (
+            <div className="w-8 h-8" />
+          )}
         </div>
       </div>
 
