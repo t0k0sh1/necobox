@@ -102,7 +102,7 @@ export default function EventStormingPage() {
   }, [undo, redo]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       <Breadcrumbs items={[{ label: t("breadcrumb") }]} />
 
       {/* ツールバー */}
