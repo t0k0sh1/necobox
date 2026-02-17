@@ -1424,6 +1424,29 @@
       "addBoundary": "{addContextLabel} や {addDomainLabel} で境界を描画",
       "addConnection": "{addConnectionLabel} でフロー間を矢印で接続",
       "legendHint": "左下の「凡例・操作ガイド」で色の意味やショートカットを確認できます"
+    },
+    "tabs": {
+      "eventStorming": "イベントストーミング",
+      "bmc": "ビジネスモデルキャンバス"
+    },
+    "bmc": {
+      "blocks": {
+        "keyPartners": "主要パートナー",
+        "keyActivities": "主要活動",
+        "keyResources": "主要リソース",
+        "valuePropositions": "価値提案",
+        "customerRelationships": "顧客との関係",
+        "channels": "チャネル",
+        "customerSegments": "顧客セグメント",
+        "costStructure": "コスト構造",
+        "revenueStreams": "収益の流れ"
+      },
+      "addNote": "ノートを追加",
+      "deleteNote": "ノートを削除",
+      "emptyHint": {
+        "title": "ビジネスモデルキャンバスを始めましょう",
+        "description": "各ブロックの「+」ボタンをクリックしてノートを追加できます"
+      }
     }
   }
 }

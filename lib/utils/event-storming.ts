@@ -92,15 +92,43 @@ export interface EventStormingBoard {
   connections: FlowConnection[];
   hotspots: Hotspot[];
   viewport: CanvasViewport;
+  bmc?: BmcBoard;
   createdAt: string;
   updatedAt: string;
 }
 
 /** エクスポートフォーマット */
 export interface ExportData {
-  version: 1;
+  version: 1 | 2;
   board: EventStormingBoard;
   exportedAt: string;
+}
+
+// ============================================================
+// BMC（ビジネスモデルキャンバス）型定義
+// ============================================================
+
+/** BMCの9ブロック種別 */
+export type BmcBlockType =
+  | "keyPartners"
+  | "keyActivities"
+  | "keyResources"
+  | "valuePropositions"
+  | "customerRelationships"
+  | "channels"
+  | "customerSegments"
+  | "costStructure"
+  | "revenueStreams";
+
+/** BMC付箋 */
+export interface BmcNote {
+  id: string;
+  text: string;
+}
+
+/** BMCボード全体 */
+export interface BmcBoard {
+  blocks: Record<BmcBlockType, BmcNote[]>;
 }
 
 /** ツールバーモード */
@@ -158,6 +186,32 @@ export const DEFAULT_CONTEXT_SIZE = { width: 500, height: 300 };
 /** ドメイン矩形のデフォルトサイズ */
 export const DEFAULT_DOMAIN_SIZE = { width: 700, height: 450 };
 
+/** BMCブロックの表示順序 */
+export const BMC_BLOCK_ORDER: BmcBlockType[] = [
+  "keyPartners",
+  "keyActivities",
+  "keyResources",
+  "valuePropositions",
+  "customerRelationships",
+  "channels",
+  "customerSegments",
+  "costStructure",
+  "revenueStreams",
+];
+
+/** BMCブロックの色（背景・ヘッダー） */
+export const BMC_BLOCK_COLORS: Record<BmcBlockType, { bg: string; header: string }> = {
+  keyPartners:           { bg: "#EDE9FE", header: "#7C3AED" },
+  keyActivities:         { bg: "#DBEAFE", header: "#2563EB" },
+  keyResources:          { bg: "#DBEAFE", header: "#2563EB" },
+  valuePropositions:     { bg: "#FEF3C7", header: "#D97706" },
+  customerRelationships: { bg: "#D1FAE5", header: "#059669" },
+  channels:              { bg: "#D1FAE5", header: "#059669" },
+  customerSegments:      { bg: "#FCE7F3", header: "#DB2777" },
+  costStructure:         { bg: "#F3F4F6", header: "#4B5563" },
+  revenueStreams:        { bg: "#FEE2E2", header: "#DC2626" },
+};
+
 // ============================================================
 // ユーティリティ関数
 // ============================================================
@@ -165,6 +219,28 @@ export const DEFAULT_DOMAIN_SIZE = { width: 700, height: 450 };
 /** ID生成 */
 export function generateId(): string {
   return nanoid(10);
+}
+
+/** 空のBMCボードを生成 */
+export function createEmptyBmcBoard(): BmcBoard {
+  return {
+    blocks: {
+      keyPartners: [],
+      keyActivities: [],
+      keyResources: [],
+      valuePropositions: [],
+      customerRelationships: [],
+      channels: [],
+      customerSegments: [],
+      costStructure: [],
+      revenueStreams: [],
+    },
+  };
+}
+
+/** BMC付箋を生成 */
+export function createBmcNote(text = ""): BmcNote {
+  return { id: generateId(), text };
 }
 
 /** 空のボードを生成 */
@@ -178,6 +254,7 @@ export function createEmptyBoard(name = "Untitled"): EventStormingBoard {
     connections: [],
     hotspots: [],
     viewport: { x: 0, y: 0, zoom: 1 },
+    bmc: createEmptyBmcBoard(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -324,7 +401,7 @@ function hasStringIdArray(value: unknown): boolean {
 export function validateExportData(data: unknown): data is ExportData {
   if (typeof data !== "object" || data === null) return false;
   const d = data as Record<string, unknown>;
-  if (d.version !== 1) return false;
+  if (d.version !== 1 && d.version !== 2) return false;
   if (typeof d.board !== "object" || d.board === null) return false;
   const board = d.board as Record<string, unknown>;
   return (
@@ -341,7 +418,7 @@ export function validateExportData(data: unknown): data is ExportData {
 /** ボードをエクスポート用JSONに変換 */
 export function exportBoard(board: EventStormingBoard): string {
   const data: ExportData = {
-    version: 1,
+    version: 2,
     board,
     exportedAt: new Date().toISOString(),
   };

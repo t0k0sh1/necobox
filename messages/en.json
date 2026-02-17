@@ -1424,6 +1424,29 @@
       "addBoundary": "Draw boundaries with {addContextLabel} or {addDomainLabel}",
       "addConnection": "Connect flows with {addConnectionLabel}",
       "legendHint": "Check the \"Legend & Guide\" at the bottom left for color meanings and shortcuts"
+    },
+    "tabs": {
+      "eventStorming": "Event Storming",
+      "bmc": "Business Model Canvas"
+    },
+    "bmc": {
+      "blocks": {
+        "keyPartners": "Key Partners",
+        "keyActivities": "Key Activities",
+        "keyResources": "Key Resources",
+        "valuePropositions": "Value Propositions",
+        "customerRelationships": "Customer Relationships",
+        "channels": "Channels",
+        "customerSegments": "Customer Segments",
+        "costStructure": "Cost Structure",
+        "revenueStreams": "Revenue Streams"
+      },
+      "addNote": "Add Note",
+      "deleteNote": "Delete note",
+      "emptyHint": {
+        "title": "Start Your Business Model Canvas",
+        "description": "Click the \"+\" button in each block to add notes"
+      }
     }
   }
 }
