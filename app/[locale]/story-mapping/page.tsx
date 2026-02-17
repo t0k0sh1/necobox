@@ -26,7 +26,7 @@ export default function StoryMappingPage() {
   // キーボードショートカット（Undo/Redo）
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
         if (e.shiftKey) {
           redo();

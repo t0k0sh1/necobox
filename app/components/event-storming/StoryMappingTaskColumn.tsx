@@ -192,6 +192,7 @@ export function StoryMappingTaskColumn({
                     className="w-full h-[28px] rounded border-2 border-dashed flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:bg-yellow-50 dark:hover:bg-yellow-950 transition-colors"
                     style={{ borderColor: `${STORY_MAPPING_COLORS.story.text}30` }}
                     onClick={() => onAddStory(release.id)}
+                    aria-label={`${t("addStory")} (${release.name})`}
                   >
                     <Plus className="w-3 h-3" />
                   </button>

@@ -49,6 +49,7 @@ export function useStoryMappingBoard(): UseStoryMappingBoardReturn {
           }
           // eslint-disable-next-line react-hooks/set-state-in-effect -- mount後のlocalStorage復元は正当なパターン
           setBoardState(parsed);
+          lastSnapshotRef.current = JSON.stringify(parsed);
         }
       }
     } catch {

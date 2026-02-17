@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { STORY_MAPPING_COLORS } from "@/lib/utils/event-storming";
 
@@ -16,6 +17,7 @@ export function StoryMappingReleaseLine({
   onDoubleClick,
   onDelete,
 }: StoryMappingReleaseLineProps) {
+  const t = useTranslations("storyMapping");
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -53,6 +55,7 @@ export function StoryMappingReleaseLine({
             e.stopPropagation();
             onDelete();
           }}
+          aria-label={t("deleteRelease")}
         >
           <X className="w-2.5 h-2.5" />
         </button>
