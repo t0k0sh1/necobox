@@ -761,7 +761,7 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
   return (
     <div
       ref={containerRef}
-      className={`relative w-full h-full overflow-hidden bg-gray-50 dark:bg-gray-950 ${cursorClass} outline-none`}
+      className={`absolute inset-0 overflow-hidden bg-gray-50 dark:bg-gray-950 ${cursorClass} outline-none`}
       tabIndex={0}
       role="application"
       aria-label={t("title")}

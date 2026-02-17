@@ -158,7 +158,7 @@ export default function DomainModelingPage() {
           </div>
 
           {/* キャンバス */}
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 relative">
             <DomainModelingCanvas
               ref={canvasRef}
               board={board}
