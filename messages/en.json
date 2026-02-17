@@ -52,6 +52,7 @@
     "textProcessor": "Text Processor",
     "colorSchemeDesigner": "Color Scheme Designer β",
     "eventStorming": "Event Storming",
+    "storyMapping": "User Story Mapping",
     "sectionGenerators": "Random Generation",
     "sectionEncoding": "Encoding & Decoding",
     "sectionConverters": "Conversion & Calculation",
@@ -1461,6 +1462,40 @@
       "addQuestion": "Add Question",
       "deleteRule": "Delete rule",
       "deleteCard": "Delete card"
+    }
+  },
+  "storyMapping": {
+    "title": "User Story Mapping",
+    "description": "A visual tool for user story mapping based on Jeff Patton's method",
+    "breadcrumb": "User Story Mapping",
+    "addActivity": "Add Activity",
+    "addTask": "Add Task",
+    "addStory": "Add Story",
+    "addRelease": "Add Release",
+    "deleteActivity": "Delete activity",
+    "deleteTask": "Delete task",
+    "deleteStory": "Delete story",
+    "deleteRelease": "Delete release",
+    "activityPlaceholder": "Activity",
+    "taskPlaceholder": "Task",
+    "storyPlaceholder": "User Story",
+    "releasePlaceholder": "Release",
+    "noRelease": "Unassigned",
+    "emptyHint": {
+      "title": "Start User Story Mapping",
+      "description": "Click \"Add Activity\" to begin mapping your user journey"
+    },
+    "guide": {
+      "toggle": "Guide",
+      "overviewText": "User Story Mapping (Jeff Patton method) visualizes user journeys. Activities and Tasks form the horizontal backbone; Stories are placed below in priority order, sliced by Release lines.",
+      "activityTitle": "Activity (Purple)",
+      "activityDesc": "High-level user goals arranged left-to-right in chronological order. e.g. \"Browse Products\", \"Checkout\", \"Manage Account\"",
+      "taskTitle": "Task (Blue)",
+      "taskDesc": "Specific actions the user takes within an Activity. e.g. \"Search by keyword\", \"Filter by category\", \"View product details\"",
+      "storyTitle": "User Story (Yellow)",
+      "storyDesc": "Implementation details placed under each Task. Higher position = higher priority. e.g. \"As a user, I want to search by name so I can find products quickly\"",
+      "releaseTitle": "Release Line (Red)",
+      "releaseDesc": "Horizontal dividers that slice stories into delivery increments. Stories above the first line ship in the MVP; stories between lines ship in later releases."
     }
   }
 }

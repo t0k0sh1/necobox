@@ -52,6 +52,7 @@
     "textProcessor": "テキスト処理",
     "colorSchemeDesigner": "カラースキームデザイナー β",
     "eventStorming": "イベントストーミング",
+    "storyMapping": "ユーザーストーリーマッピング",
     "sectionGenerators": "ランダム生成",
     "sectionEncoding": "エンコード・デコード",
     "sectionConverters": "変換・計算",
@@ -1461,6 +1462,40 @@
       "addQuestion": "不明点を追加",
       "deleteRule": "ルールを削除",
       "deleteCard": "カードを削除"
+    }
+  },
+  "storyMapping": {
+    "title": "ユーザーストーリーマッピング",
+    "description": "Jeff Patton方式のユーザーストーリーマッピングツール",
+    "breadcrumb": "ユーザーストーリーマッピング",
+    "addActivity": "アクティビティを追加",
+    "addTask": "タスクを追加",
+    "addStory": "ストーリーを追加",
+    "addRelease": "リリースを追加",
+    "deleteActivity": "アクティビティを削除",
+    "deleteTask": "タスクを削除",
+    "deleteStory": "ストーリーを削除",
+    "deleteRelease": "リリースを削除",
+    "activityPlaceholder": "アクティビティ",
+    "taskPlaceholder": "タスク",
+    "storyPlaceholder": "ユーザーストーリー",
+    "releasePlaceholder": "リリース",
+    "noRelease": "未割り当て",
+    "emptyHint": {
+      "title": "ユーザーストーリーマッピングを始めましょう",
+      "description": "「アクティビティを追加」をクリックしてユーザージャーニーのマッピングを開始します"
+    },
+    "guide": {
+      "toggle": "使い方ガイド",
+      "overviewText": "ユーザーストーリーマッピング（Jeff Patton方式）は、ユーザージャーニーを可視化する手法です。アクティビティとタスクが横軸のバックボーンを構成し、その下にストーリーを優先度順に配置、リリース線で区切ります。",
+      "activityTitle": "アクティビティ（紫）",
+      "activityDesc": "ユーザーの大きな目標を左から右へ時系列順に並べます。例：「商品を探す」「購入する」「アカウント管理」",
+      "taskTitle": "タスク（青）",
+      "taskDesc": "アクティビティ内でユーザーが行う具体的な操作です。例：「キーワードで検索」「カテゴリで絞り込む」「商品詳細を見る」",
+      "storyTitle": "ユーザーストーリー（黄）",
+      "storyDesc": "各タスクの下に配置する実装の詳細です。上にあるほど優先度が高くなります。例：「ユーザーとして、名前で検索したい。素早く商品を見つけるために」",
+      "releaseTitle": "リリース線（赤）",
+      "releaseDesc": "ストーリーをリリース単位に区切る水平線です。最初の線より上がMVP、線と線の間が後続リリースとなります。"
     }
   }
 }
