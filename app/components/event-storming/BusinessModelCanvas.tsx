@@ -44,6 +44,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange }: BusinessModelCanvasPro
   const [autoEditNoteId, setAutoEditNoteId] = useState<string | null>(null);
   const [dragOverNoteId, setDragOverNoteId] = useState<string | null>(null);
   const [dragOverBlock, setDragOverBlock] = useState<BmcBlockType | null>(null);
+  const [dragSourceBlock, setDragSourceBlock] = useState<BmcBlockType | null>(null);
   const dragRef = useRef<DragState | null>(null);
 
   const handleAddNote = useCallback(
@@ -108,6 +109,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange }: BusinessModelCanvasPro
   const handleDragStart = useCallback(
     (blockType: BmcBlockType, noteId: string) => {
       dragRef.current = { sourceBlock: blockType, noteId };
+      setDragSourceBlock(blockType);
     },
     []
   );
@@ -164,6 +166,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange }: BusinessModelCanvasPro
       dragRef.current = null;
       setDragOverNoteId(null);
       setDragOverBlock(null);
+      setDragSourceBlock(null);
     },
     [bmc, onBmcChange, dragOverNoteId]
   );
@@ -172,6 +175,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange }: BusinessModelCanvasPro
     dragRef.current = null;
     setDragOverNoteId(null);
     setDragOverBlock(null);
+    setDragSourceBlock(null);
   }, []);
 
   return (
@@ -194,7 +198,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange }: BusinessModelCanvasPro
               onDropOnBlock={handleDropOnBlock}
               onDragEnd={handleDragEnd}
               dragOverNoteId={dragOverBlock === blockType ? dragOverNoteId : null}
-              isDropTarget={dragOverBlock === blockType && dragRef.current?.sourceBlock !== blockType}
+              isDropTarget={dragOverBlock === blockType && dragSourceBlock !== null && dragSourceBlock !== blockType}
               autoEditNoteId={autoEditNoteId}
             />
           </div>
