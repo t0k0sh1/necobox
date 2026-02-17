@@ -193,6 +193,7 @@ export default function EventStormingPage() {
             onBoardChange={handleExampleMappingChange}
           />
         </TabsContent>
+
       </Tabs>
 
       {/* ファイル入力（非表示） */}

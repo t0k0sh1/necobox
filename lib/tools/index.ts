@@ -37,6 +37,7 @@ export type IconName =
   | "Paintbrush"
   | "Timer"
   | "Type"
+  | "Map"
   | "Workflow";
 
 export interface ToolDefinition {
@@ -237,6 +238,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "FileText",
     category: "devtools",
     i18nKey: "textViewer",
+  },
+  {
+    id: "story-mapping",
+    path: "/story-mapping",
+    icon: "Map",
+    category: "devtools",
+    i18nKey: "storyMapping",
   },
   // Tasks（タスク管理）
   {

@@ -156,6 +156,43 @@ export interface ExampleMappingBoard {
   questions: ExampleMappingNote[];
 }
 
+// ============================================================
+// ユーザーストーリーマッピング型定義
+// ============================================================
+
+/** ストーリーマッピングのストーリーノート */
+export interface StoryMappingNote {
+  id: string;
+  text: string;
+  releaseId: string;
+}
+
+/** ストーリーマッピングのタスク */
+export interface StoryMappingTask {
+  id: string;
+  text: string;
+  stories: StoryMappingNote[];
+}
+
+/** ストーリーマッピングのアクティビティ */
+export interface StoryMappingActivity {
+  id: string;
+  text: string;
+  tasks: StoryMappingTask[];
+}
+
+/** ストーリーマッピングのリリース */
+export interface StoryMappingRelease {
+  id: string;
+  name: string;
+}
+
+/** ストーリーマッピングボード */
+export interface StoryMappingBoard {
+  activities: StoryMappingActivity[];
+  releases: StoryMappingRelease[];
+}
+
 /** ツールバーモード */
 export type ToolMode =
   | "select"
@@ -232,6 +269,14 @@ export const EXAMPLE_MAPPING_COLORS = {
   question: { bg: "#FCE7F3", header: "#DB2777" },
 } as const;
 
+/** ストーリーマッピングの色 */
+export const STORY_MAPPING_COLORS = {
+  activity: { bg: "#EDE9FE", header: "#7C3AED" },
+  task:     { bg: "#DBEAFE", header: "#2563EB" },
+  story:    { bg: "#FEF9C3", text: "#713F12" },
+  release:  { bg: "#FEE2E2", border: "#EF4444" },
+} as const;
+
 /** BMCブロックの色（背景・ヘッダー） */
 export const BMC_BLOCK_COLORS: Record<BmcBlockType, { bg: string; header: string }> = {
   keyPartners:           { bg: "#EDE9FE", header: "#7C3AED" },
@@ -293,6 +338,34 @@ export function createExampleMappingNote(text = ""): ExampleMappingNote {
 /** 実例マッピングのルール列を生成 */
 export function createExampleMappingRule(text = ""): ExampleMappingRule {
   return { id: generateId(), text, examples: [] };
+}
+
+/** 空のストーリーマッピングボードを生成 */
+export function createEmptyStoryMappingBoard(): StoryMappingBoard {
+  return {
+    activities: [],
+    releases: [],
+  };
+}
+
+/** ストーリーマッピングのアクティビティを生成 */
+export function createStoryMappingActivity(text = ""): StoryMappingActivity {
+  return { id: generateId(), text, tasks: [] };
+}
+
+/** ストーリーマッピングのタスクを生成 */
+export function createStoryMappingTask(text = ""): StoryMappingTask {
+  return { id: generateId(), text, stories: [] };
+}
+
+/** ストーリーマッピングのストーリーノートを生成 */
+export function createStoryMappingNote(text = "", releaseId = ""): StoryMappingNote {
+  return { id: generateId(), text, releaseId };
+}
+
+/** ストーリーマッピングのリリースを生成 */
+export function createStoryMappingRelease(name: string): StoryMappingRelease {
+  return { id: generateId(), name };
 }
 
 /** 空のボードを生成 */
