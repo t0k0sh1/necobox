@@ -160,11 +160,22 @@ export interface ExampleMappingBoard {
 // ユーザーストーリーマッピング型定義
 // ============================================================
 
+/** ストーリーポイント（フィボナッチ数列） */
+export type StoryPoint = 1 | 2 | 3 | 5 | 8 | 13 | 21;
+export const STORY_POINTS: StoryPoint[] = [1, 2, 3, 5, 8, 13, 21];
+
+/** タスク列幅の定数 */
+export const DEFAULT_TASK_COLUMN_WIDTH = 160;
+export const MIN_TASK_COLUMN_WIDTH = 120;
+export const MAX_TASK_COLUMN_WIDTH = 400;
+
 /** ストーリーマッピングのストーリーノート */
 export interface StoryMappingNote {
   id: string;
   text: string;
   releaseId: string;
+  memo?: string;
+  storyPoints?: StoryPoint;
 }
 
 /** ストーリーマッピングのタスク */
@@ -172,6 +183,7 @@ export interface StoryMappingTask {
   id: string;
   text: string;
   stories: StoryMappingNote[];
+  memo?: string;
 }
 
 /** ストーリーマッピングのアクティビティ */
@@ -179,6 +191,7 @@ export interface StoryMappingActivity {
   id: string;
   text: string;
   tasks: StoryMappingTask[];
+  memo?: string;
 }
 
 /** ストーリーマッピングのリリース */
@@ -191,6 +204,7 @@ export interface StoryMappingRelease {
 export interface StoryMappingBoard {
   activities: StoryMappingActivity[];
   releases: StoryMappingRelease[];
+  taskColumnWidths?: Record<string, number>;
 }
 
 /** ツールバーモード */

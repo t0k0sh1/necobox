@@ -1496,6 +1496,18 @@
       "storyDesc": "Implementation details placed under each Task. Higher position = higher priority. e.g. \"As a user, I want to search by name so I can find products quickly\"",
       "releaseTitle": "Release Line (Red)",
       "releaseDesc": "Horizontal dividers that slice stories into delivery increments. Stories above the first line ship in the MVP; stories between lines ship in later releases."
+    },
+    "memo": {
+      "placeholder": "Add a memo...",
+      "tooltip": "Memo"
+    },
+    "storyPoints": {
+      "select": "Select story points",
+      "clear": "Clear points",
+      "unset": "SP"
+    },
+    "resize": {
+      "handle": "Resize column"
     }
   }
 }

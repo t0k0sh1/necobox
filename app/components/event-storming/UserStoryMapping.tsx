@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronUp, HelpCircle, Plus } from "lucide-react";
 
-import type { StoryMappingBoard } from "@/lib/utils/event-storming";
+import type { StoryMappingBoard, StoryPoint } from "@/lib/utils/event-storming";
 import {
   STORY_MAPPING_COLORS,
   createStoryMappingActivity,
@@ -12,6 +12,7 @@ import {
   createStoryMappingNote,
   createStoryMappingRelease,
 } from "@/lib/utils/event-storming";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { StoryMappingActivityColumn } from "./StoryMappingActivityColumn";
 import { NoteEditor } from "./NoteEditor";
 
@@ -25,7 +26,10 @@ type EditTarget =
   | { type: "activity"; activityId: string }
   | { type: "task"; activityId: string; taskId: string }
   | { type: "story"; activityId: string; taskId: string; storyId: string }
-  | { type: "release"; releaseId: string };
+  | { type: "release"; releaseId: string }
+  | { type: "activityMemo"; activityId: string }
+  | { type: "taskMemo"; activityId: string; taskId: string }
+  | { type: "storyMemo"; activityId: string; taskId: string; storyId: string };
 
 interface EditingState {
   target: EditTarget;
@@ -48,6 +52,9 @@ export function UserStoryMapping({ board, onBoardChange }: UserStoryMappingProps
   const [dragOverStoryId, setDragOverStoryId] = useState<string | null>(null);
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
   const dragRef = useRef<StoryDragState | null>(null);
+
+  // リサイズ中のローカル幅状態（undo/redoスタックに入れないため）
+  const [localWidths, setLocalWidths] = useState<Record<string, number> | null>(null);
 
   // --- アクティビティ ---
   const handleAddActivity = useCallback(() => {
@@ -197,7 +204,6 @@ export function UserStoryMapping({ board, onBoardChange }: UserStoryMappingProps
 
   const handleDeleteRelease = useCallback(
     (releaseId: string) => {
-      // リリースに所属するストーリーのreleaseIdをクリア
       const activities = board.activities.map((a) => ({
         ...a,
         tasks: a.tasks.map((t) => ({
@@ -215,6 +221,101 @@ export function UserStoryMapping({ board, onBoardChange }: UserStoryMappingProps
     },
     [board, onBoardChange]
   );
+
+  // --- メモ編集 ---
+  const handleEditActivityMemo = useCallback(
+    (activityId: string, domRect: DOMRect) => {
+      const activity = board.activities.find((a) => a.id === activityId);
+      if (!activity) return;
+      setEditing({
+        target: { type: "activityMemo", activityId },
+        text: activity.memo ?? "",
+        position: { x: domRect.left, y: domRect.top, width: domRect.width, height: domRect.height },
+      });
+    },
+    [board.activities]
+  );
+
+  const handleEditTaskMemo = useCallback(
+    (activityId: string, taskId: string, domRect: DOMRect) => {
+      const activity = board.activities.find((a) => a.id === activityId);
+      const task = activity?.tasks.find((t) => t.id === taskId);
+      if (!task) return;
+      setEditing({
+        target: { type: "taskMemo", activityId, taskId },
+        text: task.memo ?? "",
+        position: { x: domRect.left, y: domRect.top, width: domRect.width, height: domRect.height },
+      });
+    },
+    [board.activities]
+  );
+
+  const handleEditStoryMemo = useCallback(
+    (activityId: string, taskId: string, storyId: string, domRect: DOMRect) => {
+      const activity = board.activities.find((a) => a.id === activityId);
+      const task = activity?.tasks.find((t) => t.id === taskId);
+      const story = task?.stories.find((s) => s.id === storyId);
+      if (!story) return;
+      setEditing({
+        target: { type: "storyMemo", activityId, taskId, storyId },
+        text: story.memo ?? "",
+        position: { x: domRect.left, y: domRect.top, width: domRect.width, height: domRect.height },
+      });
+    },
+    [board.activities]
+  );
+
+  // --- ストーリーポイント変更 ---
+  const handleStoryPointChange = useCallback(
+    (activityId: string, taskId: string, storyId: string, points: StoryPoint | undefined) => {
+      const activities = board.activities.map((a) =>
+        a.id === activityId
+          ? {
+              ...a,
+              tasks: a.tasks.map((t) =>
+                t.id === taskId
+                  ? {
+                      ...t,
+                      stories: t.stories.map((s) =>
+                        s.id === storyId ? { ...s, storyPoints: points } : s
+                      ),
+                    }
+                  : t
+              ),
+            }
+          : a
+      );
+      onBoardChange({ ...board, activities });
+    },
+    [board, onBoardChange]
+  );
+
+  // --- タスク列幅変更 ---
+  const handleTaskColumnResize = useCallback(
+    (taskId: string, width: number, committed: boolean) => {
+      if (!committed) {
+        // ドラッグ中はローカル状態のみ更新（undo/redo登録しない）
+        setLocalWidths((prev) => ({
+          ...(prev ?? board.taskColumnWidths ?? {}),
+          [taskId]: width,
+        }));
+      } else {
+        // mouseup時にボード状態を更新（undo/redo登録）
+        setLocalWidths(null);
+        onBoardChange({
+          ...board,
+          taskColumnWidths: {
+            ...(board.taskColumnWidths ?? {}),
+            [taskId]: width,
+          },
+        });
+      }
+    },
+    [board, onBoardChange]
+  );
+
+  // 表示に使う列幅（リサイズ中はローカル状態を優先）
+  const effectiveWidths = localWidths ?? board.taskColumnWidths;
 
   // --- 編集コミット ---
   const handleEditCommit = useCallback(
@@ -263,6 +364,42 @@ export function UserStoryMapping({ board, onBoardChange }: UserStoryMappingProps
           r.id === target.releaseId ? { ...r, name: text } : r
         );
         onBoardChange({ ...board, releases });
+      } else if (target.type === "activityMemo") {
+        const activities = board.activities.map((a) =>
+          a.id === target.activityId ? { ...a, memo: text || undefined } : a
+        );
+        onBoardChange({ ...board, activities });
+      } else if (target.type === "taskMemo") {
+        const activities = board.activities.map((a) =>
+          a.id === target.activityId
+            ? {
+                ...a,
+                tasks: a.tasks.map((t) =>
+                  t.id === target.taskId ? { ...t, memo: text || undefined } : t
+                ),
+              }
+            : a
+        );
+        onBoardChange({ ...board, activities });
+      } else if (target.type === "storyMemo") {
+        const activities = board.activities.map((a) =>
+          a.id === target.activityId
+            ? {
+                ...a,
+                tasks: a.tasks.map((t) =>
+                  t.id === target.taskId
+                    ? {
+                        ...t,
+                        stories: t.stories.map((s) =>
+                          s.id === target.storyId ? { ...s, memo: text || undefined } : s
+                        ),
+                      }
+                    : t
+                ),
+              }
+            : a
+        );
+        onBoardChange({ ...board, activities });
       }
 
       setEditing(null);
@@ -459,123 +596,131 @@ export function UserStoryMapping({ board, onBoardChange }: UserStoryMappingProps
   ];
 
   return (
-    <div className="h-full flex flex-col p-4 gap-4 overflow-auto">
-      {/* ツールバー */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-white transition-colors hover:opacity-90"
-          style={{ backgroundColor: STORY_MAPPING_COLORS.activity.header }}
-          onClick={handleAddActivity}
-        >
-          <Plus className="w-3.5 h-3.5" />
-          {t("addActivity")}
-        </button>
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-white transition-colors hover:opacity-90"
-          style={{ backgroundColor: STORY_MAPPING_COLORS.release.border }}
-          onClick={handleAddRelease}
-        >
-          <Plus className="w-3.5 h-3.5" />
-          {t("addRelease")}
-        </button>
+    <TooltipProvider>
+      <div className="h-full flex flex-col p-4 gap-4 overflow-auto">
+        {/* ツールバー */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-white transition-colors hover:opacity-90"
+            style={{ backgroundColor: STORY_MAPPING_COLORS.activity.header }}
+            onClick={handleAddActivity}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            {t("addActivity")}
+          </button>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium text-white transition-colors hover:opacity-90"
+            style={{ backgroundColor: STORY_MAPPING_COLORS.release.border }}
+            onClick={handleAddRelease}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            {t("addRelease")}
+          </button>
 
-        {/* ガイド開閉ボタン */}
-        <button
-          type="button"
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ml-auto"
-          onClick={() => setGuideOpen(!guideOpen)}
-        >
-          <HelpCircle className="w-3.5 h-3.5" />
-          {t("guide.toggle")}
-          {guideOpen ? (
-            <ChevronUp className="w-3 h-3" />
-          ) : (
-            <ChevronDown className="w-3 h-3" />
-          )}
-        </button>
-      </div>
+          {/* ガイド開閉ボタン */}
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ml-auto"
+            onClick={() => setGuideOpen(!guideOpen)}
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            {t("guide.toggle")}
+            {guideOpen ? (
+              <ChevronUp className="w-3 h-3" />
+            ) : (
+              <ChevronDown className="w-3 h-3" />
+            )}
+          </button>
+        </div>
 
-      {/* 使い方ガイド（インライン折りたたみ） */}
-      {guideOpen && (
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm shrink-0">
-          <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-            {t("guide.overviewText")}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {GUIDE_AREAS.map(({ color, titleKey, descKey, textColor }) => (
-              <div key={titleKey} className="flex gap-2.5">
-                <div
-                  className="w-3 h-3 rounded-sm shrink-0 mt-0.5"
-                  style={{
-                    backgroundColor: color,
-                    border: textColor ? "1px solid rgba(0,0,0,0.15)" : undefined,
-                  }}
-                />
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">
-                    {t(titleKey)}
-                  </p>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed mt-0.5">
-                    {t(descKey)}
-                  </p>
+        {/* 使い方ガイド（インライン折りたたみ） */}
+        {guideOpen && (
+          <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm shrink-0">
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
+              {t("guide.overviewText")}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {GUIDE_AREAS.map(({ color, titleKey, descKey, textColor }) => (
+                <div key={titleKey} className="flex gap-2.5">
+                  <div
+                    className="w-3 h-3 rounded-sm shrink-0 mt-0.5"
+                    style={{
+                      backgroundColor: color,
+                      border: textColor ? "1px solid rgba(0,0,0,0.15)" : undefined,
+                    }}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                      {t(titleKey)}
+                    </p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed mt-0.5">
+                      {t(descKey)}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 空状態 */}
+        {isEmpty && !guideOpen && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center text-muted-foreground space-y-2">
+              <p className="text-lg font-semibold">{t("emptyHint.title")}</p>
+              <p className="text-sm">{t("emptyHint.description")}</p>
+            </div>
+          </div>
+        )}
+
+        {/* アクティビティ列群（水平スクロール） */}
+        {!isEmpty && (
+          <div className="flex flex-row gap-3 overflow-x-auto pb-2 flex-1 min-h-0">
+            {board.activities.map((activity) => (
+              <StoryMappingActivityColumn
+                key={activity.id}
+                activity={activity}
+                releases={board.releases}
+                taskColumnWidths={effectiveWidths}
+                onEditActivity={(rect) => handleEditActivity(activity.id, rect)}
+                onDeleteActivity={() => handleDeleteActivity(activity.id)}
+                onAddTask={() => handleAddTask(activity.id)}
+                onEditTask={(taskId, rect) => handleEditTask(activity.id, taskId, rect)}
+                onDeleteTask={(taskId) => handleDeleteTask(activity.id, taskId)}
+                onAddStory={(taskId, releaseId) => handleAddStory(activity.id, taskId, releaseId)}
+                onEditStory={(taskId, storyId, rect) => handleEditStory(activity.id, taskId, storyId, rect)}
+                onDeleteStory={(taskId, storyId) => handleDeleteStory(activity.id, taskId, storyId)}
+                onEditRelease={handleEditRelease}
+                onDeleteRelease={handleDeleteRelease}
+                onDragStartStory={(taskId, storyId) => handleDragStartStory(activity.id, taskId, storyId)}
+                onDragOverStory={(e, storyId, taskId) => handleDragOverStory(e, storyId, taskId)}
+                onDropOnTask={(taskId) => handleDropOnTask(activity.id, taskId)}
+                onDragEnd={handleDragEnd}
+                dragOverStoryId={dragOverStoryId}
+                dragOverTaskId={dragOverTaskId}
+                autoEditId={autoEditId}
+                onEditActivityMemo={(rect) => handleEditActivityMemo(activity.id, rect)}
+                onEditTaskMemo={(taskId, rect) => handleEditTaskMemo(activity.id, taskId, rect)}
+                onEditStoryMemo={(taskId, storyId, rect) => handleEditStoryMemo(activity.id, taskId, storyId, rect)}
+                onStoryPointChange={(taskId, storyId, v) => handleStoryPointChange(activity.id, taskId, storyId, v)}
+                onTaskColumnResize={(taskId, w, committed) => handleTaskColumnResize(taskId, w, committed)}
+              />
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* 空状態 */}
-      {isEmpty && !guideOpen && (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center text-muted-foreground space-y-2">
-            <p className="text-lg font-semibold">{t("emptyHint.title")}</p>
-            <p className="text-sm">{t("emptyHint.description")}</p>
-          </div>
-        </div>
-      )}
-
-      {/* アクティビティ列群（水平スクロール） */}
-      {!isEmpty && (
-        <div className="flex flex-row gap-3 overflow-x-auto pb-2 flex-1 min-h-0">
-          {board.activities.map((activity) => (
-            <StoryMappingActivityColumn
-              key={activity.id}
-              activity={activity}
-              releases={board.releases}
-              onEditActivity={(rect) => handleEditActivity(activity.id, rect)}
-              onDeleteActivity={() => handleDeleteActivity(activity.id)}
-              onAddTask={() => handleAddTask(activity.id)}
-              onEditTask={(taskId, rect) => handleEditTask(activity.id, taskId, rect)}
-              onDeleteTask={(taskId) => handleDeleteTask(activity.id, taskId)}
-              onAddStory={(taskId, releaseId) => handleAddStory(activity.id, taskId, releaseId)}
-              onEditStory={(taskId, storyId, rect) => handleEditStory(activity.id, taskId, storyId, rect)}
-              onDeleteStory={(taskId, storyId) => handleDeleteStory(activity.id, taskId, storyId)}
-              onEditRelease={handleEditRelease}
-              onDeleteRelease={handleDeleteRelease}
-              onDragStartStory={(taskId, storyId) => handleDragStartStory(activity.id, taskId, storyId)}
-              onDragOverStory={(e, storyId, taskId) => handleDragOverStory(e, storyId, taskId)}
-              onDropOnTask={(taskId) => handleDropOnTask(activity.id, taskId)}
-              onDragEnd={handleDragEnd}
-              dragOverStoryId={dragOverStoryId}
-              dragOverTaskId={dragOverTaskId}
-              autoEditId={autoEditId}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* ノートエディタ */}
-      {editing && (
-        <NoteEditor
-          initialText={editing.text}
-          position={editing.position}
-          onCommit={handleEditCommit}
-          onCancel={handleEditCancel}
-        />
-      )}
-    </div>
+        {/* ノートエディタ */}
+        {editing && (
+          <NoteEditor
+            initialText={editing.text}
+            position={editing.position}
+            onCommit={handleEditCommit}
+            onCancel={handleEditCancel}
+          />
+        )}
+      </div>
+    </TooltipProvider>
   );
 }
