@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { BmcBoard, BmcBlockType } from "@/lib/utils/event-storming";
 import { BMC_BLOCK_ORDER, createBmcNote } from "@/lib/utils/event-storming";
@@ -116,6 +116,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange }: BusinessModelCanvasPro
 
   const handleDragOverNote = useCallback(
     (_e: React.DragEvent, blockType: BmcBlockType, noteId: string) => {
+      // _e は BmcBlock → BmcStickyNote のイベント伝搬シグネチャに必要
       setDragOverNoteId(noteId);
       setDragOverBlock(blockType);
     },
@@ -139,7 +140,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange }: BusinessModelCanvasPro
           const list = [...newBlocks[sourceBlock]];
           const fromIdx = list.findIndex((n) => n.id === noteId);
           const toIdx = list.findIndex((n) => n.id === dragOverNoteId);
-          if (fromIdx !== -1 && toIdx !== -1) {
+          if (fromIdx !== -1 && toIdx !== -1 && fromIdx !== toIdx) {
             list.splice(fromIdx, 1);
             list.splice(toIdx, 0, sourceNote);
             newBlocks[sourceBlock] = list;
@@ -176,6 +177,20 @@ export function BusinessModelCanvas({ bmc, onBmcChange }: BusinessModelCanvasPro
     setDragOverNoteId(null);
     setDragOverBlock(null);
     setDragSourceBlock(null);
+  }, []);
+
+  // ウィンドウ外でドラッグがキャンセルされた場合のクリーンアップ
+  useEffect(() => {
+    const cleanup = () => {
+      if (dragRef.current) {
+        dragRef.current = null;
+        setDragOverNoteId(null);
+        setDragOverBlock(null);
+        setDragSourceBlock(null);
+      }
+    };
+    window.addEventListener("dragend", cleanup);
+    return () => window.removeEventListener("dragend", cleanup);
   }, []);
 
   return (

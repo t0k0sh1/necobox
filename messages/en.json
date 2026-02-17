@@ -1442,6 +1442,7 @@
         "revenueStreams": "Revenue Streams"
       },
       "addNote": "Add Note",
+      "deleteNote": "Delete note",
       "emptyHint": {
         "title": "Start Your Business Model Canvas",
         "description": "Click the \"+\" button in each block to add notes"

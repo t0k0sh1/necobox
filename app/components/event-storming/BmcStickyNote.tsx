@@ -1,6 +1,7 @@
 "use client";
 
 import { X, GripVertical } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 interface BmcStickyNoteProps {
@@ -29,6 +30,7 @@ export function BmcStickyNote({
   isDragOver,
   autoEdit,
 }: BmcStickyNoteProps) {
+  const t = useTranslations("eventStorming.bmc");
   const [hovered, setHovered] = useState(false);
   const elRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +39,8 @@ export function BmcStickyNote({
       const rect = elRef.current.getBoundingClientRect();
       onDoubleClick(rect);
     }
-    // autoEdit が true になった初回のみ発火
+    // onDoubleClick は安定したコールバック（useCallback）であり deps に含めると
+    // 不要な再発火を招くため、autoEdit の変化時のみ実行する
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoEdit]);
 
@@ -64,16 +67,30 @@ export function BmcStickyNote({
     onDragOver(e, noteId);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      const rect = e.currentTarget.getBoundingClientRect();
+      onDoubleClick(rect);
+    } else if (e.key === "Delete" || e.key === "Backspace") {
+      e.preventDefault();
+      onDelete();
+    }
+  };
+
   return (
     <div
       ref={elRef}
       draggable
-      className={`relative px-2 py-1.5 rounded text-xs leading-tight break-all cursor-grab active:cursor-grabbing select-none min-h-[32px] flex items-center gap-1 transition-shadow ${
+      tabIndex={0}
+      role="button"
+      className={`relative px-2 py-1.5 rounded text-xs leading-tight break-all cursor-grab active:cursor-grabbing select-none min-h-[32px] flex items-center gap-1 transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500 ${
         isDragOver ? "ring-2 ring-blue-400 ring-offset-1" : ""
       }`}
-      style={{ backgroundColor: bgColor, color: "#1f2937" }}
+      style={{ backgroundColor: bgColor, color: "#111827" }}
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
+      onKeyDown={handleKeyDown}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onDragStart={handleDragStart}
@@ -90,7 +107,7 @@ export function BmcStickyNote({
             e.stopPropagation();
             onDelete();
           }}
-          aria-label="削除"
+          aria-label={t("deleteNote")}
         >
           <X className="w-2.5 h-2.5" />
         </button>

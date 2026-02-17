@@ -1442,6 +1442,7 @@
         "revenueStreams": "収益の流れ"
       },
       "addNote": "ノートを追加",
+      "deleteNote": "ノートを削除",
       "emptyHint": {
         "title": "ビジネスモデルキャンバスを始めましょう",
         "description": "各ブロックの「+」ボタンをクリックしてノートを追加できます"

@@ -75,23 +75,29 @@ export function BmcBlock({
       </div>
       {/* 付箋リスト */}
       <div className="flex-1 p-1.5 overflow-y-auto">
-        <div className="flex flex-col gap-1">
-          {notes.map((note) => (
-            <BmcStickyNote
-              key={note.id}
-              noteId={note.id}
-              text={note.text}
-              bgColor={colors.bg}
-              onDoubleClick={(rect) => onEditNote(note.id, rect)}
-              onDelete={() => onDeleteNote(note.id)}
-              onDragStart={(nid) => onDragStart(blockType, nid)}
-              onDragOver={(e, nid) => onDragOverNote(e, blockType, nid)}
-              onDragEnd={onDragEnd}
-              isDragOver={dragOverNoteId === note.id}
-              autoEdit={autoEditNoteId === note.id}
-            />
-          ))}
-        </div>
+        {notes.length === 0 ? (
+          <p className="text-[10px] text-muted-foreground/60 text-center mt-2 select-none">
+            + を押してノートを追加
+          </p>
+        ) : (
+          <div className="flex flex-col gap-1">
+            {notes.map((note) => (
+              <BmcStickyNote
+                key={note.id}
+                noteId={note.id}
+                text={note.text}
+                bgColor={colors.bg}
+                onDoubleClick={(rect) => onEditNote(note.id, rect)}
+                onDelete={() => onDeleteNote(note.id)}
+                onDragStart={(nid) => onDragStart(blockType, nid)}
+                onDragOver={(e, nid) => onDragOverNote(e, blockType, nid)}
+                onDragEnd={onDragEnd}
+                isDragOver={dragOverNoteId === note.id}
+                autoEdit={autoEditNoteId === note.id}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
