@@ -11,6 +11,7 @@ import {
   type EventStormingBoard,
   createEmptyBoard,
   createEmptyBmcBoard,
+  createEmptyExampleMappingBoard,
   exportBoard,
   validateExportData,
   type ExportData,
@@ -65,6 +66,10 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
           // bmcフィールドが未定義の場合（v1データ）は空のBMCボードでフォールバック
           if (!parsed.bmc) {
             parsed.bmc = createEmptyBmcBoard();
+          }
+          // exampleMappingフィールドが未定義の場合は空の実例マッピングボードでフォールバック
+          if (!parsed.exampleMapping) {
+            parsed.exampleMapping = createEmptyExampleMappingBoard();
           }
           // eslint-disable-next-line react-hooks/set-state-in-effect -- mount後のlocalStorage復元は正当なパターン
           setBoardState(parsed);
@@ -148,6 +153,10 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
         // v1データのインポート時はBMCを空で初期化
         if (!data.board.bmc) {
           data.board.bmc = createEmptyBmcBoard();
+        }
+        // 実例マッピングが未定義の場合は空で初期化
+        if (!data.board.exampleMapping) {
+          data.board.exampleMapping = createEmptyExampleMappingBoard();
         }
         return data.board;
       } catch {

@@ -1428,7 +1428,8 @@
     },
     "tabs": {
       "eventStorming": "Event Storming",
-      "bmc": "Business Model Canvas"
+      "bmc": "Business Model Canvas",
+      "exampleMapping": "Example Mapping"
     },
     "bmc": {
       "blocks": {
@@ -1448,6 +1449,18 @@
         "title": "Start Your Business Model Canvas",
         "description": "Click the \"+\" button in each block to add notes"
       }
+    },
+    "exampleMapping": {
+      "storyLabel": "User Story",
+      "storyPlaceholder": "As a [role], I want [feature] so that [benefit]",
+      "rulesSection": "Rules",
+      "addRule": "Add Rule",
+      "examplesSection": "Examples",
+      "addExample": "Add Example",
+      "questionsSection": "Questions",
+      "addQuestion": "Add Question",
+      "deleteRule": "Delete rule",
+      "deleteCard": "Delete card"
     }
   }
 }

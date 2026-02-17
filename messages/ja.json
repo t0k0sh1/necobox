@@ -1428,7 +1428,8 @@
     },
     "tabs": {
       "eventStorming": "イベントストーミング",
-      "bmc": "ビジネスモデルキャンバス"
+      "bmc": "ビジネスモデルキャンバス",
+      "exampleMapping": "実例マッピング"
     },
     "bmc": {
       "blocks": {
@@ -1448,6 +1449,18 @@
         "title": "ビジネスモデルキャンバスを始めましょう",
         "description": "各ブロックの「+」ボタンをクリックしてノートを追加できます"
       }
+    },
+    "exampleMapping": {
+      "storyLabel": "ユーザーストーリー",
+      "storyPlaceholder": "[役割]として、[機能]がほしい。なぜなら[利点]だからだ",
+      "rulesSection": "ルール",
+      "addRule": "ルールを追加",
+      "examplesSection": "具体例",
+      "addExample": "具体例を追加",
+      "questionsSection": "不明点",
+      "addQuestion": "不明点を追加",
+      "deleteRule": "ルールを削除",
+      "deleteCard": "カードを削除"
     }
   }
 }
