@@ -212,11 +212,11 @@ export const TOOLS: ToolDefinition[] = [
   },
   // DevTools（開発ツール）
   {
-    id: "event-storming",
-    path: "/event-storming",
+    id: "domain-modeling",
+    path: "/domain-modeling",
     icon: "Workflow",
     category: "devtools",
-    i18nKey: "eventStorming",
+    i18nKey: "domainModeling",
   },
   {
     id: "color-scheme-designer",

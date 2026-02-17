@@ -1,6 +1,6 @@
 "use client";
 
-import { SLOT_COLORS, type SlotType } from "@/lib/utils/event-storming";
+import { SLOT_COLORS, type SlotType } from "@/lib/utils/domain-modeling";
 import { ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -27,7 +27,7 @@ const SHORTCUT_KEYS = [
 
 export function Legend() {
   const [isOpen, setIsOpen] = useState(false);
-  const t = useTranslations("eventStorming.legend");
+  const t = useTranslations("domainModeling.legend");
 
   return (
     <div className="absolute bottom-3 left-3 z-10 pointer-events-auto">

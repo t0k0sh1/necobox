@@ -13,15 +13,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  EventStormingCanvas,
+  DomainModelingCanvas,
   type CanvasHandle,
-} from "@/app/components/event-storming/EventStormingCanvas";
-import { Toolbar } from "@/app/components/event-storming/Toolbar";
-import { BusinessModelCanvas } from "@/app/components/event-storming/BusinessModelCanvas";
-import { ExampleMapping } from "@/app/components/event-storming/ExampleMapping";
-import { useEventStormingBoard } from "@/lib/hooks/useEventStormingBoard";
-import type { ToolMode, EventStormingBoard, BmcBoard, ExampleMappingBoard } from "@/lib/utils/event-storming";
-import { createEmptyBmcBoard, createEmptyExampleMappingBoard } from "@/lib/utils/event-storming";
+} from "@/app/components/domain-modeling/DomainModelingCanvas";
+import { Toolbar } from "@/app/components/domain-modeling/Toolbar";
+import { BusinessModelCanvas } from "@/app/components/domain-modeling/BusinessModelCanvas";
+import { ExampleMapping } from "@/app/components/domain-modeling/ExampleMapping";
+import { useDomainModelingBoard } from "@/lib/hooks/useDomainModelingBoard";
+import type { ToolMode, DomainModelingBoard, BmcBoard, ExampleMappingBoard } from "@/lib/utils/domain-modeling";
+import { createEmptyBmcBoard, createEmptyExampleMappingBoard } from "@/lib/utils/domain-modeling";
 import { useTranslations } from "next-intl";
 import { useState, useCallback, useRef, useEffect } from "react";
 
@@ -36,8 +36,8 @@ function useOverrideMainMinHeight() {
   }, []);
 }
 
-export default function EventStormingPage() {
-  const t = useTranslations("eventStorming");
+export default function DomainModelingPage() {
+  const t = useTranslations("domainModeling");
   useOverrideMainMinHeight();
 
   const {
@@ -50,11 +50,11 @@ export default function EventStormingPage() {
     redo,
     exportToJson,
     importFromJson,
-  } = useEventStormingBoard();
+  } = useDomainModelingBoard();
 
   const [toolMode, setToolMode] = useState<ToolMode>("select");
   const [importDialog, setImportDialog] = useState<{
-    board: EventStormingBoard;
+    board: DomainModelingBoard;
   } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<CanvasHandle>(null);
@@ -159,7 +159,7 @@ export default function EventStormingPage() {
 
           {/* キャンバス */}
           <div className="flex-1 min-h-0">
-            <EventStormingCanvas
+            <DomainModelingCanvas
               ref={canvasRef}
               board={board}
               toolMode={toolMode}

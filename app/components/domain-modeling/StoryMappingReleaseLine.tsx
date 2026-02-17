@@ -3,7 +3,7 @@
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { STORY_MAPPING_COLORS } from "@/lib/utils/event-storming";
+import { STORY_MAPPING_COLORS } from "@/lib/utils/domain-modeling";
 
 interface StoryMappingReleaseLineProps {
   name: string;

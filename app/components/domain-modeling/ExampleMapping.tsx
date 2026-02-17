@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Plus } from "lucide-react";
-import type { ExampleMappingBoard } from "@/lib/utils/event-storming";
+import type { ExampleMappingBoard } from "@/lib/utils/domain-modeling";
 import {
   EXAMPLE_MAPPING_COLORS,
   createExampleMappingNote,
   createExampleMappingRule,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 import { ExampleMappingStoryCard } from "./ExampleMappingStoryCard";
 import { ExampleMappingRuleColumn } from "./ExampleMappingRuleColumn";
 import { BmcStickyNote } from "./BmcStickyNote";
@@ -42,7 +42,7 @@ interface DragState {
 
 /** 実例マッピングメインコンポーネント */
 export function ExampleMapping({ board, onBoardChange }: ExampleMappingProps) {
-  const t = useTranslations("eventStorming.exampleMapping");
+  const t = useTranslations("domainModeling.exampleMapping");
   const [editing, setEditing] = useState<EditingState | null>(null);
   const [autoEditId, setAutoEditId] = useState<string | null>(null);
   const [dragOverExampleId, setDragOverExampleId] = useState<string | null>(null);

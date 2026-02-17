@@ -1,6 +1,6 @@
 "use client";
 
-import type { BoundedContext } from "@/lib/utils/event-storming";
+import type { BoundedContext } from "@/lib/utils/domain-modeling";
 import { useRef } from "react";
 
 interface BoundedContextRectProps {

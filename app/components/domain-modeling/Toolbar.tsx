@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { ToolMode } from "@/lib/utils/event-storming";
+import type { ToolMode } from "@/lib/utils/domain-modeling";
 import {
   MousePointer2,
   Plus,
@@ -67,7 +67,7 @@ export function Toolbar({
   onExport,
   onImport,
 }: ToolbarProps) {
-  const t = useTranslations("eventStorming.toolbar");
+  const t = useTranslations("domainModeling.toolbar");
 
   return (
     <TooltipProvider delayDuration={300}>

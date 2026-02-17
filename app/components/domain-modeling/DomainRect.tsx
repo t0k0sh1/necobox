@@ -4,7 +4,7 @@ import {
   type Domain,
   type DomainType,
   DOMAIN_TYPE_COLORS,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 import { useRef } from "react";
 
 interface DomainRectProps {

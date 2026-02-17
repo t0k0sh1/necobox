@@ -1,5 +1,5 @@
 /**
- * イベントストーミングボードの状態管理フック
+ * ドメインモデリングボードの状態管理フック
  *
  * - ボードのCRUD操作
  * - useUndoRedo との統合
@@ -8,33 +8,34 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  type EventStormingBoard,
+  type DomainModelingBoard,
   createEmptyBoard,
   createEmptyBmcBoard,
   createEmptyExampleMappingBoard,
   exportBoard,
   validateExportData,
   type ExportData,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 import { useUndoRedo } from "@/lib/hooks/useUndoRedo";
 
-const STORAGE_KEY = "necobox-event-storming-board";
+const OLD_STORAGE_KEY = "necobox-event-storming-board";
+const STORAGE_KEY = "necobox-domain-modeling-board";
 const MAX_IMPORT_SIZE = 10 * 1024 * 1024; // 10MB
 
 /** Undo/Redo 用のスナップショット（viewport を除くボード状態） */
-type BoardSnapshot = Omit<EventStormingBoard, "viewport">;
+type BoardSnapshot = Omit<DomainModelingBoard, "viewport">;
 
-function toBoardSnapshot(board: EventStormingBoard): BoardSnapshot {
+function toBoardSnapshot(board: DomainModelingBoard): BoardSnapshot {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { viewport, ...rest } = board;
   return rest;
 }
 
-export interface UseEventStormingBoardReturn {
-  board: EventStormingBoard;
-  setBoard: (board: EventStormingBoard) => void;
+export interface UseDomainModelingBoardReturn {
+  board: DomainModelingBoard;
+  setBoard: (board: DomainModelingBoard) => void;
   /** ボード変更（Undo/Redo スナップショット自動保存） */
-  updateBoard: (board: EventStormingBoard) => void;
+  updateBoard: (board: DomainModelingBoard) => void;
   canUndo: boolean;
   canRedo: boolean;
   undo: () => void;
@@ -42,14 +43,14 @@ export interface UseEventStormingBoardReturn {
   /** JSONエクスポート */
   exportToJson: () => void;
   /** JSONインポート */
-  importFromJson: (file: File) => Promise<EventStormingBoard | null>;
+  importFromJson: (file: File) => Promise<DomainModelingBoard | null>;
   /** ボードリセット */
   resetBoard: () => void;
 }
 
-export function useEventStormingBoard(): UseEventStormingBoardReturn {
+export function useDomainModelingBoard(): UseDomainModelingBoardReturn {
   // SSR/クライアントで同じ初期値を使い、ハイドレーション不一致を防ぐ
-  const [board, setBoardState] = useState<EventStormingBoard>(createEmptyBoard);
+  const [board, setBoardState] = useState<DomainModelingBoard>(createEmptyBoard);
   const undoRedo = useUndoRedo<BoardSnapshot>();
   const initializedRef = useRef(false);
   const lastSnapshotRef = useRef<string>("");
@@ -59,9 +60,16 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
     if (initializedRef.current) return;
     initializedRef.current = true;
     try {
+      // 旧キーからの移行
+      const oldData = localStorage.getItem(OLD_STORAGE_KEY);
+      if (oldData && !localStorage.getItem(STORAGE_KEY)) {
+        localStorage.setItem(STORAGE_KEY, oldData);
+        localStorage.removeItem(OLD_STORAGE_KEY);
+      }
+
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved) as EventStormingBoard;
+        const parsed = JSON.parse(saved) as DomainModelingBoard;
         if (parsed && parsed.id) {
           // bmcフィールドが未定義の場合（v1データ）は空のBMCボードでフォールバック
           if (!parsed.bmc) {
@@ -93,12 +101,12 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
     return () => clearTimeout(timer);
   }, [board]);
 
-  const setBoard = useCallback((newBoard: EventStormingBoard) => {
+  const setBoard = useCallback((newBoard: DomainModelingBoard) => {
     setBoardState(newBoard);
   }, []);
 
   const updateBoard = useCallback(
-    (newBoard: EventStormingBoard) => {
+    (newBoard: DomainModelingBoard) => {
       // viewport 変更のみの場合はスナップショットを取らない
       const newSnapshot = JSON.stringify(toBoardSnapshot(newBoard));
       if (newSnapshot !== lastSnapshotRef.current) {
@@ -115,7 +123,7 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
   const undo = useCallback(() => {
     const prev = undoRedo.undo(toBoardSnapshot(board));
     if (prev) {
-      const restored = { ...prev, viewport: board.viewport } as EventStormingBoard;
+      const restored = { ...prev, viewport: board.viewport } as DomainModelingBoard;
       setBoardState(restored);
       lastSnapshotRef.current = JSON.stringify(toBoardSnapshot(restored));
     }
@@ -124,7 +132,7 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
   const redo = useCallback(() => {
     const next = undoRedo.redo(toBoardSnapshot(board));
     if (next) {
-      const restored = { ...next, viewport: board.viewport } as EventStormingBoard;
+      const restored = { ...next, viewport: board.viewport } as DomainModelingBoard;
       setBoardState(restored);
       lastSnapshotRef.current = JSON.stringify(toBoardSnapshot(restored));
     }
@@ -137,13 +145,13 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
     const a = document.createElement("a");
     const date = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = `event-storming-${board.name || "board"}-${date}.json`;
+    a.download = `domain-modeling-${board.name || "board"}-${date}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }, [board]);
 
   const importFromJson = useCallback(
-    async (file: File): Promise<EventStormingBoard | null> => {
+    async (file: File): Promise<DomainModelingBoard | null> => {
       try {
         if (file.size > MAX_IMPORT_SIZE) return null;
         const text = await file.text();

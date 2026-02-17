@@ -2,7 +2,7 @@
 
 import { StickyNote } from "lucide-react";
 
-import type { StoryPoint } from "@/lib/utils/event-storming";
+import type { StoryPoint } from "@/lib/utils/domain-modeling";
 import {
   Tooltip,
   TooltipContent,

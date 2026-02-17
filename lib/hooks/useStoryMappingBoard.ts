@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type StoryMappingBoard,
   createEmptyStoryMappingBoard,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 import { useUndoRedo } from "@/lib/hooks/useUndoRedo";
 
 const STORAGE_KEY = "necobox-story-mapping-board";

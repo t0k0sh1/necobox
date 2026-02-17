@@ -5,7 +5,7 @@ import {
   type EventFlow,
   getFlowCenter,
   getFlowWidth,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 
 interface FlowConnectionArrowProps {
   connection: FlowConnection;

@@ -3,8 +3,8 @@
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import type { StoryPoint } from "@/lib/utils/event-storming";
-import { STORY_POINTS } from "@/lib/utils/event-storming";
+import type { StoryPoint } from "@/lib/utils/domain-modeling";
+import { STORY_POINTS } from "@/lib/utils/domain-modeling";
 import {
   Popover,
   PopoverContent,

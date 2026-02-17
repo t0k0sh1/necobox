@@ -4,7 +4,7 @@ import {
   type SlotType,
   SLOT_COLORS,
   CELL_SIZE,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 import { Plus } from "lucide-react";
 
 interface FlowSlotCellProps {

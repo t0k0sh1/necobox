@@ -30,7 +30,7 @@ export function BmcStickyNote({
   isDragOver,
   autoEdit,
 }: BmcStickyNoteProps) {
-  const t = useTranslations("eventStorming.bmc");
+  const t = useTranslations("domainModeling.bmc");
   const [hovered, setHovered] = useState(false);
   const elRef = useRef<HTMLDivElement>(null);
 

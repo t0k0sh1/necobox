@@ -1,7 +1,7 @@
 "use client";
 
-import type { BmcBlockType, BmcNote } from "@/lib/utils/event-storming";
-import { BMC_BLOCK_COLORS } from "@/lib/utils/event-storming";
+import type { BmcBlockType, BmcNote } from "@/lib/utils/domain-modeling";
+import { BMC_BLOCK_COLORS } from "@/lib/utils/domain-modeling";
 import { BmcStickyNote } from "./BmcStickyNote";
 import { Plus } from "lucide-react";
 

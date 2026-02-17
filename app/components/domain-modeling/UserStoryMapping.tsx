@@ -4,14 +4,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronUp, HelpCircle, Plus } from "lucide-react";
 
-import type { StoryMappingBoard, StoryPoint } from "@/lib/utils/event-storming";
+import type { StoryMappingBoard, StoryPoint } from "@/lib/utils/domain-modeling";
 import {
   STORY_MAPPING_COLORS,
   createStoryMappingActivity,
   createStoryMappingTask,
   createStoryMappingNote,
   createStoryMappingRelease,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { StoryMappingActivityColumn } from "./StoryMappingActivityColumn";
 import { NoteEditor } from "./NoteEditor";
