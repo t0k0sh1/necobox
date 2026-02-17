@@ -51,7 +51,7 @@
     "knowledgeHub": "ノウハウ集",
     "textProcessor": "テキスト処理",
     "colorSchemeDesigner": "カラースキームデザイナー β",
-    "eventStorming": "イベントストーミング",
+    "domainModeling": "ドメインモデリング",
     "storyMapping": "ユーザーストーリーマッピング",
     "sectionGenerators": "ランダム生成",
     "sectionEncoding": "エンコード・デコード",
@@ -1368,10 +1368,10 @@
       "removeStep": "ステップを削除"
     }
   },
-  "eventStorming": {
-    "title": "イベントストーミング",
-    "description": "DDDのイベントストーミングを支援する設計ツール",
-    "breadcrumb": "イベントストーミング",
+  "domainModeling": {
+    "title": "ドメインモデリング",
+    "description": "DDDのドメインモデリングを支援する設計ツール",
+    "breadcrumb": "ドメインモデリング",
     "importConfirmTitle": "ボードをインポート",
     "importConfirmDescription": "現在のボードの内容がインポートしたデータで置き換えられます。この操作は元に戻せません。",
     "cancel": "キャンセル",

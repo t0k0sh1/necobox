@@ -2,7 +2,7 @@
 
 import { useCanvasInteraction } from "@/lib/hooks/useCanvasInteraction";
 import {
-  type EventStormingBoard,
+  type DomainModelingBoard,
   type ToolMode,
   type CanvasViewport,
   type SlotType,
@@ -13,7 +13,7 @@ import {
   createHotspot,
   createFlowConnection,
   createFlowNote,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { EventFlowComponent } from "./EventFlow";
@@ -31,13 +31,13 @@ export interface CanvasHandle {
   resetView: () => void;
 }
 
-interface EventStormingCanvasProps {
-  board: EventStormingBoard;
+interface DomainModelingCanvasProps {
+  board: DomainModelingBoard;
   toolMode: ToolMode;
   /** 確定的な変更（Undo/Redo スナップショット付き） */
-  onBoardChange: (board: EventStormingBoard) => void;
+  onBoardChange: (board: DomainModelingBoard) => void;
   /** 中間的な変更（ドラッグ中など、Undo スナップショットなし） */
-  onBoardSet: (board: EventStormingBoard) => void;
+  onBoardSet: (board: DomainModelingBoard) => void;
   onToolModeReset: () => void;
 }
 
@@ -66,12 +66,12 @@ interface DrawingRect {
   currentY: number;
 }
 
-export const EventStormingCanvas = forwardRef<CanvasHandle, EventStormingCanvasProps>(
-  function EventStormingCanvas(
+export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanvasProps>(
+  function DomainModelingCanvas(
     { board, toolMode, onBoardChange, onBoardSet, onToolModeReset },
     ref
   ) {
-  const t = useTranslations("eventStorming");
+  const t = useTranslations("domainModeling");
   const uniqueId = useId();
   const dotGridId = `dot-grid-${uniqueId}`;
   const arrowheadId = `arrowhead-${uniqueId}`;

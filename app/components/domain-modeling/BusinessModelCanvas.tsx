@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import type { BmcBoard, BmcBlockType } from "@/lib/utils/event-storming";
-import { BMC_BLOCK_ORDER, createBmcNote } from "@/lib/utils/event-storming";
+import type { BmcBoard, BmcBlockType } from "@/lib/utils/domain-modeling";
+import { BMC_BLOCK_ORDER, createBmcNote } from "@/lib/utils/domain-modeling";
 import { BmcBlock } from "./BmcBlock";
 import { NoteEditor } from "./NoteEditor";
 
@@ -39,7 +39,7 @@ interface DragState {
 
 /** BMCメインコンポーネント */
 export function BusinessModelCanvas({ bmc, onBmcChange }: BusinessModelCanvasProps) {
-  const t = useTranslations("eventStorming.bmc");
+  const t = useTranslations("domainModeling.bmc");
   const [editing, setEditing] = useState<EditingState | null>(null);
   const [autoEditNoteId, setAutoEditNoteId] = useState<string | null>(null);
   const [dragOverNoteId, setDragOverNoteId] = useState<string | null>(null);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { EXAMPLE_MAPPING_COLORS } from "@/lib/utils/event-storming";
+import { EXAMPLE_MAPPING_COLORS } from "@/lib/utils/domain-modeling";
 
 interface ExampleMappingStoryCardProps {
   text: string;
@@ -13,7 +13,7 @@ export function ExampleMappingStoryCard({
   text,
   onDoubleClick,
 }: ExampleMappingStoryCardProps) {
-  const t = useTranslations("eventStorming.exampleMapping");
+  const t = useTranslations("domainModeling.exampleMapping");
   const colors = EXAMPLE_MAPPING_COLORS.story;
 
   const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {

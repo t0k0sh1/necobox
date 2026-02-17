@@ -3,7 +3,7 @@
 import {
   type Hotspot,
   SLOT_COLORS,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 import { useRef } from "react";
 
 interface HotspotBubbleProps {

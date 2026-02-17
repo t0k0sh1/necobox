@@ -7,8 +7,8 @@ import type {
   StoryMappingActivity,
   StoryMappingRelease,
   StoryPoint,
-} from "@/lib/utils/event-storming";
-import { STORY_MAPPING_COLORS } from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
+import { STORY_MAPPING_COLORS } from "@/lib/utils/domain-modeling";
 import {
   Tooltip,
   TooltipContent,

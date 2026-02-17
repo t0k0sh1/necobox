@@ -6,7 +6,7 @@ import {
   SLOT_ORDER,
   SLOT_COLORS,
   CELL_SIZE,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 import { FlowSlotCell, SlotAddButton } from "./FlowSlotCell";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -40,7 +40,7 @@ export function EventFlowComponent({
   onNoteContextMenu,
   onAddNote,
 }: EventFlowProps) {
-  const t = useTranslations("eventStorming");
+  const t = useTranslations("domainModeling");
 
   return (
     <div

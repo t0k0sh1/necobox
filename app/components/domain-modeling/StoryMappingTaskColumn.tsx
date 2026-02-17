@@ -9,13 +9,13 @@ import type {
   StoryMappingRelease,
   StoryMappingNote,
   StoryPoint,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 import {
   STORY_MAPPING_COLORS,
   DEFAULT_TASK_COLUMN_WIDTH,
   MIN_TASK_COLUMN_WIDTH,
   MAX_TASK_COLUMN_WIDTH,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 import {
   Tooltip,
   TooltipContent,

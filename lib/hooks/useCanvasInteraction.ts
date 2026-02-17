@@ -11,7 +11,7 @@ import {
   ZOOM_MIN,
   ZOOM_MAX,
   ZOOM_STEP,
-} from "@/lib/utils/event-storming";
+} from "@/lib/utils/domain-modeling";
 
 export interface UseCanvasInteractionOptions {
   /** 初期ビューポート */

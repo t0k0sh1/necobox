@@ -51,7 +51,7 @@
     "knowledgeHub": "Knowledge Hub",
     "textProcessor": "Text Processor",
     "colorSchemeDesigner": "Color Scheme Designer β",
-    "eventStorming": "Event Storming",
+    "domainModeling": "Domain Modeling",
     "storyMapping": "User Story Mapping",
     "sectionGenerators": "Random Generation",
     "sectionEncoding": "Encoding & Decoding",
@@ -1368,10 +1368,10 @@
       "removeStep": "Remove step"
     }
   },
-  "eventStorming": {
-    "title": "Event Storming",
-    "description": "A design tool for DDD Event Storming",
-    "breadcrumb": "Event Storming",
+  "domainModeling": {
+    "title": "Domain Modeling",
+    "description": "A design tool for DDD Domain Modeling",
+    "breadcrumb": "Domain Modeling",
     "importConfirmTitle": "Import Board",
     "importConfirmDescription": "The current board will be replaced with the imported data. This action cannot be undone.",
     "cancel": "Cancel",

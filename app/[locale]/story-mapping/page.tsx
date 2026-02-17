@@ -1,7 +1,7 @@
 "use client";
 
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
-import { UserStoryMapping } from "@/app/components/event-storming/UserStoryMapping";
+import { UserStoryMapping } from "@/app/components/domain-modeling/UserStoryMapping";
 import { useStoryMappingBoard } from "@/lib/hooks/useStoryMappingBoard";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";

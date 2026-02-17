@@ -1,5 +1,5 @@
 /**
- * イベントストーミングツール - 型定義・定数・ユーティリティ
+ * ドメインモデリングツール - 型定義・定数・ユーティリティ
  */
 
 import { nanoid } from "nanoid";
@@ -83,7 +83,7 @@ export interface CanvasViewport {
 }
 
 /** ボード全体の状態 */
-export interface EventStormingBoard {
+export interface DomainModelingBoard {
   id: string;
   name: string;
   flows: EventFlow[];
@@ -101,7 +101,7 @@ export interface EventStormingBoard {
 /** エクスポートフォーマット */
 export interface ExportData {
   version: 1 | 2;
-  board: EventStormingBoard;
+  board: DomainModelingBoard;
   exportedAt: string;
 }
 
@@ -383,7 +383,7 @@ export function createStoryMappingRelease(name: string): StoryMappingRelease {
 }
 
 /** 空のボードを生成 */
-export function createEmptyBoard(name = "Untitled"): EventStormingBoard {
+export function createEmptyBoard(name = "Untitled"): DomainModelingBoard {
   return {
     id: generateId(),
     name,
@@ -556,7 +556,7 @@ export function validateExportData(data: unknown): data is ExportData {
 }
 
 /** ボードをエクスポート用JSONに変換 */
-export function exportBoard(board: EventStormingBoard): string {
+export function exportBoard(board: DomainModelingBoard): string {
   const data: ExportData = {
     version: 2,
     board,

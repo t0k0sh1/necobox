@@ -2,8 +2,8 @@
 
 import { useTranslations } from "next-intl";
 import { Plus, X } from "lucide-react";
-import type { ExampleMappingRule } from "@/lib/utils/event-storming";
-import { EXAMPLE_MAPPING_COLORS } from "@/lib/utils/event-storming";
+import type { ExampleMappingRule } from "@/lib/utils/domain-modeling";
+import { EXAMPLE_MAPPING_COLORS } from "@/lib/utils/domain-modeling";
 import { BmcStickyNote } from "./BmcStickyNote";
 
 interface ExampleMappingRuleColumnProps {
@@ -36,7 +36,7 @@ export function ExampleMappingRuleColumn({
   dragOverExampleId,
   autoEditExampleId,
 }: ExampleMappingRuleColumnProps) {
-  const t = useTranslations("eventStorming.exampleMapping");
+  const t = useTranslations("domainModeling.exampleMapping");
   const ruleColors = EXAMPLE_MAPPING_COLORS.rule;
   const exampleColors = EXAMPLE_MAPPING_COLORS.example;
 
