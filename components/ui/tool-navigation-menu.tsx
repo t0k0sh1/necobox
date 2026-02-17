@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { Link, usePathname } from "@/i18n/routing";
 import {
+  CATEGORY_COLOR_CLASSES,
   CATEGORY_ORDER,
   getToolsByCategory,
   TOOL_CATEGORIES,
@@ -28,9 +29,9 @@ import {
   CalendarClock,
   CheckSquare,
   Clock,
+  Code,
   Dices,
   Edit,
-  Eye,
   FileCode,
   FileSpreadsheet,
   FileText,
@@ -67,9 +68,9 @@ const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   CalendarClock,
   CheckSquare,
   Clock,
+  Code,
   Dices,
   Edit,
-  Eye,
   FileCode,
   FileSpreadsheet,
   FileText,
@@ -136,12 +137,13 @@ function ToolNavSection({
 }: ToolNavSectionProps) {
   const categoryConfig = TOOL_CATEGORIES[category];
   const CategoryIcon = ICONS[categoryConfig.icon];
+  const colorClasses = CATEGORY_COLOR_CLASSES[category];
 
   if (tools.length === 0) return null;
 
   return (
     <div className="space-y-1">
-      <h3 className="flex items-center gap-2 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+      <h3 className={`flex items-center gap-2 px-3 py-1 text-xs font-semibold uppercase tracking-wider ${colorClasses.sectionTitle}`}>
         <CategoryIcon className="size-3.5" />
         {t(categoryConfig.i18nKey as Parameters<typeof t>[0])}
       </h3>

@@ -14,9 +14,9 @@ export type IconName =
   | "CalendarClock"
   | "CheckSquare"
   | "Clock"
+  | "Code"
   | "Dices"
   | "Edit"
-  | "Eye"
   | "FileCode"
   | "FileSpreadsheet"
   | "FileText"
@@ -49,11 +49,12 @@ export interface ToolDefinition {
 
 export type ToolCategory =
   | "generators"
+  | "encoding"
   | "converters"
   | "editors"
+  | "devtools"
   | "tasks"
   | "network"
-  | "viewers"
   | "references";
 
 export const TOOL_CATEGORIES: Record<
@@ -61,11 +62,12 @@ export const TOOL_CATEGORIES: Record<
   { icon: IconName; i18nKey: string }
 > = {
   generators: { icon: "Sparkles", i18nKey: "sectionGenerators" },
+  encoding: { icon: "FileCode", i18nKey: "sectionEncoding" },
   converters: { icon: "ArrowRightLeft", i18nKey: "sectionConverters" },
   editors: { icon: "Edit", i18nKey: "sectionEditors" },
+  devtools: { icon: "Code", i18nKey: "sectionDevtools" },
   tasks: { icon: "CheckSquare", i18nKey: "sectionTasks" },
-  network: { icon: "Shield", i18nKey: "sectionNetwork" },
-  viewers: { icon: "Eye", i18nKey: "sectionViewers" },
+  network: { icon: "Globe", i18nKey: "sectionNetwork" },
   references: { icon: "BookOpen", i18nKey: "sectionReferences" },
 };
 
@@ -99,21 +101,36 @@ export const TOOLS: ToolDefinition[] = [
     category: "generators",
     i18nKey: "uuidGenerator",
   },
-  // Converters（変換・計算）
+  // Encoding（エンコード・デコード）
   {
     id: "url-encoder",
     path: "/url-encoder",
     icon: "Link",
-    category: "converters",
+    category: "encoding",
     i18nKey: "urlEncoder",
   },
   {
     id: "base64-converter",
     path: "/base64-converter",
     icon: "FileCode",
-    category: "converters",
+    category: "encoding",
     i18nKey: "base64Converter",
   },
+  {
+    id: "jwt-decoder",
+    path: "/jwt-decoder",
+    icon: "Key",
+    category: "encoding",
+    i18nKey: "jwtDecoder",
+  },
+  {
+    id: "hash-generator",
+    path: "/hash-generator",
+    icon: "Hash",
+    category: "encoding",
+    i18nKey: "hashGenerator",
+  },
+  // Converters（変換・計算）
   {
     id: "unix-timestamp",
     path: "/unix-timestamp",
@@ -192,19 +209,34 @@ export const TOOLS: ToolDefinition[] = [
     category: "editors",
     i18nKey: "textProcessor",
   },
-  {
-    id: "color-scheme-designer",
-    path: "/color-scheme-designer",
-    icon: "Paintbrush",
-    category: "editors",
-    i18nKey: "colorSchemeDesigner",
-  },
+  // DevTools（開発ツール）
   {
     id: "event-storming",
     path: "/event-storming",
     icon: "Workflow",
-    category: "editors",
+    category: "devtools",
     i18nKey: "eventStorming",
+  },
+  {
+    id: "color-scheme-designer",
+    path: "/color-scheme-designer",
+    icon: "Paintbrush",
+    category: "devtools",
+    i18nKey: "colorSchemeDesigner",
+  },
+  {
+    id: "diff-viewer",
+    path: "/diff-viewer",
+    icon: "GitCompare",
+    category: "devtools",
+    i18nKey: "diffViewer",
+  },
+  {
+    id: "text-viewer",
+    path: "/text-viewer",
+    icon: "FileText",
+    category: "devtools",
+    i18nKey: "textViewer",
   },
   // Tasks（タスク管理）
   {
@@ -228,35 +260,6 @@ export const TOOLS: ToolDefinition[] = [
     icon: "Search",
     category: "network",
     i18nKey: "ipInfo",
-  },
-  {
-    id: "jwt-decoder",
-    path: "/jwt-decoder",
-    icon: "Key",
-    category: "network",
-    i18nKey: "jwtDecoder",
-  },
-  {
-    id: "hash-generator",
-    path: "/hash-generator",
-    icon: "Hash",
-    category: "network",
-    i18nKey: "hashGenerator",
-  },
-  // Viewers（ビューア）
-  {
-    id: "diff-viewer",
-    path: "/diff-viewer",
-    icon: "GitCompare",
-    category: "viewers",
-    i18nKey: "diffViewer",
-  },
-  {
-    id: "text-viewer",
-    path: "/text-viewer",
-    icon: "FileText",
-    category: "viewers",
-    i18nKey: "textViewer",
   },
   // References（リファレンス）
   {
@@ -288,11 +291,12 @@ export const TOOLS: ToolDefinition[] = [
 export function getToolsByCategory(): Record<ToolCategory, ToolDefinition[]> {
   const result: Record<ToolCategory, ToolDefinition[]> = {
     generators: [],
+    encoding: [],
     converters: [],
     editors: [],
+    devtools: [],
     tasks: [],
     network: [],
-    viewers: [],
     references: [],
   };
 
@@ -308,10 +312,91 @@ export function getToolsByCategory(): Record<ToolCategory, ToolDefinition[]> {
  */
 export const CATEGORY_ORDER: ToolCategory[] = [
   "generators",
+  "encoding",
   "converters",
   "editors",
+  "devtools",
   "tasks",
   "network",
-  "viewers",
   "references",
 ];
+
+/**
+ * カテゴリごとのカラークラス定義
+ * Tailwind JIT が正しくクラスを検出できるよう、完全なクラス文字列リテラルで記述
+ */
+export const CATEGORY_COLOR_CLASSES: Record<
+  ToolCategory,
+  {
+    sectionTitle: string;
+    cardBg: string;
+    cardBorder: string;
+    cardBorderHover: string;
+    cardIcon: string;
+  }
+> = {
+  generators: {
+    sectionTitle: "text-purple-600 dark:text-purple-400",
+    cardBg: "bg-purple-50/50 dark:bg-gray-950",
+    cardBorder: "border-purple-300 dark:border-purple-800/60",
+    cardBorderHover:
+      "hover:border-purple-400 dark:hover:border-purple-700 hover:bg-purple-50 dark:hover:bg-gray-950",
+    cardIcon: "text-purple-600 dark:text-purple-400",
+  },
+  encoding: {
+    sectionTitle: "text-amber-600 dark:text-amber-400",
+    cardBg: "bg-amber-50/50 dark:bg-gray-950",
+    cardBorder: "border-amber-300 dark:border-amber-800/60",
+    cardBorderHover:
+      "hover:border-amber-400 dark:hover:border-amber-700 hover:bg-amber-50 dark:hover:bg-gray-950",
+    cardIcon: "text-amber-600 dark:text-amber-400",
+  },
+  converters: {
+    sectionTitle: "text-blue-600 dark:text-blue-400",
+    cardBg: "bg-blue-50/50 dark:bg-gray-950",
+    cardBorder: "border-blue-300 dark:border-blue-800/60",
+    cardBorderHover:
+      "hover:border-blue-400 dark:hover:border-blue-700 hover:bg-blue-50 dark:hover:bg-gray-950",
+    cardIcon: "text-blue-600 dark:text-blue-400",
+  },
+  editors: {
+    sectionTitle: "text-emerald-600 dark:text-emerald-400",
+    cardBg: "bg-emerald-50/50 dark:bg-gray-950",
+    cardBorder: "border-emerald-300 dark:border-emerald-800/60",
+    cardBorderHover:
+      "hover:border-emerald-400 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-gray-950",
+    cardIcon: "text-emerald-600 dark:text-emerald-400",
+  },
+  devtools: {
+    sectionTitle: "text-rose-600 dark:text-rose-400",
+    cardBg: "bg-rose-50/50 dark:bg-gray-950",
+    cardBorder: "border-rose-300 dark:border-rose-800/60",
+    cardBorderHover:
+      "hover:border-rose-400 dark:hover:border-rose-700 hover:bg-rose-50 dark:hover:bg-gray-950",
+    cardIcon: "text-rose-600 dark:text-rose-400",
+  },
+  tasks: {
+    sectionTitle: "text-orange-600 dark:text-orange-400",
+    cardBg: "bg-orange-50/50 dark:bg-gray-950",
+    cardBorder: "border-orange-300 dark:border-orange-800/60",
+    cardBorderHover:
+      "hover:border-orange-400 dark:hover:border-orange-700 hover:bg-orange-50 dark:hover:bg-gray-950",
+    cardIcon: "text-orange-600 dark:text-orange-400",
+  },
+  network: {
+    sectionTitle: "text-cyan-600 dark:text-cyan-400",
+    cardBg: "bg-cyan-50/50 dark:bg-gray-950",
+    cardBorder: "border-cyan-300 dark:border-cyan-800/60",
+    cardBorderHover:
+      "hover:border-cyan-400 dark:hover:border-cyan-700 hover:bg-cyan-50 dark:hover:bg-gray-950",
+    cardIcon: "text-cyan-600 dark:text-cyan-400",
+  },
+  references: {
+    sectionTitle: "text-slate-600 dark:text-slate-400",
+    cardBg: "bg-slate-50/50 dark:bg-gray-950",
+    cardBorder: "border-slate-300 dark:border-slate-800/60",
+    cardBorderHover:
+      "hover:border-slate-400 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-gray-950",
+    cardIcon: "text-slate-600 dark:text-slate-400",
+  },
+};
