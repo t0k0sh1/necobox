@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type EventStormingBoard,
   createEmptyBoard,
+  createEmptyBmcBoard,
   exportBoard,
   validateExportData,
   type ExportData,
@@ -61,6 +62,10 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
       if (saved) {
         const parsed = JSON.parse(saved) as EventStormingBoard;
         if (parsed && parsed.id) {
+          // bmcフィールドが未定義の場合（v1データ）は空のBMCボードでフォールバック
+          if (!parsed.bmc) {
+            parsed.bmc = createEmptyBmcBoard();
+          }
           // eslint-disable-next-line react-hooks/set-state-in-effect -- mount後のlocalStorage復元は正当なパターン
           setBoardState(parsed);
         }
@@ -140,6 +145,10 @@ export function useEventStormingBoard(): UseEventStormingBoardReturn {
         const parsed = JSON.parse(text) as unknown;
         if (!validateExportData(parsed)) return null;
         const data = parsed as ExportData;
+        // v1データのインポート時はBMCを空で初期化
+        if (!data.board.bmc) {
+          data.board.bmc = createEmptyBmcBoard();
+        }
         return data.board;
       } catch {
         return null;

@@ -11,13 +11,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   EventStormingCanvas,
   type CanvasHandle,
 } from "@/app/components/event-storming/EventStormingCanvas";
 import { Toolbar } from "@/app/components/event-storming/Toolbar";
+import { BusinessModelCanvas } from "@/app/components/event-storming/BusinessModelCanvas";
 import { useEventStormingBoard } from "@/lib/hooks/useEventStormingBoard";
-import type { ToolMode, EventStormingBoard } from "@/lib/utils/event-storming";
+import type { ToolMode, EventStormingBoard, BmcBoard } from "@/lib/utils/event-storming";
+import { createEmptyBmcBoard } from "@/lib/utils/event-storming";
 import { useTranslations } from "next-intl";
 import { useState, useCallback, useRef, useEffect } from "react";
 
@@ -85,6 +88,13 @@ export default function EventStormingPage() {
     }
   }, [importDialog, setBoard]);
 
+  const handleBmcChange = useCallback(
+    (bmc: BmcBoard) => {
+      updateBoard({ ...board, bmc, updatedAt: new Date().toISOString() });
+    },
+    [board, updateBoard]
+  );
+
   // キーボードショートカット（Undo/Redo）
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -105,35 +115,64 @@ export default function EventStormingPage() {
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       <Breadcrumbs items={[{ label: t("breadcrumb") }]} />
 
-      {/* ツールバー */}
-      <div className="flex items-center justify-center px-4 py-2">
-        <Toolbar
-          toolMode={toolMode}
-          onToolModeChange={setToolMode}
-          onZoomIn={() => canvasRef.current?.zoomIn()}
-          onZoomOut={() => canvasRef.current?.zoomOut()}
-          onResetView={() => canvasRef.current?.resetView()}
-          zoom={board.viewport.zoom}
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onUndo={undo}
-          onRedo={redo}
-          onExport={exportToJson}
-          onImport={handleImportClick}
-        />
-      </div>
+      <Tabs defaultValue="bmc" className="flex flex-col flex-1 min-h-0">
+        {/* タブリスト */}
+        <div className="flex items-center justify-center px-4 pt-2">
+          <TabsList>
+            <TabsTrigger value="bmc">{t("tabs.bmc")}</TabsTrigger>
+            <TabsTrigger value="eventStorming">{t("tabs.eventStorming")}</TabsTrigger>
+          </TabsList>
+        </div>
 
-      {/* キャンバス */}
-      <div className="flex-1 min-h-0">
-        <EventStormingCanvas
-          ref={canvasRef}
-          board={board}
-          toolMode={toolMode}
-          onBoardChange={updateBoard}
-          onBoardSet={setBoard}
-          onToolModeReset={handleToolModeReset}
-        />
-      </div>
+        {/* イベントストーミングタブ */}
+        <TabsContent
+          value="eventStorming"
+          forceMount
+          className="flex flex-col flex-1 min-h-0 mt-0 data-[state=inactive]:hidden"
+        >
+          {/* ツールバー */}
+          <div className="flex items-center justify-center px-4 py-2">
+            <Toolbar
+              toolMode={toolMode}
+              onToolModeChange={setToolMode}
+              onZoomIn={() => canvasRef.current?.zoomIn()}
+              onZoomOut={() => canvasRef.current?.zoomOut()}
+              onResetView={() => canvasRef.current?.resetView()}
+              zoom={board.viewport.zoom}
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={undo}
+              onRedo={redo}
+              onExport={exportToJson}
+              onImport={handleImportClick}
+            />
+          </div>
+
+          {/* キャンバス */}
+          <div className="flex-1 min-h-0">
+            <EventStormingCanvas
+              ref={canvasRef}
+              board={board}
+              toolMode={toolMode}
+              onBoardChange={updateBoard}
+              onBoardSet={setBoard}
+              onToolModeReset={handleToolModeReset}
+            />
+          </div>
+        </TabsContent>
+
+        {/* BMCタブ */}
+        <TabsContent
+          value="bmc"
+          forceMount
+          className="flex flex-col flex-1 min-h-0 mt-0 data-[state=inactive]:hidden"
+        >
+          <BusinessModelCanvas
+            bmc={board.bmc ?? createEmptyBmcBoard()}
+            onBmcChange={handleBmcChange}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* ファイル入力（非表示） */}
       <input
