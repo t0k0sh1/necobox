@@ -4,6 +4,7 @@ import { Link } from "@/i18n/routing";
 import { useRecentTools } from "@/lib/hooks/useRecentTools";
 import { useToolPins } from "@/lib/hooks/useToolPins";
 import {
+  CATEGORY_COLOR_CLASSES,
   CATEGORY_ORDER,
   getToolsByCategory,
   TOOL_CATEGORIES,
@@ -22,9 +23,9 @@ import {
   CalendarClock,
   CheckSquare,
   Clock,
+  Code,
   Dices,
   Edit,
-  Eye,
   FileCode,
   FileSpreadsheet,
   FileText,
@@ -50,6 +51,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useCallback, useRef, useState } from "react";
 
 // アイコン名からコンポーネントへのマッピング
 const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
@@ -62,9 +64,9 @@ const ICONS: Record<IconName, React.ComponentType<{ className?: string }>> = {
   CalendarClock,
   CheckSquare,
   Clock,
+  Code,
   Dices,
   Edit,
-  Eye,
   FileCode,
   FileSpreadsheet,
   FileText,
@@ -104,6 +106,7 @@ const CATEGORY_ICONS: Record<
 
 interface ToolCardProps {
   tool: ToolDefinition;
+  category: ToolCategory;
   t: ReturnType<typeof useTranslations<"home">>;
   isPinned: boolean;
   onTogglePin: (toolId: string) => void;
@@ -112,12 +115,14 @@ interface ToolCardProps {
 
 function ToolCard({
   tool,
+  category,
   t,
   isPinned,
   onTogglePin,
   onRecordUsage,
 }: ToolCardProps) {
   const Icon = ICONS[tool.icon];
+  const colorClasses = CATEGORY_COLOR_CLASSES[category];
 
   return (
     <div className="relative group">
@@ -126,9 +131,9 @@ function ToolCard({
         className="block"
         onClick={() => onRecordUsage(tool.id)}
       >
-        <div className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-sm pl-4 pr-9 py-3.5 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-700 transition-all">
+        <div className={`flex items-center gap-3 rounded-xl border ${colorClasses.cardBorder} ${colorClasses.cardBg} shadow-sm pl-4 pr-9 py-3.5 hover:shadow-md ${colorClasses.cardBorderHover} transition-all`}>
           {Icon && (
-            <Icon className="size-5 shrink-0 text-gray-500 dark:text-gray-400" />
+            <Icon className={`size-5 shrink-0 ${colorClasses.cardIcon}`} />
           )}
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {t(tool.i18nKey as Parameters<typeof t>[0])}
@@ -168,20 +173,27 @@ interface ToolChipProps {
   t: ReturnType<typeof useTranslations<"home">>;
   onRecordUsage: (toolId: string) => void;
   onUnpin?: (toolId: string) => void;
+  variant?: "default" | "pinned";
+  draggable?: boolean;
 }
 
-function ToolChip({ tool, t, onRecordUsage, onUnpin }: ToolChipProps) {
+function ToolChip({ tool, t, onRecordUsage, onUnpin, variant = "default", draggable: isDraggable }: ToolChipProps) {
   const Icon = ICONS[tool.icon];
+  const isPinned = variant === "pinned";
 
   return (
-    <div className="inline-flex items-center rounded-full border border-gray-200/80 dark:border-gray-800 bg-white dark:bg-gray-950 hover:shadow-sm hover:border-gray-300 dark:hover:border-gray-700 transition-all">
+    <div className={`inline-flex items-center rounded-full border transition-all ${
+      isPinned
+        ? "border-amber-400/70 dark:border-amber-700/60 bg-white dark:bg-amber-950/30 shadow-sm shadow-amber-100 dark:shadow-none hover:shadow-md hover:shadow-amber-200/50 hover:border-amber-500 dark:hover:shadow-none dark:hover:border-amber-600"
+        : "border-gray-200/80 dark:border-gray-800 bg-white dark:bg-gray-950 hover:shadow-sm hover:border-gray-300 dark:hover:border-gray-700"
+    } ${isDraggable ? "cursor-grab active:cursor-grabbing" : ""}`}>
       <Link
         href={tool.path}
         className="inline-flex items-center gap-2 px-3 py-1.5 text-sm"
         onClick={() => onRecordUsage(tool.id)}
       >
         {Icon && (
-          <Icon className="size-3.5 shrink-0 text-gray-500 dark:text-gray-400" />
+          <Icon className={`size-3.5 shrink-0 ${isPinned ? "text-amber-600 dark:text-amber-400" : "text-gray-500 dark:text-gray-400"}`} />
         )}
         <span className="text-gray-700 dark:text-gray-300 whitespace-nowrap">
           {t(tool.i18nKey as Parameters<typeof t>[0])}
@@ -191,7 +203,7 @@ function ToolChip({ tool, t, onRecordUsage, onUnpin }: ToolChipProps) {
         <button
           type="button"
           onClick={() => onUnpin(tool.id)}
-          className="pr-2.5 pl-0.5 py-1.5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+          className="pr-2.5 pl-0.5 py-1.5 text-amber-400 hover:text-amber-600 dark:text-amber-500 dark:hover:text-amber-300 transition-colors"
           aria-label={t("unpinTool" as Parameters<typeof t>[0])}
         >
           <PinOff className="size-3" />
@@ -220,6 +232,7 @@ function ToolSection({
 }: ToolSectionProps) {
   const CategoryIcon = CATEGORY_ICONS[category];
   const categoryConfig = TOOL_CATEGORIES[category];
+  const colorClasses = CATEGORY_COLOR_CLASSES[category];
 
   if (tools.length === 0) {
     return null;
@@ -227,7 +240,7 @@ function ToolSection({
 
   return (
     <section>
-      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2.5 flex items-center gap-1.5">
+      <h2 className={`text-xs font-semibold uppercase tracking-wider ${colorClasses.sectionTitle} mb-2.5 flex items-center gap-1.5`}>
         <CategoryIcon className="size-3.5" />
         {t(categoryConfig.i18nKey as Parameters<typeof t>[0])}
       </h2>
@@ -236,6 +249,7 @@ function ToolSection({
           <ToolCard
             key={tool.id}
             tool={tool}
+            category={category}
             t={t}
             isPinned={isPinned(tool.id)}
             onTogglePin={onTogglePin}
@@ -252,6 +266,7 @@ interface PinnedSectionProps {
   t: ReturnType<typeof useTranslations<"home">>;
   onRecordUsage: (toolId: string) => void;
   onUnpin: (toolId: string) => void;
+  onReorder: (fromIndex: number, toIndex: number) => void;
 }
 
 function PinnedSection({
@@ -259,30 +274,100 @@ function PinnedSection({
   t,
   onRecordUsage,
   onUnpin,
+  onReorder,
 }: PinnedSectionProps) {
-  if (toolIds.length === 0) return null;
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+  const dragNodeRef = useRef<HTMLDivElement | null>(null);
 
   const tools = toolIds
     .map((id) => TOOL_MAP.get(id))
     .filter((tool): tool is ToolDefinition => tool !== undefined);
 
+  const handleDragStart = useCallback(
+    (e: React.DragEvent<HTMLDivElement>, index: number) => {
+      setDragIndex(index);
+      dragNodeRef.current = e.currentTarget;
+      e.dataTransfer.effectAllowed = "move";
+      // ドラッグ開始直後に半透明にする
+      requestAnimationFrame(() => {
+        if (dragNodeRef.current) {
+          dragNodeRef.current.style.opacity = "0.4";
+        }
+      });
+    },
+    []
+  );
+
+  const handleDragOver = useCallback(
+    (e: React.DragEvent<HTMLDivElement>, index: number) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      if (dragIndex !== null && dragIndex !== index) {
+        setDropIndex(index);
+      }
+    },
+    [dragIndex]
+  );
+
+  const handleDragLeave = useCallback(() => {
+    setDropIndex(null);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>, index: number) => {
+      e.preventDefault();
+      if (dragIndex !== null && dragIndex !== index) {
+        onReorder(dragIndex, index);
+      }
+      setDragIndex(null);
+      setDropIndex(null);
+    },
+    [dragIndex, onReorder]
+  );
+
+  const handleDragEnd = useCallback(() => {
+    if (dragNodeRef.current) {
+      dragNodeRef.current.style.opacity = "1";
+    }
+    setDragIndex(null);
+    setDropIndex(null);
+    dragNodeRef.current = null;
+  }, []);
+
   if (tools.length === 0) return null;
 
   return (
-    <section>
+    <section className="rounded-xl border border-amber-300 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/20 px-4 py-3 shadow-sm shadow-amber-100 dark:shadow-none">
       <h2 className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-1.5">
         <Pin className="size-3.5" />
         {t("sectionPinned" as Parameters<typeof t>[0])}
       </h2>
       <div className="flex flex-wrap gap-2">
-        {tools.map((tool) => (
-          <ToolChip
+        {tools.map((tool, index) => (
+          <div
             key={tool.id}
-            tool={tool}
-            t={t}
-            onRecordUsage={onRecordUsage}
-            onUnpin={onUnpin}
-          />
+            draggable
+            onDragStart={(e) => handleDragStart(e, index)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => handleDrop(e, index)}
+            onDragEnd={handleDragEnd}
+            className={`transition-transform ${
+              dropIndex === index && dragIndex !== index
+                ? "scale-105 ring-2 ring-amber-400 dark:ring-amber-500 rounded-full"
+                : ""
+            }`}
+          >
+            <ToolChip
+              tool={tool}
+              t={t}
+              onRecordUsage={onRecordUsage}
+              onUnpin={onUnpin}
+              variant="pinned"
+              draggable
+            />
+          </div>
         ))}
       </div>
     </section>
@@ -331,6 +416,7 @@ export default function Home() {
     pinnedToolIds,
     isPinned,
     togglePin,
+    reorderPins,
     isInitialized: pinsInitialized,
   } = useToolPins();
   const {
@@ -349,6 +435,7 @@ export default function Home() {
             t={t}
             onRecordUsage={recordUsage}
             onUnpin={togglePin}
+            onReorder={reorderPins}
           />
         )}
         {recentInitialized && (

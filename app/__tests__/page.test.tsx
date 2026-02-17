@@ -135,13 +135,14 @@ describe("Home Page", () => {
     expect(pinButtons).toHaveLength(TOOLS.length);
   });
 
-  it("renders 7 category sections", () => {
+  it("renders 8 category sections", () => {
     expect(screen.getByText("Random Generation")).toBeInTheDocument();
+    expect(screen.getByText("Encoding & Decoding")).toBeInTheDocument();
     expect(screen.getByText("Conversion & Calculation")).toBeInTheDocument();
     expect(screen.getByText("Data Editors")).toBeInTheDocument();
+    expect(screen.getByText("Developer Tools")).toBeInTheDocument();
     expect(screen.getByText("Task Management")).toBeInTheDocument();
-    expect(screen.getByText("Network & Security")).toBeInTheDocument();
-    expect(screen.getByText("Viewers")).toBeInTheDocument();
+    expect(screen.getByText("Network")).toBeInTheDocument();
     expect(screen.getByText("References")).toBeInTheDocument();
   });
 });

@@ -55,5 +55,17 @@ export function useToolPins() {
     );
   }, []);
 
-  return { pinnedToolIds, isPinned, togglePin, isInitialized };
+  const reorderPins = useCallback((fromIndex: number, toIndex: number) => {
+    setPinnedToolIds((prev) => {
+      if (fromIndex < 0 || fromIndex >= prev.length) return prev;
+      if (toIndex < 0 || toIndex >= prev.length) return prev;
+      if (fromIndex === toIndex) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  }, []);
+
+  return { pinnedToolIds, isPinned, togglePin, reorderPins, isInitialized };
 }
