@@ -18,9 +18,10 @@ import {
 } from "@/app/components/event-storming/EventStormingCanvas";
 import { Toolbar } from "@/app/components/event-storming/Toolbar";
 import { BusinessModelCanvas } from "@/app/components/event-storming/BusinessModelCanvas";
+import { ExampleMapping } from "@/app/components/event-storming/ExampleMapping";
 import { useEventStormingBoard } from "@/lib/hooks/useEventStormingBoard";
-import type { ToolMode, EventStormingBoard, BmcBoard } from "@/lib/utils/event-storming";
-import { createEmptyBmcBoard } from "@/lib/utils/event-storming";
+import type { ToolMode, EventStormingBoard, BmcBoard, ExampleMappingBoard } from "@/lib/utils/event-storming";
+import { createEmptyBmcBoard, createEmptyExampleMappingBoard } from "@/lib/utils/event-storming";
 import { useTranslations } from "next-intl";
 import { useState, useCallback, useRef, useEffect } from "react";
 
@@ -95,6 +96,13 @@ export default function EventStormingPage() {
     [board, updateBoard]
   );
 
+  const handleExampleMappingChange = useCallback(
+    (exampleMapping: ExampleMappingBoard) => {
+      updateBoard({ ...board, exampleMapping, updatedAt: new Date().toISOString() });
+    },
+    [board, updateBoard]
+  );
+
   // キーボードショートカット（Undo/Redo）
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -121,6 +129,7 @@ export default function EventStormingPage() {
           <TabsList>
             <TabsTrigger value="bmc">{t("tabs.bmc")}</TabsTrigger>
             <TabsTrigger value="eventStorming">{t("tabs.eventStorming")}</TabsTrigger>
+            <TabsTrigger value="exampleMapping">{t("tabs.exampleMapping")}</TabsTrigger>
           </TabsList>
         </div>
 
@@ -170,6 +179,18 @@ export default function EventStormingPage() {
           <BusinessModelCanvas
             bmc={board.bmc ?? createEmptyBmcBoard()}
             onBmcChange={handleBmcChange}
+          />
+        </TabsContent>
+
+        {/* 実例マッピングタブ */}
+        <TabsContent
+          value="exampleMapping"
+          forceMount
+          className="flex flex-col flex-1 min-h-0 mt-0 data-[state=inactive]:hidden"
+        >
+          <ExampleMapping
+            board={board.exampleMapping ?? createEmptyExampleMappingBoard()}
+            onBoardChange={handleExampleMappingChange}
           />
         </TabsContent>
       </Tabs>

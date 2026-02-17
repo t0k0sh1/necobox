@@ -93,6 +93,7 @@ export interface EventStormingBoard {
   hotspots: Hotspot[];
   viewport: CanvasViewport;
   bmc?: BmcBoard;
+  exampleMapping?: ExampleMappingBoard;
   createdAt: string;
   updatedAt: string;
 }
@@ -129,6 +130,30 @@ export interface BmcNote {
 /** BMCボード全体 */
 export interface BmcBoard {
   blocks: Record<BmcBlockType, BmcNote[]>;
+}
+
+// ============================================================
+// 実例マッピング（Example Mapping）型定義
+// ============================================================
+
+/** 実例マッピングのカード */
+export interface ExampleMappingNote {
+  id: string;
+  text: string;
+}
+
+/** ルール列（ルール1つ + 配下の具体例群） */
+export interface ExampleMappingRule {
+  id: string;
+  text: string;
+  examples: ExampleMappingNote[];
+}
+
+/** 実例マッピングボード */
+export interface ExampleMappingBoard {
+  story: ExampleMappingNote;
+  rules: ExampleMappingRule[];
+  questions: ExampleMappingNote[];
 }
 
 /** ツールバーモード */
@@ -199,6 +224,14 @@ export const BMC_BLOCK_ORDER: BmcBlockType[] = [
   "revenueStreams",
 ];
 
+/** 実例マッピングのカード色 */
+export const EXAMPLE_MAPPING_COLORS = {
+  story:    { bg: "#FEF3C7", header: "#D97706" },
+  rule:     { bg: "#DBEAFE", header: "#2563EB" },
+  example:  { bg: "#D1FAE5", header: "#059669" },
+  question: { bg: "#FCE7F3", header: "#DB2777" },
+} as const;
+
 /** BMCブロックの色（背景・ヘッダー） */
 export const BMC_BLOCK_COLORS: Record<BmcBlockType, { bg: string; header: string }> = {
   keyPartners:           { bg: "#EDE9FE", header: "#7C3AED" },
@@ -243,6 +276,25 @@ export function createBmcNote(text = ""): BmcNote {
   return { id: generateId(), text };
 }
 
+/** 空の実例マッピングボードを生成 */
+export function createEmptyExampleMappingBoard(): ExampleMappingBoard {
+  return {
+    story: { id: generateId(), text: "" },
+    rules: [],
+    questions: [],
+  };
+}
+
+/** 実例マッピングのノートを生成 */
+export function createExampleMappingNote(text = ""): ExampleMappingNote {
+  return { id: generateId(), text };
+}
+
+/** 実例マッピングのルール列を生成 */
+export function createExampleMappingRule(text = ""): ExampleMappingRule {
+  return { id: generateId(), text, examples: [] };
+}
+
 /** 空のボードを生成 */
 export function createEmptyBoard(name = "Untitled"): EventStormingBoard {
   return {
@@ -255,6 +307,7 @@ export function createEmptyBoard(name = "Untitled"): EventStormingBoard {
     hotspots: [],
     viewport: { x: 0, y: 0, zoom: 1 },
     bmc: createEmptyBmcBoard(),
+    exampleMapping: createEmptyExampleMappingBoard(),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
