@@ -861,10 +861,10 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
           />
         ))}
 
-        {/* SVG矢印オーバーレイ */}
+        {/* SVG矢印オーバーレイ（親が0×0なので固定サイズを指定） */}
         <svg
           className="absolute top-0 left-0 pointer-events-none"
-          style={{ width: "100%", height: "100%", overflow: "visible" }}
+          style={{ width: 1, height: 1, overflow: "visible" }}
         >
           <defs>
             <marker
