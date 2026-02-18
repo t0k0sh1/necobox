@@ -6,6 +6,11 @@ import {
   type ToolMode,
   type CanvasViewport,
   type SlotType,
+  type ContextMappingPattern,
+  type ContextMappingCategory,
+  CONTEXT_MAPPING_PATTERN_TO_CATEGORY,
+  CONTEXT_MAPPING_PATTERN_ABBR,
+  CONTEXT_MAPPING_CATEGORY_COLORS,
   clientToCanvas,
   createEmptyFlow,
   createBoundedContext,
@@ -13,6 +18,10 @@ import {
   createHotspot,
   createFlowConnection,
   createFlowNote,
+  getConnectionDirection,
+  getFlowExitPoint,
+  getFlowEntryPoint,
+  getMidpointOfPath,
 } from "@/lib/utils/domain-modeling";
 import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
@@ -74,7 +83,7 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
   const t = useTranslations("domainModeling");
   const uniqueId = useId();
   const dotGridId = `dot-grid-${uniqueId}`;
-  const arrowheadId = `arrowhead-${uniqueId}`;
+  const arrowheadIdPrefix = `arrowhead-${uniqueId}`;
 
   // 安定したコールバック用 ref（useEffect でレンダー後に同期）
   const boardRef = useRef(board);
@@ -114,6 +123,7 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
   const [editingLabel, setEditingLabel] = useState<EditingLabel | null>(null);
   const [drawingRect, setDrawingRect] = useState<DrawingRect | null>(null);
   const [connectionFrom, setConnectionFrom] = useState<string | null>(null);
+  const [patternPopup, setPatternPopup] = useState<{ connId: string; screenX: number; screenY: number } | null>(null);
 
   // ドラッグ移動用
   const dragRef = useRef<{
@@ -172,6 +182,7 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
       } else if (toolMode === "select") {
         setSelectedId(null);
         setConnectionFrom(null);
+        setPatternPopup(null);
       }
     },
     [isPanning, toolMode, getCanvasCoords, board, onBoardChange, onToolModeReset]
@@ -640,6 +651,7 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
             updatedAt: new Date().toISOString(),
           });
           setSelectedId(null);
+          setPatternPopup(null);
           return;
         }
         // ホットスポット削除
@@ -734,12 +746,44 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
     [editingNote, editingLabel, board, onBoardChange, handleNoteEditCommit, handleLabelEditCommit]
   );
 
-  // 接続矢印クリック
+  // 接続矢印クリック（ポップアップ表示）
   const handleConnectionClick = useCallback(
     (connId: string) => {
       setSelectedId(connId);
+      const conn = boardRef.current.connections.find((c) => c.id === connId);
+      if (!conn) return;
+      const flows = boardRef.current.flows;
+      const fromFlow = flows.find((f) => f.id === conn.fromFlowId);
+      const toFlow = flows.find((f) => f.id === conn.toFlowId);
+      if (!fromFlow || !toFlow) return;
+      const direction = getConnectionDirection(fromFlow, toFlow);
+      const exit = getFlowExitPoint(fromFlow, direction);
+      const entry = getFlowEntryPoint(toFlow, direction);
+      const mid = getMidpointOfPath(exit, entry);
+      const container = containerRef.current;
+      if (!container) return;
+      const containerRect = container.getBoundingClientRect();
+      const vp = boardRef.current.viewport;
+      const screenX = mid.x * vp.zoom + vp.x + containerRect.left;
+      const screenY = mid.y * vp.zoom + vp.y + containerRect.top;
+      setPatternPopup({ connId, screenX, screenY });
     },
-    []
+    [containerRef]
+  );
+
+  // パターン変更ハンドラ
+  const handlePatternChange = useCallback(
+    (connId: string, pattern: ContextMappingPattern | undefined) => {
+      onBoardChange({
+        ...boardRef.current,
+        connections: boardRef.current.connections.map((c) =>
+          c.id === connId ? { ...c, pattern } : c
+        ),
+        updatedAt: new Date().toISOString(),
+      });
+      setPatternPopup(null);
+    },
+    [onBoardChange]
   );
 
   const cursorClass =
@@ -867,8 +911,9 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
           style={{ width: 1, height: 1, overflow: "visible" }}
         >
           <defs>
+            {/* デフォルト（グレー） */}
             <marker
-              id={arrowheadId}
+              id={`${arrowheadIdPrefix}-default`}
               markerWidth="10"
               markerHeight="7"
               refX="10"
@@ -880,6 +925,50 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
                 className="fill-gray-600 dark:fill-gray-400"
               />
             </marker>
+            {/* 選択中（青） */}
+            <marker
+              id={`${arrowheadIdPrefix}-selected`}
+              markerWidth="10"
+              markerHeight="7"
+              refX="10"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
+            </marker>
+            {/* 協力（teal） */}
+            <marker
+              id={`${arrowheadIdPrefix}-collaboration`}
+              markerWidth="10"
+              markerHeight="7"
+              refX="10"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3.5, 0 7" fill="#14b8a6" />
+            </marker>
+            {/* 顧客/供給者（blue） */}
+            <marker
+              id={`${arrowheadIdPrefix}-customerSupplier`}
+              markerWidth="10"
+              markerHeight="7"
+              refX="10"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
+            </marker>
+            {/* 保護/変換（orange） */}
+            <marker
+              id={`${arrowheadIdPrefix}-protectionTranslation`}
+              markerWidth="10"
+              markerHeight="7"
+              refX="10"
+              refY="3.5"
+              orient="auto"
+            >
+              <polygon points="0 0, 10 3.5, 0 7" fill="#f97316" />
+            </marker>
           </defs>
           {board.connections.map((conn) => (
             <FlowConnectionArrow
@@ -888,7 +977,7 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
               flows={board.flows}
               isSelected={selectedId === conn.id}
               onClick={() => handleConnectionClick(conn.id)}
-              arrowheadId={arrowheadId}
+              arrowheadIdPrefix={arrowheadIdPrefix}
             />
           ))}
         </svg>
@@ -952,6 +1041,78 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
         </div>
       )}
 
+      {/* コンテキストマッピングパターン選択ポップアップ */}
+      {patternPopup && (() => {
+        const clampedScreenX = Math.min(Math.max(patternPopup.screenX, 156), window.innerWidth - 156);
+        return (
+          <div
+            className="fixed z-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-3 w-[280px]"
+            style={{
+              left: clampedScreenX,
+              top: patternPopup.screenY + 12,
+              transform: "translateX(-50%)",
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[10px] font-semibold text-teal-600 dark:text-teal-400 uppercase tracking-wide mb-1">
+              {t("connection.categoryCollaboration")}
+            </p>
+            <div className="flex gap-1.5 mb-2">
+              {(["partnership", "sharedKernel"] as ContextMappingPattern[]).map((p) => (
+                <PatternButton
+                  key={p}
+                  pattern={p}
+                  isSelected={board.connections.find((c) => c.id === patternPopup.connId)?.pattern === p}
+                  label={t(`connection.pattern.${p}`)}
+                  abbr={CONTEXT_MAPPING_PATTERN_ABBR[p]}
+                  color={CONTEXT_MAPPING_CATEGORY_COLORS[CONTEXT_MAPPING_PATTERN_TO_CATEGORY[p]]}
+                  onClick={() => handlePatternChange(patternPopup.connId, p)}
+                />
+              ))}
+            </div>
+            <p className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+              {t("connection.categoryCustomerSupplier")}
+            </p>
+            <div className="flex gap-1.5 mb-2">
+              {(["customerSupplier", "conformist"] as ContextMappingPattern[]).map((p) => (
+                <PatternButton
+                  key={p}
+                  pattern={p}
+                  isSelected={board.connections.find((c) => c.id === patternPopup.connId)?.pattern === p}
+                  label={t(`connection.pattern.${p}`)}
+                  abbr={CONTEXT_MAPPING_PATTERN_ABBR[p]}
+                  color={CONTEXT_MAPPING_CATEGORY_COLORS[CONTEXT_MAPPING_PATTERN_TO_CATEGORY[p]]}
+                  onClick={() => handlePatternChange(patternPopup.connId, p)}
+                />
+              ))}
+            </div>
+            <p className="text-[10px] font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wide mb-1">
+              {t("connection.categoryProtectionTranslation")}
+            </p>
+            <div className="flex gap-1.5 mb-3">
+              {(["acl", "ohsPl"] as ContextMappingPattern[]).map((p) => (
+                <PatternButton
+                  key={p}
+                  pattern={p}
+                  isSelected={board.connections.find((c) => c.id === patternPopup.connId)?.pattern === p}
+                  label={t(`connection.pattern.${p}`)}
+                  abbr={CONTEXT_MAPPING_PATTERN_ABBR[p]}
+                  color={CONTEXT_MAPPING_CATEGORY_COLORS[CONTEXT_MAPPING_PATTERN_TO_CATEGORY[p]]}
+                  onClick={() => handlePatternChange(patternPopup.connId, p)}
+                />
+              ))}
+            </div>
+            <button
+              className="w-full text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 transition-colors"
+              onClick={() => handlePatternChange(patternPopup.connId, undefined)}
+            >
+              {t("connection.clearPattern")}
+            </button>
+          </div>
+        );
+      })()}
+
       {/* 凡例・操作ガイド */}
       <Legend />
 
@@ -972,3 +1133,42 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
     </div>
   );
 });
+
+/** パターン選択ボタン（ポップアップ内で使用） */
+function PatternButton({
+  isSelected,
+  label,
+  abbr,
+  color,
+  onClick,
+}: {
+  pattern: ContextMappingPattern;
+  isSelected: boolean;
+  label: string;
+  abbr: string;
+  color: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={`flex-1 flex flex-col items-center gap-0.5 p-1.5 rounded-md border transition-colors text-left ${
+        isSelected
+          ? "border-current bg-opacity-10"
+          : "border-gray-200 dark:border-gray-700 hover:border-current hover:bg-opacity-5"
+      }`}
+      style={{ borderColor: isSelected ? color : undefined, color }}
+      onClick={onClick}
+      title={label}
+    >
+      <span
+        className="text-[9px] font-bold px-1 py-0.5 rounded text-white"
+        style={{ backgroundColor: color }}
+      >
+        {abbr}
+      </span>
+      <span className="text-[9px] text-gray-600 dark:text-gray-400 text-center leading-tight">
+        {label}
+      </span>
+    </button>
+  );
+}

@@ -60,12 +60,31 @@ export interface Domain {
   size: { width: number; height: number };
 }
 
+/** コンテキストマッピングパターン */
+export type ContextMappingPattern =
+  | "partnership"
+  | "sharedKernel"
+  | "customerSupplier"
+  | "conformist"
+  | "acl"
+  | "ohsPl";
+
+/** コンテキストマッピングカテゴリ */
+export type ContextMappingCategory =
+  | "collaboration"
+  | "customerSupplier"
+  | "protectionTranslation";
+
+/** 接続方向 */
+export type ConnectionDirection = "right" | "left" | "down" | "up";
+
 /** フロー間の矢印 */
 export interface FlowConnection {
   id: string;
   fromFlowId: string;
   toFlowId: string;
   label?: string;
+  pattern?: ContextMappingPattern;
 }
 
 /** ホットスポット（吹き出し型注釈） */
@@ -258,6 +277,33 @@ export const CELL_SIZE = { width: 140, height: 90 };
 export const ZOOM_MIN = 0.25;
 export const ZOOM_MAX = 2.0;
 export const ZOOM_STEP = 0.1;
+
+/** コンテキストマッピングパターン → カテゴリのマッピング */
+export const CONTEXT_MAPPING_PATTERN_TO_CATEGORY: Record<ContextMappingPattern, ContextMappingCategory> = {
+  partnership: "collaboration",
+  sharedKernel: "collaboration",
+  customerSupplier: "customerSupplier",
+  conformist: "customerSupplier",
+  acl: "protectionTranslation",
+  ohsPl: "protectionTranslation",
+};
+
+/** コンテキストマッピングパターンの略称 */
+export const CONTEXT_MAPPING_PATTERN_ABBR: Record<ContextMappingPattern, string> = {
+  partnership: "PRT",
+  sharedKernel: "SK",
+  customerSupplier: "C/S",
+  conformist: "CF",
+  acl: "ACL",
+  ohsPl: "OHS",
+};
+
+/** コンテキストマッピングカテゴリの色 */
+export const CONTEXT_MAPPING_CATEGORY_COLORS: Record<ContextMappingCategory, string> = {
+  collaboration: "#14b8a6",
+  customerSupplier: "#3b82f6",
+  protectionTranslation: "#f97316",
+};
 
 /** ドメイン種別のラベル色 */
 export const DOMAIN_TYPE_COLORS: Record<DomainType, string> = {
@@ -655,6 +701,75 @@ export function getFlowCenter(flow: EventFlow): { x: number; y: number } {
   return {
     x: flow.position.x + w / 2,
     y: flow.position.y + h / 2,
+  };
+}
+
+/** 2つのフローの相対位置から接続方向を決定する */
+export function getConnectionDirection(fromFlow: EventFlow, toFlow: EventFlow): ConnectionDirection {
+  const from = getFlowCenter(fromFlow);
+  const to = getFlowCenter(toFlow);
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? "right" : "left";
+  } else {
+    return dy >= 0 ? "down" : "up";
+  }
+}
+
+/** フローの出口座標（指定方向の面の中央）を返す */
+export function getFlowExitPoint(flow: EventFlow, direction: ConnectionDirection): { x: number; y: number } {
+  const w = getFlowWidth(flow);
+  const h = getFlowHeight(flow);
+  const cx = flow.position.x + w / 2;
+  const cy = flow.position.y + h / 2;
+  switch (direction) {
+    case "right": return { x: flow.position.x + w, y: cy };
+    case "left":  return { x: flow.position.x, y: cy };
+    case "down":  return { x: cx, y: flow.position.y + h };
+    case "up":    return { x: cx, y: flow.position.y };
+  }
+}
+
+/** フローの入口座標（出口の反対側の面の中央）を返す */
+export function getFlowEntryPoint(flow: EventFlow, direction: ConnectionDirection): { x: number; y: number } {
+  const w = getFlowWidth(flow);
+  const h = getFlowHeight(flow);
+  const cx = flow.position.x + w / 2;
+  const cy = flow.position.y + h / 2;
+  switch (direction) {
+    case "right": return { x: flow.position.x, y: cy };
+    case "left":  return { x: flow.position.x + w, y: cy };
+    case "down":  return { x: cx, y: flow.position.y };
+    case "up":    return { x: cx, y: flow.position.y + h };
+  }
+}
+
+/** マンハッタンルーティングのSVGパス文字列を生成する */
+export function buildManhattanPath(
+  exit: { x: number; y: number },
+  entry: { x: number; y: number },
+  direction: ConnectionDirection
+): string {
+  if (direction === "right" || direction === "left") {
+    // 水平→垂直→水平
+    const midX = (exit.x + entry.x) / 2;
+    return `M ${exit.x} ${exit.y} L ${midX} ${exit.y} L ${midX} ${entry.y} L ${entry.x} ${entry.y}`;
+  } else {
+    // 垂直→水平→垂直
+    const midY = (exit.y + entry.y) / 2;
+    return `M ${exit.x} ${exit.y} L ${exit.x} ${midY} L ${entry.x} ${midY} L ${entry.x} ${entry.y}`;
+  }
+}
+
+/** パスの中点座標を返す（バッジ・ポップアップ位置計算用） */
+export function getMidpointOfPath(
+  exit: { x: number; y: number },
+  entry: { x: number; y: number }
+): { x: number; y: number } {
+  return {
+    x: (exit.x + entry.x) / 2,
+    y: (exit.y + entry.y) / 2,
   };
 }
 
