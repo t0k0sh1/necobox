@@ -96,6 +96,13 @@ export default function DomainModelingPage() {
     [board, updateBoard]
   );
 
+  const handleBmcSet = useCallback(
+    (bmc: BmcBoard) => {
+      setBoard({ ...board, bmc });
+    },
+    [board, setBoard]
+  );
+
   const handleExampleMappingChange = useCallback(
     (exampleMapping: ExampleMappingBoard) => {
       updateBoard({ ...board, exampleMapping, updatedAt: new Date().toISOString() });
@@ -176,10 +183,13 @@ export default function DomainModelingPage() {
           forceMount
           className="flex flex-col flex-1 min-h-0 mt-0 data-[state=inactive]:hidden"
         >
-          <BusinessModelCanvas
-            bmc={board.bmc ?? createEmptyBmcBoard()}
-            onBmcChange={handleBmcChange}
-          />
+          <div className="flex-1 min-h-0 relative">
+            <BusinessModelCanvas
+              bmc={board.bmc ?? createEmptyBmcBoard()}
+              onBmcChange={handleBmcChange}
+              onBmcSet={handleBmcSet}
+            />
+          </div>
         </TabsContent>
 
         {/* 実例マッピングタブ */}

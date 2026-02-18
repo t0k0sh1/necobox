@@ -14,6 +14,8 @@ import {
   createEmptyExampleMappingBoard,
   exportBoard,
   validateExportData,
+  isLegacyBmcBoard,
+  migrateBmcBoard,
   type ExportData,
 } from "@/lib/utils/domain-modeling";
 import { useUndoRedo } from "@/lib/hooks/useUndoRedo";
@@ -71,9 +73,11 @@ export function useDomainModelingBoard(): UseDomainModelingBoardReturn {
       if (saved) {
         const parsed = JSON.parse(saved) as DomainModelingBoard;
         if (parsed && parsed.id) {
-          // bmcフィールドが未定義の場合（v1データ）は空のBMCボードでフォールバック
+          // bmcフィールドのマイグレーション
           if (!parsed.bmc) {
             parsed.bmc = createEmptyBmcBoard();
+          } else if (isLegacyBmcBoard(parsed.bmc)) {
+            parsed.bmc = migrateBmcBoard(parsed.bmc);
           }
           // exampleMappingフィールドが未定義の場合は空の実例マッピングボードでフォールバック
           if (!parsed.exampleMapping) {
@@ -158,9 +162,11 @@ export function useDomainModelingBoard(): UseDomainModelingBoardReturn {
         const parsed = JSON.parse(text) as unknown;
         if (!validateExportData(parsed)) return null;
         const data = parsed as ExportData;
-        // v1データのインポート時はBMCを空で初期化
+        // v1データのインポート時はBMCを空で初期化、旧形式はマイグレーション
         if (!data.board.bmc) {
           data.board.bmc = createEmptyBmcBoard();
+        } else if (isLegacyBmcBoard(data.board.bmc)) {
+          data.board.bmc = migrateBmcBoard(data.board.bmc);
         }
         // 実例マッピングが未定義の場合は空で初期化
         if (!data.board.exampleMapping) {
