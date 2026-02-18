@@ -31,10 +31,11 @@ export function BmcBlock({ blockType, label, scale, onAddNote }: BmcBlockProps) 
     >
       {/* ヘッダー（ポインターイベント有効） */}
       <div
-        className="flex items-center justify-between px-2 text-xs font-semibold text-white shrink-0 pointer-events-auto"
+        className="flex items-center justify-between px-2 font-semibold text-white shrink-0 pointer-events-auto"
         style={{
           backgroundColor: colors.header,
           height: `${headerH}px`,
+          fontSize: `${Math.max(10, 12 * scale)}px`,
         }}
       >
         <span className="truncate">{label}</span>

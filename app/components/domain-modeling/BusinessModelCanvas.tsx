@@ -50,7 +50,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange, onBmcSet }: BusinessMode
     bmcRef.current = bmc;
     onBmcChangeRef.current = onBmcChange;
     onBmcSetRef.current = onBmcSet;
-  });
+  }, [bmc, onBmcChange, onBmcSet]);
 
   const {
     viewport,
@@ -94,6 +94,27 @@ export function BusinessModelCanvas({ bmc, onBmcChange, onBmcSet }: BusinessMode
     origScale: number;
   } | null>(null);
 
+  // ドラッグ／リサイズ操作のクリーンアップ
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        dragRef.current = null;
+        resizeRef.current = null;
+        layoutResizeRef.current = null;
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      dragRef.current = null;
+      resizeRef.current = null;
+      layoutResizeRef.current = null;
+    };
+  }, []);
+
+  // rAF制御用ref（ポインタ移動のスロットリング）
+  const rafRef = useRef<number | null>(null);
+
   // 付箋追加
   const handleAddNote = useCallback(
     (blockType: BmcBlockType) => {
@@ -132,6 +153,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange, onBmcSet }: BusinessMode
     (noteId: string, e: React.PointerEvent) => {
       const note = bmc.notes.find((n) => n.id === noteId);
       if (!note) return;
+      containerRef.current?.setPointerCapture(e.pointerId);
       dragRef.current = {
         noteId,
         startX: e.clientX,
@@ -140,7 +162,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange, onBmcSet }: BusinessMode
         origY: note.position.y,
       };
     },
-    [bmc.notes]
+    [bmc.notes, containerRef]
   );
 
   // 付箋リサイズ開始
@@ -148,6 +170,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange, onBmcSet }: BusinessMode
     (noteId: string, e: React.PointerEvent) => {
       const note = bmc.notes.find((n) => n.id === noteId);
       if (!note) return;
+      containerRef.current?.setPointerCapture(e.pointerId);
       resizeRef.current = {
         noteId,
         startX: e.clientX,
@@ -156,20 +179,21 @@ export function BusinessModelCanvas({ bmc, onBmcChange, onBmcSet }: BusinessMode
         origHeight: note.size.height,
       };
     },
-    [bmc.notes]
+    [bmc.notes, containerRef]
   );
 
   // レイアウトリサイズ開始
   const handleLayoutResizeStart = useCallback(
     (e: React.PointerEvent) => {
       e.stopPropagation();
+      containerRef.current?.setPointerCapture(e.pointerId);
       layoutResizeRef.current = {
         startX: e.clientX,
         startY: e.clientY,
         origScale: bmcRef.current.layoutScale ?? 1,
       };
     },
-    []
+    [containerRef]
   );
 
   // 付箋ダブルクリック → 編集開始
@@ -213,64 +237,68 @@ export function BusinessModelCanvas({ bmc, onBmcChange, onBmcSet }: BusinessMode
     setEditing(null);
   }, []);
 
-  // ポインタ移動の統合ハンドラ
+  // ポインタ移動の統合ハンドラ（rAFでスロットリング）
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
-      // レイアウトリサイズ中
-      if (layoutResizeRef.current) {
-        // 右下ハンドルから対角線方向の移動量でスケールを計算
-        const dx = (e.clientX - layoutResizeRef.current.startX) / viewport.zoom;
-        const dy = (e.clientY - layoutResizeRef.current.startY) / viewport.zoom;
-        // 対角線方向の移動量（右下方向が正）
-        const diagonal = (dx + dy) / 2;
-        const baseDiagonal = Math.hypot(BMC_LAYOUT_BASE_WIDTH, BMC_LAYOUT_BASE_HEIGHT);
-        const scaleDelta = diagonal / baseDiagonal;
-        const newScale = Math.min(
-          BMC_LAYOUT_SCALE_MAX,
-          Math.max(BMC_LAYOUT_SCALE_MIN, layoutResizeRef.current.origScale + scaleDelta)
-        );
-
-        onBmcSetRef.current({ ...bmcRef.current, layoutScale: newScale });
+      // インタラクション中でなければパン処理にデリゲート
+      if (!layoutResizeRef.current && !dragRef.current && !resizeRef.current) {
+        canvasPointerMove(e);
         return;
       }
 
-      // 付箋ドラッグ中
-      if (dragRef.current) {
-        const dx = (e.clientX - dragRef.current.startX) / viewport.zoom;
-        const dy = (e.clientY - dragRef.current.startY) / viewport.zoom;
-        const newX = dragRef.current.origX + dx;
-        const newY = dragRef.current.origY + dy;
+      // rAFで1フレーム1回に制限
+      const clientX = e.clientX;
+      const clientY = e.clientY;
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
 
-        onBmcSetRef.current({
-          ...bmcRef.current,
-          notes: bmcRef.current.notes.map((n) =>
-            n.id === dragRef.current!.noteId
-              ? { ...n, position: { x: newX, y: newY } }
-              : n
-          ),
-        });
-        return;
-      }
+        // レイアウトリサイズ中
+        if (layoutResizeRef.current) {
+          const dx = (clientX - layoutResizeRef.current.startX) / viewport.zoom;
+          const dy = (clientY - layoutResizeRef.current.startY) / viewport.zoom;
+          const diagonal = (dx + dy) / 2;
+          const baseDiagonal = Math.hypot(BMC_LAYOUT_BASE_WIDTH, BMC_LAYOUT_BASE_HEIGHT);
+          const scaleDelta = diagonal / baseDiagonal;
+          const newScale = Math.min(
+            BMC_LAYOUT_SCALE_MAX,
+            Math.max(BMC_LAYOUT_SCALE_MIN, layoutResizeRef.current.origScale + scaleDelta)
+          );
+          onBmcSetRef.current({ ...bmcRef.current, layoutScale: newScale });
+          return;
+        }
 
-      // 付箋リサイズ中
-      if (resizeRef.current) {
-        const dx = (e.clientX - resizeRef.current.startX) / viewport.zoom;
-        const dy = (e.clientY - resizeRef.current.startY) / viewport.zoom;
-        const newWidth = Math.max(BMC_NOTE_MIN_SIZE.width, resizeRef.current.origWidth + dx);
-        const newHeight = Math.max(BMC_NOTE_MIN_SIZE.height, resizeRef.current.origHeight + dy);
+        // 付箋ドラッグ中
+        if (dragRef.current) {
+          const dx = (clientX - dragRef.current.startX) / viewport.zoom;
+          const dy = (clientY - dragRef.current.startY) / viewport.zoom;
+          onBmcSetRef.current({
+            ...bmcRef.current,
+            notes: bmcRef.current.notes.map((n) =>
+              n.id === dragRef.current!.noteId
+                ? { ...n, position: { x: dragRef.current!.origX + dx, y: dragRef.current!.origY + dy } }
+                : n
+            ),
+          });
+          return;
+        }
 
-        onBmcSetRef.current({
-          ...bmcRef.current,
-          notes: bmcRef.current.notes.map((n) =>
-            n.id === resizeRef.current!.noteId
-              ? { ...n, size: { width: newWidth, height: newHeight } }
-              : n
-          ),
-        });
-        return;
-      }
-
-      canvasPointerMove(e);
+        // 付箋リサイズ中
+        if (resizeRef.current) {
+          const dx = (clientX - resizeRef.current.startX) / viewport.zoom;
+          const dy = (clientY - resizeRef.current.startY) / viewport.zoom;
+          const newWidth = Math.max(BMC_NOTE_MIN_SIZE.width, resizeRef.current.origWidth + dx);
+          const newHeight = Math.max(BMC_NOTE_MIN_SIZE.height, resizeRef.current.origHeight + dy);
+          onBmcSetRef.current({
+            ...bmcRef.current,
+            notes: bmcRef.current.notes.map((n) =>
+              n.id === resizeRef.current!.noteId
+                ? { ...n, size: { width: newWidth, height: newHeight } }
+                : n
+            ),
+          });
+        }
+      });
     },
     [viewport.zoom, canvasPointerMove]
   );
@@ -278,6 +306,17 @@ export function BusinessModelCanvas({ bmc, onBmcChange, onBmcSet }: BusinessMode
   // ポインタアップの統合ハンドラ
   const handlePointerUp = useCallback(
     (e: React.PointerEvent) => {
+      // 保留中のrAFをキャンセル
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+
+      // pointer captureの解放
+      if (dragRef.current || resizeRef.current || layoutResizeRef.current) {
+        containerRef.current?.releasePointerCapture(e.pointerId);
+      }
+
       // レイアウトリサイズ終了 → 確定
       if (layoutResizeRef.current) {
         onBmcChangeRef.current({ ...bmcRef.current });
@@ -316,7 +355,7 @@ export function BusinessModelCanvas({ bmc, onBmcChange, onBmcSet }: BusinessMode
 
       canvasPointerUp(e);
     },
-    [canvasPointerUp]
+    [canvasPointerUp, containerRef]
   );
 
   // ポインタダウンの統合ハンドラ
@@ -399,6 +438,8 @@ export function BusinessModelCanvas({ bmc, onBmcChange, onBmcSet }: BusinessMode
 
         {/* レイアウト全体のリサイズハンドル（右下角） */}
         <div
+          role="separator"
+          aria-label="レイアウトをリサイズ"
           className="absolute pointer-events-auto cursor-se-resize group"
           style={{
             left: `${totalW - 6}px`,

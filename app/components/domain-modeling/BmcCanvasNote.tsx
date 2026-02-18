@@ -71,6 +71,8 @@ export function BmcCanvasNote({
 
   return (
     <div
+      role="button"
+      aria-label={note.text || "空のノート"}
       className="absolute rounded shadow-sm border border-black/10 select-none cursor-grab active:cursor-grabbing"
       style={{
         left: `${note.position.x}px`,
@@ -110,8 +112,11 @@ export function BmcCanvasNote({
 
       {/* リサイズハンドル（右下） */}
       <div
+        role="separator"
+        aria-label="ノートをリサイズ"
         className="absolute bottom-0 right-0 w-3 h-3 cursor-se-resize"
         onPointerDown={handleResizePointerDown}
+        onDoubleClick={(e) => e.stopPropagation()}
         style={{
           background: isHovered
             ? "linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.3) 50%)"
