@@ -1,101 +1,209 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useCanvasInteraction } from "@/lib/hooks/useCanvasInteraction";
 import type { BmcBoard, BmcBlockType } from "@/lib/utils/domain-modeling";
-import { BMC_BLOCK_ORDER, createBmcNote } from "@/lib/utils/domain-modeling";
+import {
+  BMC_BLOCK_ORDER,
+  BMC_BLOCK_COLORS,
+  BMC_NOTE_MIN_SIZE,
+  BMC_LAYOUT_BASE_WIDTH,
+  BMC_LAYOUT_BASE_HEIGHT,
+  BMC_LAYOUT_SCALE_MIN,
+  BMC_LAYOUT_SCALE_MAX,
+  createBmcNote,
+  detectBmcBlock,
+} from "@/lib/utils/domain-modeling";
 import { BmcBlock } from "./BmcBlock";
+import { BmcCanvasNote } from "./BmcCanvasNote";
 import { NoteEditor } from "./NoteEditor";
-
-/** CSS Grid の配置定義 */
-const GRID_PLACEMENT: Record<BmcBlockType, string> = {
-  keyPartners:           "md:col-start-1 md:col-end-3 md:row-start-1 md:row-end-3",
-  keyActivities:         "md:col-start-3 md:col-end-5 md:row-start-1 md:row-end-2",
-  keyResources:          "md:col-start-3 md:col-end-5 md:row-start-2 md:row-end-3",
-  valuePropositions:     "md:col-start-5 md:col-end-7 md:row-start-1 md:row-end-3",
-  customerRelationships: "md:col-start-7 md:col-end-9 md:row-start-1 md:row-end-2",
-  channels:              "md:col-start-7 md:col-end-9 md:row-start-2 md:row-end-3",
-  customerSegments:      "md:col-start-9 md:col-end-11 md:row-start-1 md:row-end-3",
-  costStructure:         "md:col-start-1 md:col-end-6 md:row-start-3 md:row-end-4",
-  revenueStreams:        "md:col-start-6 md:col-end-11 md:row-start-3 md:row-end-4",
-};
+import { Minus, Plus, RotateCcw } from "lucide-react";
 
 interface BusinessModelCanvasProps {
   bmc: BmcBoard;
   onBmcChange: (bmc: BmcBoard) => void;
+  onBmcSet: (bmc: BmcBoard) => void;
 }
 
 interface EditingState {
-  blockType: BmcBlockType;
   noteId: string;
   text: string;
   position: { x: number; y: number; width: number; height: number };
 }
 
-interface DragState {
-  sourceBlock: BmcBlockType;
-  noteId: string;
-}
-
-/** BMCメインコンポーネント */
-export function BusinessModelCanvas({ bmc, onBmcChange }: BusinessModelCanvasProps) {
+/** BMCメインコンポーネント（フリーキャンバス） */
+export function BusinessModelCanvas({ bmc, onBmcChange, onBmcSet }: BusinessModelCanvasProps) {
   const t = useTranslations("domainModeling.bmc");
+  const uniqueId = useId();
+  const dotGridId = `bmc-dot-grid-${uniqueId}`;
   const [editing, setEditing] = useState<EditingState | null>(null);
   const [autoEditNoteId, setAutoEditNoteId] = useState<string | null>(null);
-  const [dragOverNoteId, setDragOverNoteId] = useState<string | null>(null);
-  const [dragOverBlock, setDragOverBlock] = useState<BmcBlockType | null>(null);
-  const [dragSourceBlock, setDragSourceBlock] = useState<BmcBlockType | null>(null);
-  const dragRef = useRef<DragState | null>(null);
 
+  const layoutScale = bmc.layoutScale ?? 1;
+
+  // 安定したコールバック用ref
+  const bmcRef = useRef(bmc);
+  const onBmcChangeRef = useRef(onBmcChange);
+  const onBmcSetRef = useRef(onBmcSet);
+  useEffect(() => {
+    bmcRef.current = bmc;
+    onBmcChangeRef.current = onBmcChange;
+    onBmcSetRef.current = onBmcSet;
+  });
+
+  const {
+    viewport,
+    isPanning,
+    containerRef,
+    handlePointerDown: canvasPointerDown,
+    handlePointerMove: canvasPointerMove,
+    handlePointerUp: canvasPointerUp,
+    handleWheel,
+    handleKeyDown,
+    handleKeyUp,
+    zoomIn,
+    zoomOut,
+    resetView,
+  } = useCanvasInteraction({
+    initialViewport: { x: 50, y: 30, zoom: 0.8 },
+  });
+
+  // 付箋ドラッグ用ref
+  const dragRef = useRef<{
+    noteId: string;
+    startX: number;
+    startY: number;
+    origX: number;
+    origY: number;
+  } | null>(null);
+
+  // 付箋リサイズ用ref
+  const resizeRef = useRef<{
+    noteId: string;
+    startX: number;
+    startY: number;
+    origWidth: number;
+    origHeight: number;
+  } | null>(null);
+
+  // レイアウトリサイズ用ref
+  const layoutResizeRef = useRef<{
+    startX: number;
+    startY: number;
+    origScale: number;
+  } | null>(null);
+
+  // 付箋追加
   const handleAddNote = useCallback(
     (blockType: BmcBlockType) => {
-      const note = createBmcNote();
-      const newBlocks = { ...bmc.blocks };
-      newBlocks[blockType] = [...newBlocks[blockType], note];
-      onBmcChange({ blocks: newBlocks });
+      const scale = bmcRef.current.layoutScale ?? 1;
+      const note = createBmcNote(blockType, bmc.notes, "", scale);
+      const newBmc: BmcBoard = { ...bmc, notes: [...bmc.notes, note] };
+      onBmcChange(newBmc);
       setAutoEditNoteId(note.id);
     },
     [bmc, onBmcChange]
   );
 
-  const handleEditNote = useCallback(
-    (blockType: BmcBlockType, noteId: string, domRect: DOMRect) => {
-      const note = bmc.blocks[blockType].find((n) => n.id === noteId);
-      if (!note) return;
+  // 自動編集の処理
+  useEffect(() => {
+    if (!autoEditNoteId) return;
+    const timer = requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-note-id="${autoEditNoteId}"]`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const note = bmcRef.current.notes.find((n) => n.id === autoEditNoteId);
+        if (note) {
+          setEditing({
+            noteId: autoEditNoteId,
+            text: note.text,
+            position: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+          });
+        }
+      }
       setAutoEditNoteId(null);
-      setEditing({
-        blockType,
+    });
+    return () => cancelAnimationFrame(timer);
+  }, [autoEditNoteId]);
+
+  // 付箋ドラッグ開始
+  const handleNoteDragStart = useCallback(
+    (noteId: string, e: React.PointerEvent) => {
+      const note = bmc.notes.find((n) => n.id === noteId);
+      if (!note) return;
+      dragRef.current = {
         noteId,
-        text: note.text,
-        position: {
-          x: domRect.left,
-          y: domRect.top,
-          width: domRect.width,
-          height: domRect.height,
-        },
-      });
+        startX: e.clientX,
+        startY: e.clientY,
+        origX: note.position.x,
+        origY: note.position.y,
+      };
     },
-    [bmc]
+    [bmc.notes]
   );
 
-  const handleDeleteNote = useCallback(
-    (blockType: BmcBlockType, noteId: string) => {
-      const newBlocks = { ...bmc.blocks };
-      newBlocks[blockType] = newBlocks[blockType].filter((n) => n.id !== noteId);
-      onBmcChange({ blocks: newBlocks });
+  // 付箋リサイズ開始
+  const handleNoteResizeStart = useCallback(
+    (noteId: string, e: React.PointerEvent) => {
+      const note = bmc.notes.find((n) => n.id === noteId);
+      if (!note) return;
+      resizeRef.current = {
+        noteId,
+        startX: e.clientX,
+        startY: e.clientY,
+        origWidth: note.size.width,
+        origHeight: note.size.height,
+      };
+    },
+    [bmc.notes]
+  );
+
+  // レイアウトリサイズ開始
+  const handleLayoutResizeStart = useCallback(
+    (e: React.PointerEvent) => {
+      e.stopPropagation();
+      layoutResizeRef.current = {
+        startX: e.clientX,
+        startY: e.clientY,
+        origScale: bmcRef.current.layoutScale ?? 1,
+      };
+    },
+    []
+  );
+
+  // 付箋ダブルクリック → 編集開始
+  const handleNoteDoubleClick = useCallback(
+    (noteId: string, domRect: DOMRect) => {
+      const note = bmc.notes.find((n) => n.id === noteId);
+      if (!note) return;
+      setEditing({
+        noteId,
+        text: note.text,
+        position: { x: domRect.left, y: domRect.top, width: domRect.width, height: domRect.height },
+      });
+    },
+    [bmc.notes]
+  );
+
+  // 付箋削除
+  const handleNoteDelete = useCallback(
+    (noteId: string) => {
+      onBmcChange({ ...bmc, notes: bmc.notes.filter((n) => n.id !== noteId) });
     },
     [bmc, onBmcChange]
   );
 
+  // 編集確定
   const handleEditCommit = useCallback(
     (text: string) => {
       if (!editing) return;
-      const { blockType, noteId } = editing;
-      const newBlocks = { ...bmc.blocks };
-      newBlocks[blockType] = newBlocks[blockType].map((n) =>
-        n.id === noteId ? { ...n, text } : n
-      );
-      onBmcChange({ blocks: newBlocks });
+      onBmcChange({
+        ...bmc,
+        notes: bmc.notes.map((n) =>
+          n.id === editing.noteId ? { ...n, text } : n
+        ),
+      });
       setEditing(null);
     },
     [editing, bmc, onBmcChange]
@@ -105,122 +213,255 @@ export function BusinessModelCanvas({ bmc, onBmcChange }: BusinessModelCanvasPro
     setEditing(null);
   }, []);
 
-  // ドラッグ&ドロップハンドラ
-  const handleDragStart = useCallback(
-    (blockType: BmcBlockType, noteId: string) => {
-      dragRef.current = { sourceBlock: blockType, noteId };
-      setDragSourceBlock(blockType);
-    },
-    []
-  );
+  // ポインタ移動の統合ハンドラ
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      // レイアウトリサイズ中
+      if (layoutResizeRef.current) {
+        // 右下ハンドルから対角線方向の移動量でスケールを計算
+        const dx = (e.clientX - layoutResizeRef.current.startX) / viewport.zoom;
+        const dy = (e.clientY - layoutResizeRef.current.startY) / viewport.zoom;
+        // 対角線方向の移動量（右下方向が正）
+        const diagonal = (dx + dy) / 2;
+        const baseDiagonal = Math.hypot(BMC_LAYOUT_BASE_WIDTH, BMC_LAYOUT_BASE_HEIGHT);
+        const scaleDelta = diagonal / baseDiagonal;
+        const newScale = Math.min(
+          BMC_LAYOUT_SCALE_MAX,
+          Math.max(BMC_LAYOUT_SCALE_MIN, layoutResizeRef.current.origScale + scaleDelta)
+        );
 
-  const handleDragOverNote = useCallback(
-    (_e: React.DragEvent, blockType: BmcBlockType, noteId: string) => {
-      // _e は BmcBlock → BmcStickyNote のイベント伝搬シグネチャに必要
-      setDragOverNoteId(noteId);
-      setDragOverBlock(blockType);
-    },
-    []
-  );
-
-  const handleDropOnBlock = useCallback(
-    (targetBlock: BmcBlockType) => {
-      const drag = dragRef.current;
-      if (!drag) return;
-
-      const { sourceBlock, noteId } = drag;
-      const sourceNote = bmc.blocks[sourceBlock].find((n) => n.id === noteId);
-      if (!sourceNote) return;
-
-      const newBlocks = { ...bmc.blocks };
-
-      if (sourceBlock === targetBlock) {
-        // 同一ブロック内の並び替え
-        if (dragOverNoteId && dragOverNoteId !== noteId) {
-          const list = [...newBlocks[sourceBlock]];
-          const fromIdx = list.findIndex((n) => n.id === noteId);
-          const toIdx = list.findIndex((n) => n.id === dragOverNoteId);
-          if (fromIdx !== -1 && toIdx !== -1 && fromIdx !== toIdx) {
-            list.splice(fromIdx, 1);
-            list.splice(toIdx, 0, sourceNote);
-            newBlocks[sourceBlock] = list;
-          }
-        }
-      } else {
-        // 別ブロックへ移動
-        newBlocks[sourceBlock] = newBlocks[sourceBlock].filter((n) => n.id !== noteId);
-        const targetList = [...newBlocks[targetBlock]];
-        if (dragOverNoteId) {
-          const toIdx = targetList.findIndex((n) => n.id === dragOverNoteId);
-          if (toIdx !== -1) {
-            targetList.splice(toIdx, 0, sourceNote);
-          } else {
-            targetList.push(sourceNote);
-          }
-        } else {
-          targetList.push(sourceNote);
-        }
-        newBlocks[targetBlock] = targetList;
+        onBmcSetRef.current({ ...bmcRef.current, layoutScale: newScale });
+        return;
       }
 
-      onBmcChange({ blocks: newBlocks });
-      dragRef.current = null;
-      setDragOverNoteId(null);
-      setDragOverBlock(null);
-      setDragSourceBlock(null);
-    },
-    [bmc, onBmcChange, dragOverNoteId]
-  );
-
-  const handleDragEnd = useCallback(() => {
-    dragRef.current = null;
-    setDragOverNoteId(null);
-    setDragOverBlock(null);
-    setDragSourceBlock(null);
-  }, []);
-
-  // ウィンドウ外でドラッグがキャンセルされた場合のクリーンアップ
-  useEffect(() => {
-    const cleanup = () => {
+      // 付箋ドラッグ中
       if (dragRef.current) {
-        dragRef.current = null;
-        setDragOverNoteId(null);
-        setDragOverBlock(null);
-        setDragSourceBlock(null);
+        const dx = (e.clientX - dragRef.current.startX) / viewport.zoom;
+        const dy = (e.clientY - dragRef.current.startY) / viewport.zoom;
+        const newX = dragRef.current.origX + dx;
+        const newY = dragRef.current.origY + dy;
+
+        onBmcSetRef.current({
+          ...bmcRef.current,
+          notes: bmcRef.current.notes.map((n) =>
+            n.id === dragRef.current!.noteId
+              ? { ...n, position: { x: newX, y: newY } }
+              : n
+          ),
+        });
+        return;
       }
-    };
-    window.addEventListener("dragend", cleanup);
-    return () => window.removeEventListener("dragend", cleanup);
-  }, []);
+
+      // 付箋リサイズ中
+      if (resizeRef.current) {
+        const dx = (e.clientX - resizeRef.current.startX) / viewport.zoom;
+        const dy = (e.clientY - resizeRef.current.startY) / viewport.zoom;
+        const newWidth = Math.max(BMC_NOTE_MIN_SIZE.width, resizeRef.current.origWidth + dx);
+        const newHeight = Math.max(BMC_NOTE_MIN_SIZE.height, resizeRef.current.origHeight + dy);
+
+        onBmcSetRef.current({
+          ...bmcRef.current,
+          notes: bmcRef.current.notes.map((n) =>
+            n.id === resizeRef.current!.noteId
+              ? { ...n, size: { width: newWidth, height: newHeight } }
+              : n
+          ),
+        });
+        return;
+      }
+
+      canvasPointerMove(e);
+    },
+    [viewport.zoom, canvasPointerMove]
+  );
+
+  // ポインタアップの統合ハンドラ
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      // レイアウトリサイズ終了 → 確定
+      if (layoutResizeRef.current) {
+        onBmcChangeRef.current({ ...bmcRef.current });
+        layoutResizeRef.current = null;
+        return;
+      }
+
+      // ドラッグ終了 → ブロック再判定 → 確定
+      if (dragRef.current) {
+        const currentBmc = bmcRef.current;
+        const scale = currentBmc.layoutScale ?? 1;
+        const note = currentBmc.notes.find((n) => n.id === dragRef.current!.noteId);
+        if (note) {
+          const centerX = note.position.x + note.size.width / 2;
+          const centerY = note.position.y + note.size.height / 2;
+          const newBlockType = detectBmcBlock(centerX, centerY, scale);
+          onBmcChangeRef.current({
+            ...currentBmc,
+            notes: currentBmc.notes.map((n) =>
+              n.id === dragRef.current!.noteId
+                ? { ...n, blockType: newBlockType }
+                : n
+            ),
+          });
+        }
+        dragRef.current = null;
+        return;
+      }
+
+      // リサイズ終了 → 確定
+      if (resizeRef.current) {
+        onBmcChangeRef.current({ ...bmcRef.current });
+        resizeRef.current = null;
+        return;
+      }
+
+      canvasPointerUp(e);
+    },
+    [canvasPointerUp]
+  );
+
+  // ポインタダウンの統合ハンドラ
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      canvasPointerDown(e);
+    },
+    [canvasPointerDown]
+  );
+
+  // キャンバスクリック
+  const handleCanvasClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (isPanning || dragRef.current || resizeRef.current || layoutResizeRef.current) return;
+      if (e.target !== e.currentTarget) return;
+    },
+    [isPanning]
+  );
+
+  const cursorClass = isPanning ? "cursor-grabbing" : "cursor-default";
+
+  // スケール済みレイアウトの全体サイズ
+  const totalW = BMC_LAYOUT_BASE_WIDTH * layoutScale;
+  const totalH = BMC_LAYOUT_BASE_HEIGHT * layoutScale;
 
   return (
-    <div className="h-full flex flex-col p-4 overflow-auto">
-      <div className="grid grid-cols-1 md:grid-cols-10 md:grid-rows-3 gap-2 flex-1 min-h-0 md:min-h-[500px]">
-        {BMC_BLOCK_ORDER.map((blockType) => (
-          <div
-            key={blockType}
-            className={`min-h-[120px] ${GRID_PLACEMENT[blockType]}`}
+    <div
+      ref={containerRef}
+      className={`absolute inset-0 overflow-hidden bg-gray-50 dark:bg-gray-950 ${cursorClass} outline-none`}
+      tabIndex={0}
+      role="application"
+      aria-label="Business Model Canvas"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onWheel={handleWheel}
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
+      onClick={handleCanvasClick}
+    >
+      {/* ドットグリッド背景 */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none">
+        <defs>
+          <pattern
+            id={dotGridId}
+            x={viewport.x % (20 * viewport.zoom)}
+            y={viewport.y % (20 * viewport.zoom)}
+            width={20 * viewport.zoom}
+            height={20 * viewport.zoom}
+            patternUnits="userSpaceOnUse"
           >
-            <BmcBlock
-              blockType={blockType}
-              label={t(`blocks.${blockType}`)}
-              notes={bmc.blocks[blockType]}
-              onAddNote={() => handleAddNote(blockType)}
-              onEditNote={(noteId, rect) => handleEditNote(blockType, noteId, rect)}
-              onDeleteNote={(noteId) => handleDeleteNote(blockType, noteId)}
-              onDragStart={handleDragStart}
-              onDragOverNote={handleDragOverNote}
-              onDropOnBlock={handleDropOnBlock}
-              onDragEnd={handleDragEnd}
-              dragOverNoteId={dragOverBlock === blockType ? dragOverNoteId : null}
-              isDropTarget={dragOverBlock === blockType && dragSourceBlock !== null && dragSourceBlock !== blockType}
-              autoEditNoteId={autoEditNoteId}
+            <circle
+              cx={1}
+              cy={1}
+              r={1}
+              className="fill-gray-300 dark:fill-gray-700"
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill={`url(#${dotGridId})`} />
+      </svg>
+
+      {/* キャンバスコンテンツ */}
+      <div
+        className="absolute top-0 left-0 origin-top-left"
+        style={{
+          transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})`,
+        }}
+      >
+        {/* BMCブロック背景 × 9 */}
+        {BMC_BLOCK_ORDER.map((blockType) => (
+          <BmcBlock
+            key={blockType}
+            blockType={blockType}
+            label={t(`blocks.${blockType}`)}
+            scale={layoutScale}
+            onAddNote={() => handleAddNote(blockType)}
+          />
+        ))}
+
+        {/* レイアウト全体のリサイズハンドル（右下角） */}
+        <div
+          className="absolute pointer-events-auto cursor-se-resize group"
+          style={{
+            left: `${totalW - 6}px`,
+            top: `${totalH - 6}px`,
+            width: "16px",
+            height: "16px",
+          }}
+          onPointerDown={handleLayoutResizeStart}
+        >
+          {/* 三角形のリサイズグリップ */}
+          <svg width="16" height="16" className="text-gray-400 group-hover:text-gray-600 dark:text-gray-500 dark:group-hover:text-gray-300 transition-colors">
+            <path d="M14 2 L14 14 L2 14 Z" fill="currentColor" opacity="0.6" />
+          </svg>
+        </div>
+
+        {/* 付箋 × N */}
+        {bmc.notes.map((note) => (
+          <div key={note.id} data-note-id={note.id}>
+            <BmcCanvasNote
+              note={note}
+              bgColor={BMC_BLOCK_COLORS[note.blockType].bg}
+              onDragStart={handleNoteDragStart}
+              onResizeStart={handleNoteResizeStart}
+              onDoubleClick={handleNoteDoubleClick}
+              onDelete={handleNoteDelete}
             />
           </div>
         ))}
       </div>
 
-      {/* ノートエディタ（再利用） */}
+      {/* ズームコントロール（右下固定） */}
+      <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 px-1 py-0.5">
+        <button
+          type="button"
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          onClick={zoomOut}
+          aria-label="ズームアウト"
+        >
+          <Minus className="w-3.5 h-3.5" />
+        </button>
+        <span className="text-xs font-mono w-10 text-center select-none text-gray-600 dark:text-gray-400">
+          {Math.round(viewport.zoom * 100)}%
+        </span>
+        <button
+          type="button"
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          onClick={zoomIn}
+          aria-label="ズームイン"
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </button>
+        <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-0.5" />
+        <button
+          type="button"
+          className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          onClick={resetView}
+          aria-label="ビューをリセット"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* ノートエディタ（固定位置オーバーレイ） */}
       {editing && (
         <NoteEditor
           initialText={editing.text}

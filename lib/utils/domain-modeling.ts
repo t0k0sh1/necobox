@@ -125,11 +125,20 @@ export type BmcBlockType =
 export interface BmcNote {
   id: string;
   text: string;
+  blockType: BmcBlockType;
+  position: { x: number; y: number };
+  size: { width: number; height: number };
 }
 
 /** BMCボード全体 */
 export interface BmcBoard {
-  blocks: Record<BmcBlockType, BmcNote[]>;
+  notes: BmcNote[];
+  layoutScale?: number;
+}
+
+/** 旧形式のBMCボード（マイグレーション用） */
+export interface LegacyBmcBoard {
+  blocks: Record<BmcBlockType, { id: string; text: string }[]>;
 }
 
 // ============================================================
@@ -291,6 +300,50 @@ export const STORY_MAPPING_COLORS = {
   release:  { bg: "#FEE2E2", border: "#EF4444" },
 } as const;
 
+/** BMCブロックのキャンバス座標レイアウト */
+export const BMC_BLOCK_LAYOUT: Record<BmcBlockType, { x: number; y: number; width: number; height: number }> = {
+  keyPartners:           { x: 0,    y: 0,   width: 240, height: 400 },
+  keyActivities:         { x: 240,  y: 0,   width: 240, height: 200 },
+  keyResources:          { x: 240,  y: 200, width: 240, height: 200 },
+  valuePropositions:     { x: 480,  y: 0,   width: 240, height: 400 },
+  customerRelationships: { x: 720,  y: 0,   width: 240, height: 200 },
+  channels:              { x: 720,  y: 200, width: 240, height: 200 },
+  customerSegments:      { x: 960,  y: 0,   width: 240, height: 400 },
+  costStructure:         { x: 0,    y: 400, width: 600, height: 200 },
+  revenueStreams:        { x: 600,  y: 400, width: 600, height: 200 },
+};
+
+/** BMCレイアウトのベースサイズ（スケール1.0時の右下座標） */
+export const BMC_LAYOUT_BASE_WIDTH = 1200;
+export const BMC_LAYOUT_BASE_HEIGHT = 600;
+
+/** BMCレイアウトスケールの範囲 */
+export const BMC_LAYOUT_SCALE_MIN = 0.5;
+export const BMC_LAYOUT_SCALE_MAX = 3.0;
+
+/** スケール適用済みのブロックレイアウトを取得 */
+export function getScaledBlockLayout(
+  blockType: BmcBlockType,
+  scale: number
+): { x: number; y: number; width: number; height: number } {
+  const base = BMC_BLOCK_LAYOUT[blockType];
+  return {
+    x: base.x * scale,
+    y: base.y * scale,
+    width: base.width * scale,
+    height: base.height * scale,
+  };
+}
+
+/** BMC付箋のデフォルトサイズ */
+export const BMC_NOTE_DEFAULT_SIZE = { width: 120, height: 80 };
+
+/** BMC付箋の最小サイズ */
+export const BMC_NOTE_MIN_SIZE = { width: 80, height: 50 };
+
+/** BMCブロックヘッダーの高さ */
+export const BMC_BLOCK_HEADER_HEIGHT = 28;
+
 /** BMCブロックの色（背景・ヘッダー） */
 export const BMC_BLOCK_COLORS: Record<BmcBlockType, { bg: string; header: string }> = {
   keyPartners:           { bg: "#EDE9FE", header: "#7C3AED" },
@@ -315,24 +368,102 @@ export function generateId(): string {
 
 /** 空のBMCボードを生成 */
 export function createEmptyBmcBoard(): BmcBoard {
+  return { notes: [] };
+}
+
+/** 中心座標からBMCブロック所属を判定 */
+export function detectBmcBlock(centerX: number, centerY: number, scale = 1): BmcBlockType {
+  for (const blockType of BMC_BLOCK_ORDER) {
+    const layout = getScaledBlockLayout(blockType, scale);
+    if (
+      centerX >= layout.x &&
+      centerX < layout.x + layout.width &&
+      centerY >= layout.y &&
+      centerY < layout.y + layout.height
+    ) {
+      return blockType;
+    }
+  }
+  // 範囲外の場合、最も近いブロックを返す
+  let minDist = Infinity;
+  let nearest: BmcBlockType = "valuePropositions";
+  for (const blockType of BMC_BLOCK_ORDER) {
+    const layout = getScaledBlockLayout(blockType, scale);
+    const cx = layout.x + layout.width / 2;
+    const cy = layout.y + layout.height / 2;
+    const dist = Math.hypot(centerX - cx, centerY - cy);
+    if (dist < minDist) {
+      minDist = dist;
+      nearest = blockType;
+    }
+  }
+  return nearest;
+}
+
+/** ブロック内の空き位置を計算 */
+export function findBmcNotePosition(
+  blockType: BmcBlockType,
+  existingNotes: BmcNote[],
+  scale = 1
+): { x: number; y: number } {
+  const layout = getScaledBlockLayout(blockType, scale);
+  const blockNotes = existingNotes.filter((n) => n.blockType === blockType);
+  const padding = 8;
+  const headerH = BMC_BLOCK_HEADER_HEIGHT * scale;
+  const startX = layout.x + padding;
+  const startY = layout.y + headerH + padding;
+  const cols = Math.floor((layout.width - padding * 2) / (BMC_NOTE_DEFAULT_SIZE.width + padding));
+  const maxCols = Math.max(1, cols);
+  const idx = blockNotes.length;
+  const col = idx % maxCols;
+  const row = Math.floor(idx / maxCols);
   return {
-    blocks: {
-      keyPartners: [],
-      keyActivities: [],
-      keyResources: [],
-      valuePropositions: [],
-      customerRelationships: [],
-      channels: [],
-      customerSegments: [],
-      costStructure: [],
-      revenueStreams: [],
-    },
+    x: startX + col * (BMC_NOTE_DEFAULT_SIZE.width + padding),
+    y: startY + row * (BMC_NOTE_DEFAULT_SIZE.height + padding),
   };
 }
 
-/** BMC付箋を生成 */
-export function createBmcNote(text = ""): BmcNote {
-  return { id: generateId(), text };
+/** BMC付箋を生成（ブロック所属・位置計算付き） */
+export function createBmcNote(
+  blockType: BmcBlockType,
+  existingNotes: BmcNote[],
+  text = "",
+  scale = 1
+): BmcNote {
+  const position = findBmcNotePosition(blockType, existingNotes, scale);
+  return {
+    id: generateId(),
+    text,
+    blockType,
+    position,
+    size: { ...BMC_NOTE_DEFAULT_SIZE },
+  };
+}
+
+/** 旧形式のBMCボードかどうかを判定 */
+export function isLegacyBmcBoard(bmc: unknown): bmc is LegacyBmcBoard {
+  if (typeof bmc !== "object" || bmc === null) return false;
+  const obj = bmc as Record<string, unknown>;
+  return "blocks" in obj && typeof obj.blocks === "object" && !("notes" in obj);
+}
+
+/** 旧blocks形式 → 新notes配列形式へのマイグレーション */
+export function migrateBmcBoard(legacy: LegacyBmcBoard): BmcBoard {
+  const notes: BmcNote[] = [];
+  for (const blockType of BMC_BLOCK_ORDER) {
+    const legacyNotes = legacy.blocks[blockType] ?? [];
+    for (const legacyNote of legacyNotes) {
+      const position = findBmcNotePosition(blockType, notes);
+      notes.push({
+        id: legacyNote.id,
+        text: legacyNote.text,
+        blockType,
+        position,
+        size: { ...BMC_NOTE_DEFAULT_SIZE },
+      });
+    }
+  }
+  return { notes };
 }
 
 /** 空の実例マッピングボードを生成 */
