@@ -124,6 +124,15 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
   const [drawingRect, setDrawingRect] = useState<DrawingRect | null>(null);
   const [connectionFrom, setConnectionFrom] = useState<string | null>(null);
   const [patternPopup, setPatternPopup] = useState<{ connId: string; screenX: number; screenY: number } | null>(null);
+  const patternPopupRef = useRef<HTMLDivElement>(null);
+
+  // ポップアップが開いたとき最初のボタンにフォーカスを移動
+  useEffect(() => {
+    if (patternPopup) {
+      const firstButton = patternPopupRef.current?.querySelector("button");
+      firstButton?.focus();
+    }
+  }, [patternPopup]);
 
   // ドラッグ移動用
   const dragRef = useRef<{
@@ -606,6 +615,12 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
   // 選択要素の削除
   const handleKeyDownCapture = useCallback(
     (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (patternPopup) {
+          setPatternPopup(null);
+          return;
+        }
+      }
       if (e.key === "Delete" || e.key === "Backspace") {
         if (editingNote || editingLabel) return;
         if (!selectedId) return;
@@ -674,6 +689,7 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
       board,
       onBoardChange,
       handleKeyDown,
+      patternPopup,
     ]
   );
 
@@ -1043,9 +1059,14 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
 
       {/* コンテキストマッピングパターン選択ポップアップ */}
       {patternPopup && (() => {
-        const clampedScreenX = Math.min(Math.max(patternPopup.screenX, 156), window.innerWidth - 156);
+        const clampedScreenX = Math.min(Math.max(patternPopup.screenX, 140), window.innerWidth - 140);
+        const currentPattern = board.connections.find((c) => c.id === patternPopup.connId)?.pattern;
         return (
           <div
+            ref={patternPopupRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("connection.categoryCollaboration")}
             className="fixed z-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-3 w-[280px]"
             style={{
               left: clampedScreenX,
@@ -1062,8 +1083,7 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
               {(["partnership", "sharedKernel"] as ContextMappingPattern[]).map((p) => (
                 <PatternButton
                   key={p}
-                  pattern={p}
-                  isSelected={board.connections.find((c) => c.id === patternPopup.connId)?.pattern === p}
+                  isSelected={currentPattern === p}
                   label={t(`connection.pattern.${p}`)}
                   abbr={CONTEXT_MAPPING_PATTERN_ABBR[p]}
                   color={CONTEXT_MAPPING_CATEGORY_COLORS[CONTEXT_MAPPING_PATTERN_TO_CATEGORY[p]]}
@@ -1078,8 +1098,7 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
               {(["customerSupplier", "conformist"] as ContextMappingPattern[]).map((p) => (
                 <PatternButton
                   key={p}
-                  pattern={p}
-                  isSelected={board.connections.find((c) => c.id === patternPopup.connId)?.pattern === p}
+                  isSelected={currentPattern === p}
                   label={t(`connection.pattern.${p}`)}
                   abbr={CONTEXT_MAPPING_PATTERN_ABBR[p]}
                   color={CONTEXT_MAPPING_CATEGORY_COLORS[CONTEXT_MAPPING_PATTERN_TO_CATEGORY[p]]}
@@ -1094,8 +1113,7 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
               {(["acl", "ohsPl"] as ContextMappingPattern[]).map((p) => (
                 <PatternButton
                   key={p}
-                  pattern={p}
-                  isSelected={board.connections.find((c) => c.id === patternPopup.connId)?.pattern === p}
+                  isSelected={currentPattern === p}
                   label={t(`connection.pattern.${p}`)}
                   abbr={CONTEXT_MAPPING_PATTERN_ABBR[p]}
                   color={CONTEXT_MAPPING_CATEGORY_COLORS[CONTEXT_MAPPING_PATTERN_TO_CATEGORY[p]]}
@@ -1142,7 +1160,6 @@ function PatternButton({
   color,
   onClick,
 }: {
-  pattern: ContextMappingPattern;
   isSelected: boolean;
   label: string;
   abbr: string;

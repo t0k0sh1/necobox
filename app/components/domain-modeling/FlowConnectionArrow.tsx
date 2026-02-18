@@ -82,7 +82,7 @@ export function FlowConnectionArrow({
           strokeColor ? undefined : "stroke-gray-500 dark:stroke-gray-400"
         }
         strokeWidth={isSelected ? 2.5 : 1.5}
-        strokeDasharray={isSelected ? undefined : "6 3"}
+        strokeDasharray={isSelected || pattern ? undefined : "6 3"}
         markerEnd={markerEnd}
       />
       {/* パターンバッジ */}

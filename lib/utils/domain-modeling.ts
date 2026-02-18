@@ -295,7 +295,7 @@ export const CONTEXT_MAPPING_PATTERN_ABBR: Record<ContextMappingPattern, string>
   customerSupplier: "C/S",
   conformist: "CF",
   acl: "ACL",
-  ohsPl: "OHS",
+  ohsPl: "OHS/PL",
 };
 
 /** コンテキストマッピングカテゴリの色 */
