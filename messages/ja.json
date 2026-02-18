@@ -1420,6 +1420,20 @@
       "deleteSelected": "選択要素を削除",
       "undo": "元に戻す"
     },
+    "connection": {
+      "categoryCollaboration": "協力 (Collaboration)",
+      "categoryCustomerSupplier": "顧客/供給者 (Customer/Supplier)",
+      "categoryProtectionTranslation": "保護/変換 (Protection/Translation)",
+      "clearPattern": "パターンをクリア",
+      "pattern": {
+        "partnership": "パートナーシップ",
+        "sharedKernel": "共有カーネル",
+        "customerSupplier": "顧客/供給者",
+        "conformist": "従順者",
+        "acl": "腐敗防止層",
+        "ohsPl": "公開ホストサービス/公表された言語"
+      }
+    },
     "emptyHint": {
       "title": "イベントストーミングを始めましょう",
       "addFlow": "ツールバーの {addFlowLabel} でイベントフローを配置",

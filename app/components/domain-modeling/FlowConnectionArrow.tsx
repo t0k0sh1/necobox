@@ -3,8 +3,15 @@
 import {
   type FlowConnection,
   type EventFlow,
-  getFlowCenter,
-  getFlowWidth,
+  type ContextMappingPattern,
+  CONTEXT_MAPPING_PATTERN_TO_CATEGORY,
+  CONTEXT_MAPPING_PATTERN_ABBR,
+  CONTEXT_MAPPING_CATEGORY_COLORS,
+  getConnectionDirection,
+  getFlowExitPoint,
+  getFlowEntryPoint,
+  buildManhattanPath,
+  getMidpointOfPath,
 } from "@/lib/utils/domain-modeling";
 
 interface FlowConnectionArrowProps {
@@ -12,7 +19,7 @@ interface FlowConnectionArrowProps {
   flows: EventFlow[];
   isSelected: boolean;
   onClick: () => void;
-  arrowheadId: string;
+  arrowheadIdPrefix: string;
 }
 
 export function FlowConnectionArrow({
@@ -20,27 +27,36 @@ export function FlowConnectionArrow({
   flows,
   isSelected,
   onClick,
-  arrowheadId,
+  arrowheadIdPrefix,
 }: FlowConnectionArrowProps) {
   const fromFlow = flows.find((f) => f.id === connection.fromFlowId);
   const toFlow = flows.find((f) => f.id === connection.toFlowId);
   if (!fromFlow || !toFlow) return null;
 
-  // 始点: ソースフローのイベントスロット右端
-  const fromCenter = getFlowCenter(fromFlow);
-  const fromRight = fromFlow.position.x + getFlowWidth(fromFlow);
-  const fromY = fromCenter.y;
+  const direction = getConnectionDirection(fromFlow, toFlow);
+  const exit = getFlowExitPoint(fromFlow, direction);
+  const entry = getFlowEntryPoint(toFlow, direction);
+  const path = buildManhattanPath(exit, entry, direction);
+  const mid = getMidpointOfPath(exit, entry);
 
-  // 終点: ターゲットフローの左端中央
-  const toCenter = getFlowCenter(toFlow);
-  const toX = toFlow.position.x;
-  const toY = toCenter.y;
+  const pattern: ContextMappingPattern | undefined = connection.pattern;
+  const category = pattern ? CONTEXT_MAPPING_PATTERN_TO_CATEGORY[pattern] : undefined;
+  const categoryColor = category ? CONTEXT_MAPPING_CATEGORY_COLORS[category] : undefined;
 
-  // ベジェ曲線の制御点
-  const dx = Math.abs(toX - fromRight);
-  const cpOffset = Math.max(40, dx * 0.4);
+  // マーカーsuffixの決定
+  const markerSuffix = isSelected
+    ? "selected"
+    : category
+      ? category
+      : "default";
+  const markerEnd = `url(#${arrowheadIdPrefix}-${markerSuffix})`;
 
-  const path = `M ${fromRight} ${fromY} C ${fromRight + cpOffset} ${fromY}, ${toX - cpOffset} ${toY}, ${toX} ${toY}`;
+  // 線色の決定
+  const strokeColor = isSelected
+    ? "#3b82f6"
+    : categoryColor
+      ? categoryColor
+      : undefined;
 
   return (
     <g
@@ -61,20 +77,43 @@ export function FlowConnectionArrow({
       <path
         d={path}
         fill="none"
+        stroke={strokeColor}
         className={
-          isSelected
-            ? "stroke-blue-500"
-            : "stroke-gray-500 dark:stroke-gray-400"
+          strokeColor ? undefined : "stroke-gray-500 dark:stroke-gray-400"
         }
         strokeWidth={isSelected ? 2.5 : 1.5}
-        strokeDasharray={isSelected ? undefined : "6 3"}
-        markerEnd={`url(#${arrowheadId})`}
+        strokeDasharray={isSelected || pattern ? undefined : "6 3"}
+        markerEnd={markerEnd}
       />
+      {/* パターンバッジ */}
+      {pattern && (
+        <g>
+          <rect
+            x={mid.x - 16}
+            y={mid.y - 9}
+            width={32}
+            height={18}
+            rx={4}
+            fill={categoryColor}
+            opacity={0.9}
+          />
+          <text
+            x={mid.x}
+            y={mid.y + 4}
+            textAnchor="middle"
+            fontSize={9}
+            fontWeight="bold"
+            fill="white"
+          >
+            {CONTEXT_MAPPING_PATTERN_ABBR[pattern]}
+          </text>
+        </g>
+      )}
       {/* ラベル */}
       {connection.label && (
         <text
-          x={(fromRight + toX) / 2}
-          y={(fromY + toY) / 2 - 8}
+          x={mid.x}
+          y={mid.y - (pattern ? 14 : 8)}
           textAnchor="middle"
           className="text-[10px] fill-gray-600 dark:fill-gray-400"
         >

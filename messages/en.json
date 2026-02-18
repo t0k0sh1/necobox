@@ -1420,6 +1420,20 @@
       "deleteSelected": "Delete selected",
       "undo": "Undo"
     },
+    "connection": {
+      "categoryCollaboration": "Collaboration",
+      "categoryCustomerSupplier": "Customer/Supplier",
+      "categoryProtectionTranslation": "Protection/Translation",
+      "clearPattern": "Clear Pattern",
+      "pattern": {
+        "partnership": "Partnership",
+        "sharedKernel": "Shared Kernel",
+        "customerSupplier": "Customer/Supplier",
+        "conformist": "Conformist",
+        "acl": "Anti-Corruption Layer",
+        "ohsPl": "Open Host Service / Published Language"
+      }
+    },
     "emptyHint": {
       "title": "Start Event Storming",
       "addFlow": "Place event flows with {addFlowLabel} in the toolbar",
