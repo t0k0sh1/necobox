@@ -1559,6 +1559,12 @@
     "sat": "Sat",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
-    "addTaskColumn": "Add task column"
+    "addTaskColumn": "Add task column",
+    "export": "Export",
+    "import": "Import",
+    "importConfirmTitle": "Import Attendance Data",
+    "importConfirmDescription": "This will overwrite all existing data. This action cannot be undone.",
+    "importConfirm": "Import",
+    "importFailed": "Failed to import. The file may be invalid."
   }
 }

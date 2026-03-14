@@ -7,6 +7,16 @@ import { AttendanceHeader } from "@/app/components/attendance/AttendanceHeader";
 import { AttendanceTable } from "@/app/components/attendance/AttendanceTable";
 import { MonthSettingsDialog } from "@/app/components/attendance/MonthSettingsDialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   loadAttendanceData,
   saveAttendanceData,
   getOrCreateMonth,
@@ -14,6 +24,8 @@ import {
   collectTaskSuggestions,
   getDefaultSettings,
   getDaysInMonth,
+  downloadAttendanceJson,
+  importAttendanceJson,
   type AttendanceData,
   type MonthSettings,
   type MonthlyAttendance,
@@ -36,6 +48,8 @@ export default function AttendancePage() {
     loaded: false,
   });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [importDialog, setImportDialog] = useState<{ open: boolean; data: AttendanceData | null }>({ open: false, data: null });
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isInitialLoad = useRef(true);
 
   const { data, year, month, loaded } = state;
@@ -175,6 +189,38 @@ export default function AttendancePage() {
     updateMonthData((monthData) => ({ ...monthData, settings }));
   };
 
+  // エクスポート
+  const handleExport = () => {
+    downloadAttendanceJson(data);
+  };
+
+  // インポート（ファイル選択を開く）
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // ファイル選択後の処理
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // input をリセット（同じファイルを再選択可能にする）
+    e.target.value = "";
+    const imported = await importAttendanceJson(file);
+    if (imported) {
+      setImportDialog({ open: true, data: imported });
+    } else {
+      setImportDialog({ open: true, data: null });
+    }
+  };
+
+  // インポート確認
+  const handleImportConfirm = () => {
+    if (importDialog.data) {
+      setData(importDialog.data);
+    }
+    setImportDialog({ open: false, data: null });
+  };
+
   return (
     <div className="flex flex-col h-[calc(100dvh-64px-48px)]">
       <Breadcrumbs items={[{ label: t("breadcrumb") }]} />
@@ -185,6 +231,8 @@ export default function AttendancePage() {
           summary={summary}
           onPrevMonth={handlePrevMonth}
           onNextMonth={handleNextMonth}
+          onExport={handleExport}
+          onImport={handleImportClick}
           onOpenSettings={() => setSettingsOpen(true)}
         />
       </div>
@@ -205,6 +253,35 @@ export default function AttendancePage() {
         settings={currentMonth.settings}
         onSave={handleSaveSettings}
       />
+      {/* 隠しファイル入力 */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".json"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+      {/* インポート確認ダイアログ */}
+      <AlertDialog open={importDialog.open} onOpenChange={(open) => !open && setImportDialog({ open: false, data: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {importDialog.data ? t("importConfirmTitle") : t("importFailed")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {importDialog.data ? t("importConfirmDescription") : t("importFailed")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            {importDialog.data && (
+              <AlertDialogAction onClick={handleImportConfirm}>
+                {t("importConfirm")}
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

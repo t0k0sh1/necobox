@@ -1559,6 +1559,12 @@
     "sat": "土",
     "prevMonth": "前月へ",
     "nextMonth": "翌月へ",
-    "addTaskColumn": "タスク列を追加"
+    "addTaskColumn": "タスク列を追加",
+    "export": "エクスポート",
+    "import": "インポート",
+    "importConfirmTitle": "勤怠データのインポート",
+    "importConfirmDescription": "既存の勤怠データがすべて上書きされます。この操作は元に戻せません。続行しますか？",
+    "importConfirm": "インポート",
+    "importFailed": "インポートに失敗しました。ファイルが不正な可能性があります。"
   }
 }

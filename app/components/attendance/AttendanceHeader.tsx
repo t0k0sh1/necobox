@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Upload, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatWorkTime } from "@/lib/utils/attendance";
 
@@ -11,6 +11,8 @@ interface AttendanceHeaderProps {
   summary: { businessDays: number; enteredDays: number; totalMinutes: number };
   onPrevMonth: () => void;
   onNextMonth: () => void;
+  onExport: () => void;
+  onImport: () => void;
   onOpenSettings: () => void;
 }
 
@@ -21,6 +23,8 @@ export function AttendanceHeader({
   summary,
   onPrevMonth,
   onNextMonth,
+  onExport,
+  onImport,
   onOpenSettings,
 }: AttendanceHeaderProps) {
   const t = useTranslations("attendanceTracker");
@@ -40,9 +44,17 @@ export function AttendanceHeader({
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onOpenSettings} aria-label={t("settings")}>
-          <Settings className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-0.5">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onExport} aria-label={t("export")}>
+            <Download className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onImport} aria-label={t("import")}>
+            <Upload className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onOpenSettings} aria-label={t("settings")}>
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
       {/* サマリ */}
       <div className="flex items-center gap-4 text-xs text-muted-foreground px-1">

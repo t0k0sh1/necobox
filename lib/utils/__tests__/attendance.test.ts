@@ -12,7 +12,11 @@ import {
   saveAttendanceData,
   collectTaskSuggestions,
   getMaxTaskCount,
+  exportAttendanceData,
+  validateAttendanceExportData,
+  importAttendanceJson,
   type AttendanceData,
+  type AttendanceExportData,
   type DailyAttendance,
   type MonthSettings,
 } from "../attendance";
@@ -461,5 +465,150 @@ describe("loadAttendanceData / saveAttendanceData", () => {
     localStorageMock.setItem("necobox-attendance", JSON.stringify(oldData));
     const loaded = loadAttendanceData();
     expect(loaded!.months["2026-03"].days[0].breakMinutes).toBe(60);
+  });
+});
+
+describe("exportAttendanceData", () => {
+  it("正しいエクスポート形式のJSON文字列を生成する", () => {
+    const data: AttendanceData = {
+      months: {
+        "2026-03": {
+          yearMonth: "2026-03",
+          settings: getDefaultSettings(),
+          days: [{ date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: ["開発"] }],
+        },
+      },
+    };
+    const json = exportAttendanceData(data);
+    const parsed = JSON.parse(json) as AttendanceExportData;
+    expect(parsed.version).toBe(1);
+    expect(typeof parsed.exportedAt).toBe("string");
+    expect(parsed.data.months["2026-03"].days[0].tasks).toEqual(["開発"]);
+  });
+});
+
+describe("validateAttendanceExportData", () => {
+  const validData: AttendanceExportData = {
+    version: 1,
+    exportedAt: "2026-03-14T00:00:00.000Z",
+    data: {
+      months: {
+        "2026-03": {
+          yearMonth: "2026-03",
+          settings: getDefaultSettings(),
+          days: [{ date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: [] }],
+        },
+      },
+    },
+  };
+
+  it("正しいデータを受け入れる", () => {
+    expect(validateAttendanceExportData(validData)).toBe(true);
+  });
+
+  it("nullを拒否する", () => {
+    expect(validateAttendanceExportData(null)).toBe(false);
+  });
+
+  it("versionが異なるデータを拒否する", () => {
+    expect(validateAttendanceExportData({ ...validData, version: 2 })).toBe(false);
+  });
+
+  it("exportedAtが欠落しているデータを拒否する", () => {
+    expect(validateAttendanceExportData({ version: 1, data: validData.data })).toBe(false);
+  });
+
+  it("dataが欠落しているデータを拒否する", () => {
+    expect(validateAttendanceExportData({ version: 1, exportedAt: "2026-01-01" })).toBe(false);
+  });
+
+  it("日付フィールドが不正なデータを拒否する", () => {
+    const bad = {
+      version: 1,
+      exportedAt: "2026-01-01",
+      data: {
+        months: {
+          "2026-03": {
+            yearMonth: "2026-03",
+            settings: getDefaultSettings(),
+            days: [{ date: 123, startTime: null, endTime: null, breakMinutes: 60, tasks: [] }],
+          },
+        },
+      },
+    };
+    expect(validateAttendanceExportData(bad)).toBe(false);
+  });
+});
+
+describe("importAttendanceJson", () => {
+  function createFile(content: string, size?: number): File {
+    const file = new File([content], "test.json", { type: "application/json" });
+    if (size !== undefined) {
+      Object.defineProperty(file, "size", { value: size });
+    }
+    // JSDOM環境では File.text() が未実装の場合があるのでモック
+    if (!file.text) {
+      file.text = () => Promise.resolve(content);
+    }
+    return file;
+  }
+
+  it("正しいJSONファイルからデータをインポートできる", async () => {
+    const exportData: AttendanceExportData = {
+      version: 1,
+      exportedAt: "2026-03-14T00:00:00.000Z",
+      data: {
+        months: {
+          "2026-03": {
+            yearMonth: "2026-03",
+            settings: getDefaultSettings(),
+            days: [{ date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: ["開発"] }],
+          },
+        },
+      },
+    };
+    const file = createFile(JSON.stringify(exportData));
+    const result = await importAttendanceJson(file);
+    expect(result).not.toBeNull();
+    expect(result!.months["2026-03"].days[0].tasks).toEqual(["開発"]);
+  });
+
+  it("不正なJSONファイルの場合はnullを返す", async () => {
+    const file = createFile("not valid json");
+    const result = await importAttendanceJson(file);
+    expect(result).toBeNull();
+  });
+
+  it("バリデーション失敗時はnullを返す", async () => {
+    const file = createFile(JSON.stringify({ version: 999 }));
+    const result = await importAttendanceJson(file);
+    expect(result).toBeNull();
+  });
+
+  it("10MBを超えるファイルはnullを返す", async () => {
+    const file = createFile("{}", 11 * 1024 * 1024);
+    const result = await importAttendanceJson(file);
+    expect(result).toBeNull();
+  });
+
+  it("旧形式のデータもマイグレーションしてインポートできる", async () => {
+    const exportData = {
+      version: 1,
+      exportedAt: "2026-03-14T00:00:00.000Z",
+      data: {
+        months: {
+          "2026-03": {
+            yearMonth: "2026-03",
+            settings: getDefaultSettings(),
+            days: [{ date: "2026-03-01", startTime: "09:00", endTime: "18:00", note: "作業A" }],
+          },
+        },
+      },
+    };
+    const file = createFile(JSON.stringify(exportData));
+    const result = await importAttendanceJson(file);
+    expect(result).not.toBeNull();
+    expect(result!.months["2026-03"].days[0].tasks).toEqual(["作業A"]);
+    expect(result!.months["2026-03"].days[0].breakMinutes).toBe(60);
   });
 });
