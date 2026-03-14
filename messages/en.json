@@ -1556,6 +1556,9 @@
     "wed": "Wed",
     "thu": "Thu",
     "fri": "Fri",
-    "sat": "Sat"
+    "sat": "Sat",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "addTaskColumn": "Add task column"
   }
 }

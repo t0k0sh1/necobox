@@ -1556,6 +1556,9 @@
     "wed": "水",
     "thu": "木",
     "fri": "金",
-    "sat": "土"
+    "sat": "土",
+    "prevMonth": "前月へ",
+    "nextMonth": "翌月へ",
+    "addTaskColumn": "タスク列を追加"
   }
 }

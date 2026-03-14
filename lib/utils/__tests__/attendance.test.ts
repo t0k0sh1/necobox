@@ -426,4 +426,40 @@ describe("loadAttendanceData / saveAttendanceData", () => {
     expect(loaded!.months["2026-03"].days[0].tasks).toEqual(["作業A"]);
     expect(loaded!.months["2026-03"].days[1].tasks).toEqual([]);
   });
+
+  it("旧形式（TaskEntry配列）のデータを string[] に移行する", () => {
+    const oldData = {
+      months: {
+        "2026-03": {
+          yearMonth: "2026-03",
+          settings: getDefaultSettings(),
+          days: [
+            { date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: [{ task: "開発", status: "完了" }, { task: "レビュー", status: "順調" }] },
+            { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: [{ task: "テスト" }] },
+          ],
+        },
+      },
+    };
+    localStorageMock.setItem("necobox-attendance", JSON.stringify(oldData));
+    const loaded = loadAttendanceData();
+    expect(loaded!.months["2026-03"].days[0].tasks).toEqual(["開発", "レビュー"]);
+    expect(loaded!.months["2026-03"].days[1].tasks).toEqual(["テスト"]);
+  });
+
+  it("旧形式でbreakMinutesが欠落している場合はデフォルト60を補完する", () => {
+    const oldData = {
+      months: {
+        "2026-03": {
+          yearMonth: "2026-03",
+          settings: getDefaultSettings(),
+          days: [
+            { date: "2026-03-01", startTime: "09:00", endTime: "18:00", tasks: [{ task: "開発", status: "" }] },
+          ],
+        },
+      },
+    };
+    localStorageMock.setItem("necobox-attendance", JSON.stringify(oldData));
+    const loaded = loadAttendanceData();
+    expect(loaded!.months["2026-03"].days[0].breakMinutes).toBe(60);
+  });
 });

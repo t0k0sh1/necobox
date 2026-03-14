@@ -91,6 +91,7 @@ export function AttendanceTable({
                 size="icon"
                 className="h-5 w-5"
                 onClick={() => setTaskSlotCount((c) => c + 1)}
+                aria-label={t("addTaskColumn")}
               >
                 <Plus className="h-3 w-3" />
               </Button>

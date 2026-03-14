@@ -30,17 +30,17 @@ export function AttendanceHeader({
       {/* 月ナビゲーション + 設定 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onPrevMonth}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onPrevMonth} aria-label={t("prevMonth")}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="text-sm font-medium min-w-[100px] text-center">
             {t("month", { year, month })}
           </span>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onNextMonth}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onNextMonth} aria-label={t("nextMonth")}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onOpenSettings}>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onOpenSettings} aria-label={t("settings")}>
           <Settings className="h-4 w-4" />
         </Button>
       </div>

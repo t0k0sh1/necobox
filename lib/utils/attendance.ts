@@ -39,11 +39,17 @@ const STORAGE_KEY = "necobox-attendance";
  */
 function migrateDailyAttendance(day: Record<string, unknown>): DailyAttendance {
   if (Array.isArray(day.tasks)) {
-    // TaskEntry 形式（{ task, status }）から string[] への移行
+    // TaskEntry 形式（{ task, status }）または string[] からの移行
     const tasks = (day.tasks as unknown[]).map((t) =>
       typeof t === "string" ? t : (t as { task?: string }).task ?? ""
     ).filter(Boolean);
-    return { ...day, tasks } as unknown as DailyAttendance;
+    return {
+      date: day.date as string,
+      startTime: (day.startTime as string | null) ?? null,
+      endTime: (day.endTime as string | null) ?? null,
+      breakMinutes: typeof day.breakMinutes === "number" ? day.breakMinutes : 60,
+      tasks,
+    };
   }
   // 旧形式: note フィールドを tasks に変換
   const note = typeof day.note === "string" ? day.note : "";
@@ -83,7 +89,9 @@ export function saveAttendanceData(data: AttendanceData): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {}
+  } catch {
+    // LocalStorage容量超過等のエラーは握りつぶす（ブラウザ環境での制約）
+  }
 }
 
 /**

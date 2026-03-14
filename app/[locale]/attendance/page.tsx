@@ -131,25 +131,19 @@ export default function AttendancePage() {
 
   // 月切り替え
   const handlePrevMonth = () => {
-    setState((prev) => {
-      const newMonth = prev.month === 1 ? 12 : prev.month - 1;
-      const newYear = prev.month === 1 ? prev.year - 1 : prev.year;
-      return { ...prev, year: newYear, month: newMonth };
-    });
-    const prevMonth = month === 1 ? 12 : month - 1;
-    const prevYear = month === 1 ? year - 1 : year;
-    ensureMonthExists(`${prevYear}-${String(prevMonth).padStart(2, "0")}`);
+    const newMonth = month === 1 ? 12 : month - 1;
+    const newYear = month === 1 ? year - 1 : year;
+    const ym = `${newYear}-${String(newMonth).padStart(2, "0")}`;
+    setState((prev) => ({ ...prev, year: newYear, month: newMonth }));
+    ensureMonthExists(ym);
   };
 
   const handleNextMonth = () => {
-    setState((prev) => {
-      const newMonth = prev.month === 12 ? 1 : prev.month + 1;
-      const newYear = prev.month === 12 ? prev.year + 1 : prev.year;
-      return { ...prev, year: newYear, month: newMonth };
-    });
-    const nextMonth = month === 12 ? 1 : month + 1;
-    const nextYear = month === 12 ? year + 1 : year;
-    ensureMonthExists(`${nextYear}-${String(nextMonth).padStart(2, "0")}`);
+    const newMonth = month === 12 ? 1 : month + 1;
+    const newYear = month === 12 ? year + 1 : year;
+    const ym = `${newYear}-${String(newMonth).padStart(2, "0")}`;
+    setState((prev) => ({ ...prev, year: newYear, month: newMonth }));
+    ensureMonthExists(ym);
   };
 
   // 日データ更新（時刻・休憩フィールド）
