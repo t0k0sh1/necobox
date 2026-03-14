@@ -205,6 +205,10 @@ export function validateAttendanceExportData(data: unknown): data is AttendanceE
     if (typeof month !== "object" || month === null) return false;
     if (typeof month.yearMonth !== "string") return false;
     if (typeof month.settings !== "object" || month.settings === null) return false;
+    const s = month.settings as Record<string, unknown>;
+    if (typeof s.defaultStartTime !== "string") return false;
+    if (typeof s.defaultEndTime !== "string") return false;
+    if (typeof s.defaultBreakMinutes !== "number") return false;
     if (!Array.isArray(month.days)) return false;
     for (const day of month.days as unknown[]) {
       if (typeof day !== "object" || day === null) return false;
@@ -212,6 +216,10 @@ export function validateAttendanceExportData(data: unknown): data is AttendanceE
       if (typeof d.date !== "string") return false;
       if (d.startTime !== null && typeof d.startTime !== "string") return false;
       if (d.endTime !== null && typeof d.endTime !== "string") return false;
+      // breakMinutes: number が望ましいが、旧形式では欠落しうるのでマイグレーションに任せる
+      if (d.breakMinutes !== undefined && typeof d.breakMinutes !== "number") return false;
+      // tasks: 旧形式（note, TaskEntry[]）もマイグレーションで対応するため、配列またはundefinedを許容
+      if (d.tasks !== undefined && !Array.isArray(d.tasks)) return false;
     }
   }
   return true;

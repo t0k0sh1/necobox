@@ -538,6 +538,74 @@ describe("validateAttendanceExportData", () => {
     };
     expect(validateAttendanceExportData(bad)).toBe(false);
   });
+
+  it("settingsのdefaultStartTimeが欠落しているデータを拒否する", () => {
+    const bad = {
+      version: 1,
+      exportedAt: "2026-01-01",
+      data: {
+        months: {
+          "2026-03": {
+            yearMonth: "2026-03",
+            settings: { defaultEndTime: "18:00", defaultBreakMinutes: 60 },
+            days: [],
+          },
+        },
+      },
+    };
+    expect(validateAttendanceExportData(bad)).toBe(false);
+  });
+
+  it("settingsのdefaultBreakMinutesが文字列のデータを拒否する", () => {
+    const bad = {
+      version: 1,
+      exportedAt: "2026-01-01",
+      data: {
+        months: {
+          "2026-03": {
+            yearMonth: "2026-03",
+            settings: { defaultStartTime: "09:00", defaultEndTime: "18:00", defaultBreakMinutes: "60" },
+            days: [],
+          },
+        },
+      },
+    };
+    expect(validateAttendanceExportData(bad)).toBe(false);
+  });
+
+  it("breakMinutesが文字列のデータを拒否する", () => {
+    const bad = {
+      version: 1,
+      exportedAt: "2026-01-01",
+      data: {
+        months: {
+          "2026-03": {
+            yearMonth: "2026-03",
+            settings: getDefaultSettings(),
+            days: [{ date: "2026-03-01", startTime: null, endTime: null, breakMinutes: "60", tasks: [] }],
+          },
+        },
+      },
+    };
+    expect(validateAttendanceExportData(bad)).toBe(false);
+  });
+
+  it("tasksがオブジェクトのデータを拒否する", () => {
+    const bad = {
+      version: 1,
+      exportedAt: "2026-01-01",
+      data: {
+        months: {
+          "2026-03": {
+            yearMonth: "2026-03",
+            settings: getDefaultSettings(),
+            days: [{ date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: "invalid" }],
+          },
+        },
+      },
+    };
+    expect(validateAttendanceExportData(bad)).toBe(false);
+  });
 });
 
 describe("importAttendanceJson", () => {
