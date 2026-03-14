@@ -24,7 +24,6 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.1",
     "@radix-ui/react-tooltip": "^1.1.4",
-    "@types/japanese-holidays": "^1.0.3",
     "@zxcvbn-ts/core": "^3.0.4",
     "@zxcvbn-ts/language-common": "^3.0.4",
     "@zxcvbn-ts/language-en": "^3.0.2",
@@ -58,7 +57,7 @@
   "pnpm": {
     "overrides": {
       "diff": "^8.0.3",
-      "ajv": ">=6.14.0",
+      "ajv": "~6.14.0",
       "flatted": ">=3.4.0",
       "minimatch": ">=10.2.3",
       "underscore": ">=1.13.8"
@@ -82,6 +81,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/japanese-holidays": "^1.0.3",
     "@types/xml2js": "^0.4.14",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",

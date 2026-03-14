@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { AttendanceRow } from "./AttendanceRow";
 import {
   calcWorkMinutes,
-  isNonBusinessDay,
+  isWeekend,
   isHoliday,
   getMaxTaskCount,
   type DailyAttendance,
@@ -46,7 +46,7 @@ export function AttendanceTable({
     settings.defaultBreakMinutes
   );
 
-  // データ内の最大タスク数（最低3）を初期値にし、+ボタンで増やせる
+  // データ内の最大タスク数（最低5）を初期値にし、+ボタンで増やせる
   const dataMax = Math.max(5, getMaxTaskCount(days));
   const [taskSlotCount, setTaskSlotCount] = useState(dataMax);
   // データが増えたら自動追従
@@ -101,13 +101,15 @@ export function AttendanceTable({
           {days.map((day) => {
             const date = new Date(year, month - 1, parseInt(day.date.split("-")[2], 10));
             const dayOfWeek = date.getDay();
+            const holiday = isHoliday(date);
+            const nonBusinessDay = isWeekend(date) || holiday;
             return (
               <AttendanceRow
                 key={day.date}
                 day={day}
                 dayOfWeek={dayOfWeek}
-                isNonBusinessDay={isNonBusinessDay(date)}
-                isHoliday={isHoliday(date)}
+                isNonBusinessDay={nonBusinessDay}
+                isHoliday={holiday}
                 defaultWorkMinutes={defaultWorkMinutes}
                 taskSlotCount={effectiveSlotCount}
                 onUpdate={onUpdateDay}

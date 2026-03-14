@@ -29,8 +29,7 @@ export function MonthSettingsDialog({
 }: MonthSettingsDialogProps) {
   const t = useTranslations("attendanceTracker");
 
-  // ダイアログが開かれるたびにリセットするため key を使用
-  // ローカル状態は settings の値で初期化
+  // ローカル状態は settings の値で初期化（handleOpenChange でリセット）
   const [startTime, setStartTime] = useState(settings.defaultStartTime);
   const [endTime, setEndTime] = useState(settings.defaultEndTime);
   const [breakMinutes, setBreakMinutes] = useState(settings.defaultBreakMinutes);

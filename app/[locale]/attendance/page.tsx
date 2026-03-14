@@ -12,8 +12,11 @@ import {
   getOrCreateMonth,
   calcMonthlyTotal,
   collectTaskSuggestions,
+  getDefaultSettings,
+  getDaysInMonth,
   type AttendanceData,
   type MonthSettings,
+  type MonthlyAttendance,
 } from "@/lib/utils/attendance";
 
 // 勤怠管理ページ
@@ -49,14 +52,14 @@ export default function AttendancePage() {
   // クライアントサイドでのみ LocalStorage 読み込みと日付初期化
   useEffect(() => {
     const now = new Date();
-    const stored = loadAttendanceData();
+    const stored = loadAttendanceData() ?? { months: {} };
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+    // 初期表示月のデータを確実に生成
+    const ym = `${y}-${String(m).padStart(2, "0")}`;
+    getOrCreateMonth(stored, ym);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- 初回マウント時のみの初期化で意図的に使用
-    setState({
-      data: stored ?? { months: {} },
-      year: now.getFullYear(),
-      month: now.getMonth() + 1,
-      loaded: true,
-    });
+    setState({ data: stored, year: y, month: m, loaded: true });
   }, []);
 
   // データ変更時に保存（初回ロード完了後のみ）
@@ -72,46 +75,81 @@ export default function AttendancePage() {
   // 現在月のキー
   const yearMonth = `${year}-${String(month).padStart(2, "0")}`;
 
-  // 月データを確実に取得する
-  const ensureMonthData = useCallback(
-    (targetYearMonth: string): AttendanceData => {
-      if (data.months[targetYearMonth]) return data;
-      const newData: AttendanceData = { months: { ...data.months } };
-      getOrCreateMonth(newData, targetYearMonth);
-      return newData;
+  // 月データを useMemo で導出（存在しない月はデフォルト値を返す）
+  const currentMonth: MonthlyAttendance = useMemo(() => {
+    if (data.months[yearMonth]) return data.months[yearMonth];
+    return {
+      yearMonth,
+      settings: getDefaultSettings(),
+      days: getDaysInMonth(year, month),
+    };
+  }, [data, yearMonth, year, month]);
+
+  // 月切り替え時に月データを確保するヘルパー
+  const ensureMonthExists = useCallback(
+    (targetYearMonth: string) => {
+      setData((prev) => {
+        if (prev.months[targetYearMonth]) return prev;
+        const newData: AttendanceData = { months: { ...prev.months } };
+        getOrCreateMonth(newData, targetYearMonth);
+        return newData;
+      });
     },
-    [data]
+    [setData]
   );
 
-  if (loaded) {
-    const dataWithMonth = ensureMonthData(yearMonth);
-    if (dataWithMonth !== data) {
-      setData(dataWithMonth);
-    }
-  }
+  // 月データを確保してから更新するヘルパー
+  const updateMonthData = useCallback(
+    (updater: (monthData: MonthlyAttendance) => MonthlyAttendance) => {
+      setData((prev) => {
+        let ensured = prev;
+        if (!ensured.months[yearMonth]) {
+          ensured = { months: { ...ensured.months } };
+          getOrCreateMonth(ensured, yearMonth);
+        }
+        const monthData = ensured.months[yearMonth];
+        return {
+          months: {
+            ...ensured.months,
+            [yearMonth]: updater(monthData),
+          },
+        };
+      });
+    },
+    [setData, yearMonth]
+  );
 
   // オートコンプリート候補を全月データから収集
   const taskSuggestions = useMemo(() => collectTaskSuggestions(data), [data]);
 
-  if (!loaded) return null;
+  const summary = useMemo(
+    () => calcMonthlyTotal(currentMonth.days, currentMonth.settings),
+    [currentMonth]
+  );
 
-  const currentMonth = data.months[yearMonth]!;
+  if (!loaded) return null;
 
   // 月切り替え
   const handlePrevMonth = () => {
-    setState((prev) =>
-      prev.month === 1
-        ? { ...prev, year: prev.year - 1, month: 12 }
-        : { ...prev, month: prev.month - 1 }
-    );
+    setState((prev) => {
+      const newMonth = prev.month === 1 ? 12 : prev.month - 1;
+      const newYear = prev.month === 1 ? prev.year - 1 : prev.year;
+      return { ...prev, year: newYear, month: newMonth };
+    });
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+    ensureMonthExists(`${prevYear}-${String(prevMonth).padStart(2, "0")}`);
   };
 
   const handleNextMonth = () => {
-    setState((prev) =>
-      prev.month === 12
-        ? { ...prev, year: prev.year + 1, month: 1 }
-        : { ...prev, month: prev.month + 1 }
-    );
+    setState((prev) => {
+      const newMonth = prev.month === 12 ? 1 : prev.month + 1;
+      const newYear = prev.month === 12 ? prev.year + 1 : prev.year;
+      return { ...prev, year: newYear, month: newMonth };
+    });
+    const nextMonth = month === 12 ? 1 : month + 1;
+    const nextYear = month === 12 ? year + 1 : year;
+    ensureMonthExists(`${nextYear}-${String(nextMonth).padStart(2, "0")}`);
   };
 
   // 日データ更新（時刻・休憩フィールド）
@@ -120,53 +158,28 @@ export default function AttendancePage() {
     field: "startTime" | "endTime" | "breakMinutes",
     value: string | number | null
   ) => {
-    setData((prev) => {
-      const monthData = prev.months[yearMonth];
-      if (!monthData) return prev;
-      const newDays = monthData.days.map((d) =>
+    updateMonthData((monthData) => ({
+      ...monthData,
+      days: monthData.days.map((d) =>
         d.date === date ? { ...d, [field]: value } : d
-      );
-      return {
-        months: {
-          ...prev.months,
-          [yearMonth]: { ...monthData, days: newDays },
-        },
-      };
-    });
+      ),
+    }));
   };
 
   // タスク一覧更新
   const handleUpdateTasks = (date: string, tasks: string[]) => {
-    setData((prev) => {
-      const monthData = prev.months[yearMonth];
-      if (!monthData) return prev;
-      const newDays = monthData.days.map((d) =>
+    updateMonthData((monthData) => ({
+      ...monthData,
+      days: monthData.days.map((d) =>
         d.date === date ? { ...d, tasks } : d
-      );
-      return {
-        months: {
-          ...prev.months,
-          [yearMonth]: { ...monthData, days: newDays },
-        },
-      };
-    });
+      ),
+    }));
   };
 
   // 設定保存
   const handleSaveSettings = (settings: MonthSettings) => {
-    setData((prev) => {
-      const monthData = prev.months[yearMonth];
-      if (!monthData) return prev;
-      return {
-        months: {
-          ...prev.months,
-          [yearMonth]: { ...monthData, settings },
-        },
-      };
-    });
+    updateMonthData((monthData) => ({ ...monthData, settings }));
   };
-
-  const summary = calcMonthlyTotal(currentMonth.days, currentMonth.settings);
 
   return (
     <div className="flex flex-col h-[calc(100dvh-64px-48px)]">
