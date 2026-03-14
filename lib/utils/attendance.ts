@@ -1,0 +1,279 @@
+/**
+ * 勤怠管理 ビジネスロジック
+ */
+
+import JapaneseHolidays from "japanese-holidays";
+
+// 日次勤怠データ
+export interface DailyAttendance {
+  date: string; // "YYYY-MM-DD"
+  startTime: string | null; // "HH:mm" (null = 未入力)
+  endTime: string | null; // "HH:mm"
+  breakMinutes: number; // 休憩（分）、デフォルト60
+  tasks: string[]; // 作業タスク名一覧
+}
+
+// 月の設定
+export interface MonthSettings {
+  defaultStartTime: string; // "09:00"
+  defaultEndTime: string; // "18:00"
+  defaultBreakMinutes: number; // 60
+}
+
+// 月次勤怠データ
+export interface MonthlyAttendance {
+  yearMonth: string; // "YYYY-MM"
+  settings: MonthSettings;
+  days: DailyAttendance[];
+}
+
+// 全体データ
+export interface AttendanceData {
+  months: Record<string, MonthlyAttendance>;
+}
+
+const STORAGE_KEY = "necobox-attendance";
+
+/**
+ * 旧データ（note フィールド）からの移行
+ */
+function migrateDailyAttendance(day: Record<string, unknown>): DailyAttendance {
+  if (Array.isArray(day.tasks)) {
+    // TaskEntry 形式（{ task, status }）または string[] からの移行
+    const tasks = (day.tasks as unknown[]).map((t) =>
+      typeof t === "string" ? t : (t as { task?: string }).task ?? ""
+    ).filter(Boolean);
+    return {
+      date: day.date as string,
+      startTime: (day.startTime as string | null) ?? null,
+      endTime: (day.endTime as string | null) ?? null,
+      breakMinutes: typeof day.breakMinutes === "number" ? day.breakMinutes : 60,
+      tasks,
+    };
+  }
+  // 旧形式: note フィールドを tasks に変換
+  const note = typeof day.note === "string" ? day.note : "";
+  return {
+    date: day.date as string,
+    startTime: (day.startTime as string | null) ?? null,
+    endTime: (day.endTime as string | null) ?? null,
+    breakMinutes: typeof day.breakMinutes === "number" ? day.breakMinutes : 60,
+    tasks: note ? [note] : [],
+  };
+}
+
+/**
+ * LocalStorageから勤怠データを読み込み（旧形式からの移行対応）
+ */
+export function loadAttendanceData(): AttendanceData | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { months: Record<string, { yearMonth: string; settings: MonthSettings; days: Record<string, unknown>[] }> };
+    // 各日のデータを移行
+    for (const key of Object.keys(parsed.months)) {
+      const month = parsed.months[key];
+      month.days = month.days.map(migrateDailyAttendance) as unknown as Record<string, unknown>[];
+    }
+    return parsed as unknown as AttendanceData;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * LocalStorageに勤怠データを保存
+ */
+export function saveAttendanceData(data: AttendanceData): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // LocalStorage容量超過等のエラーは握りつぶす（ブラウザ環境での制約）
+  }
+}
+
+/**
+ * 勤務時間を分単位で計算
+ * 日跨ぎ対応: 終了時刻 < 開始時刻 なら +24h
+ */
+export function calcWorkMinutes(
+  startTime: string,
+  endTime: string,
+  breakMinutes: number
+): number {
+  const [sh, sm] = startTime.split(":").map(Number);
+  const [eh, em] = endTime.split(":").map(Number);
+  const startTotal = sh * 60 + sm;
+  let endTotal = eh * 60 + em;
+  if (endTotal < startTotal) {
+    endTotal += 24 * 60;
+  }
+  const work = endTotal - startTotal - breakMinutes;
+  return Math.max(0, work);
+}
+
+/**
+ * 分を "H:mm" 形式にフォーマット
+ */
+export function formatWorkTime(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h}:${String(m).padStart(2, "0")}`;
+}
+
+/**
+ * デフォルト設定を返す
+ */
+export function getDefaultSettings(): MonthSettings {
+  return {
+    defaultStartTime: "09:00",
+    defaultEndTime: "18:00",
+    defaultBreakMinutes: 60,
+  };
+}
+
+/**
+ * 土日判定
+ */
+export function isWeekend(date: Date): boolean {
+  const day = date.getDay();
+  return day === 0 || day === 6;
+}
+
+/**
+ * 日本の祝日判定（japanese-holidays ライブラリを使用）
+ * 振替休日・国民の休日・春分/秋分の日を含む正確な判定
+ */
+export function isHoliday(date: Date): boolean {
+  return JapaneseHolidays.isHoliday(date) !== undefined;
+}
+
+/**
+ * 非営業日判定（土日 or 祝日）
+ */
+export function isNonBusinessDay(date: Date): boolean {
+  return isWeekend(date) || isHoliday(date);
+}
+
+/**
+ * 月の日数分の初期データを生成
+ */
+export function getDaysInMonth(
+  year: number,
+  month: number
+): DailyAttendance[] {
+  const daysCount = new Date(year, month, 0).getDate();
+  const days: DailyAttendance[] = [];
+  for (let d = 1; d <= daysCount; d++) {
+    const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    days.push({
+      date: dateStr,
+      startTime: null,
+      endTime: null,
+      breakMinutes: 60,
+      tasks: [],
+    });
+  }
+  return days;
+}
+
+/**
+ * 月合計を計算
+ * - 入力済み日: 実際の値で計算
+ * - 未入力の平日: 標準勤務時間で計算
+ * - 土日祝: 入力がある場合のみ加算（未入力は0）
+ */
+export function calcMonthlyTotal(
+  days: DailyAttendance[],
+  settings: MonthSettings
+): { businessDays: number; enteredDays: number; totalMinutes: number } {
+  let businessDays = 0;
+  let enteredDays = 0;
+  let totalMinutes = 0;
+
+  const defaultMinutes = calcWorkMinutes(
+    settings.defaultStartTime,
+    settings.defaultEndTime,
+    settings.defaultBreakMinutes
+  );
+
+  for (const day of days) {
+    const date = new Date(day.date + "T00:00:00");
+    const nonBusiness = isNonBusinessDay(date);
+    const hasEntry = day.startTime !== null && day.endTime !== null;
+
+    if (!nonBusiness) {
+      businessDays++;
+    }
+
+    if (hasEntry) {
+      enteredDays++;
+      totalMinutes += calcWorkMinutes(
+        day.startTime!,
+        day.endTime!,
+        day.breakMinutes
+      );
+    } else if (!nonBusiness) {
+      totalMinutes += defaultMinutes;
+    }
+  }
+
+  return { businessDays, enteredDays, totalMinutes };
+}
+
+/**
+ * 全月データからタスク名の候補一覧を収集
+ */
+export function collectTaskSuggestions(data: AttendanceData): string[] {
+  const set = new Set<string>();
+  for (const month of Object.values(data.months)) {
+    for (const day of month.days) {
+      for (const task of day.tasks) {
+        if (task) set.add(task);
+      }
+    }
+  }
+  return [...set].sort();
+}
+
+/**
+ * 月内の最大タスク数を返す（最低1）
+ */
+export function getMaxTaskCount(days: DailyAttendance[]): number {
+  let max = 0;
+  for (const day of days) {
+    if (day.tasks.length > max) max = day.tasks.length;
+  }
+  return Math.max(1, max);
+}
+
+/**
+ * 月データを取得、なければ前月設定を引き継いで生成
+ */
+export function getOrCreateMonth(
+  data: AttendanceData,
+  yearMonth: string
+): MonthlyAttendance {
+  if (data.months[yearMonth]) {
+    return data.months[yearMonth];
+  }
+
+  const [year, month] = yearMonth.split("-").map(Number);
+
+  // 前月の設定を探す
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const prevYear = month === 1 ? year - 1 : year;
+  const prevKey = `${prevYear}-${String(prevMonth).padStart(2, "0")}`;
+  const prevSettings = data.months[prevKey]?.settings ?? getDefaultSettings();
+
+  const newMonth: MonthlyAttendance = {
+    yearMonth,
+    settings: { ...prevSettings },
+    days: getDaysInMonth(year, month),
+  };
+
+  data.months[yearMonth] = newMonth;
+  return newMonth;
+}

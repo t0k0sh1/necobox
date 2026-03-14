@@ -33,6 +33,7 @@
     "cron-parser": "^5.5.0",
     "diff": "^8.0.3",
     "encoding-japanese": "^2.2.0",
+    "japanese-holidays": "^1.0.10",
     "js-md5": "^0.8.3",
     "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
@@ -55,7 +56,11 @@
   },
   "pnpm": {
     "overrides": {
-      "diff": "^8.0.3"
+      "diff": "^8.0.3",
+      "ajv": "~6.14.0",
+      "flatted": ">=3.4.0",
+      "minimatch": ">=10.2.3",
+      "underscore": ">=1.13.8"
     },
     "peerDependencyRules": {
       "ignoreMissing": [
@@ -76,6 +81,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/japanese-holidays": "^1.0.3",
     "@types/xml2js": "^0.4.14",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
