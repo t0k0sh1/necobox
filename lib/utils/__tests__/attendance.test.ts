@@ -12,6 +12,9 @@ import {
   saveAttendanceData,
   collectTaskSuggestions,
   getMaxTaskCount,
+  aggregateTaskCounts,
+  getDailyTaskList,
+  getTaskPeriods,
   exportAttendanceData,
   validateAttendanceExportData,
   importAttendanceJson,
@@ -308,6 +311,103 @@ describe("getMaxTaskCount", () => {
       { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
     ];
     expect(getMaxTaskCount(days)).toBe(1);
+  });
+});
+
+describe("aggregateTaskCounts", () => {
+  it("タスク名ごとの作業日数を集計し日数降順で返す", () => {
+    const days: DailyAttendance[] = [
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発", "レビュー"] },
+      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"] },
+      { date: "2026-03-03", startTime: null, endTime: null, breakMinutes: 60, tasks: ["テスト", "レビュー"] },
+    ];
+    const result = aggregateTaskCounts(days);
+    expect(result).toEqual([
+      { task: "開発", days: 2 },
+      { task: "レビュー", days: 2 },
+      { task: "テスト", days: 1 },
+    ]);
+  });
+
+  it("同じ日に同じタスクが複数あっても1日としてカウントする", () => {
+    const days: DailyAttendance[] = [
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発", "開発"] },
+    ];
+    const result = aggregateTaskCounts(days);
+    expect(result).toEqual([{ task: "開発", days: 1 }]);
+  });
+
+  it("タスクがない場合は空配列を返す", () => {
+    const days: DailyAttendance[] = [
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
+    ];
+    expect(aggregateTaskCounts(days)).toEqual([]);
+  });
+});
+
+describe("getDailyTaskList", () => {
+  it("タスクがある日のみ抽出する", () => {
+    const days: DailyAttendance[] = [
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"] },
+      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
+      { date: "2026-03-03", startTime: null, endTime: null, breakMinutes: 60, tasks: ["テスト", "レビュー"] },
+    ];
+    const result = getDailyTaskList(days);
+    expect(result).toEqual([
+      { date: "2026-03-01", tasks: ["開発"] },
+      { date: "2026-03-03", tasks: ["テスト", "レビュー"] },
+    ]);
+  });
+
+  it("タスクがない場合は空配列を返す", () => {
+    const days: DailyAttendance[] = [
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
+    ];
+    expect(getDailyTaskList(days)).toEqual([]);
+  });
+
+  it("空文字のタスクはフィルタリングされる", () => {
+    const days: DailyAttendance[] = [
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["", "開発"] },
+      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: [""] },
+    ];
+    const result = getDailyTaskList(days);
+    expect(result).toEqual([
+      { date: "2026-03-01", tasks: ["開発"] },
+    ]);
+  });
+});
+
+describe("getTaskPeriods", () => {
+  it("タスクごとの開始日・終了日・出現日数を開始日昇順で返す", () => {
+    const days: DailyAttendance[] = [
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"] },
+      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: ["レビュー"] },
+      { date: "2026-03-03", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発", "レビュー"] },
+      { date: "2026-03-05", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"] },
+    ];
+    const result = getTaskPeriods(days);
+    expect(result).toEqual([
+      { task: "開発", startDate: "2026-03-01", endDate: "2026-03-05", days: 3 },
+      { task: "レビュー", startDate: "2026-03-02", endDate: "2026-03-03", days: 2 },
+    ]);
+  });
+
+  it("1日のみのタスクは開始日と終了日が同じになる", () => {
+    const days: DailyAttendance[] = [
+      { date: "2026-03-10", startTime: null, endTime: null, breakMinutes: 60, tasks: ["ミーティング"] },
+    ];
+    const result = getTaskPeriods(days);
+    expect(result).toEqual([
+      { task: "ミーティング", startDate: "2026-03-10", endDate: "2026-03-10", days: 1 },
+    ]);
+  });
+
+  it("タスクがない場合は空配列を返す", () => {
+    const days: DailyAttendance[] = [
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
+    ];
+    expect(getTaskPeriods(days)).toEqual([]);
   });
 });
 

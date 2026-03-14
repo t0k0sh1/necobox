@@ -1565,6 +1565,15 @@
     "importConfirmTitle": "Import Attendance Data",
     "importConfirmDescription": "This will overwrite all existing data. This action cannot be undone.",
     "importConfirm": "Import",
-    "importFailed": "Failed to import. The file may be invalid."
+    "importFailed": "Failed to import. The file may be invalid.",
+    "taskSummary": "Work Summary",
+    "taskSummaryCount": "Task Summary",
+    "taskSummaryDaily": "Daily Tasks",
+    "taskSummaryPeriod": "Task Periods",
+    "taskSummaryEmpty": "No tasks recorded this month.",
+    "taskSummaryTask": "Task",
+    "taskSummaryDays": "Days",
+    "taskSummaryDate": "Date",
+    "taskSummaryPeriodRange": "Period"
   }
 }

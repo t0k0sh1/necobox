@@ -1565,6 +1565,15 @@
     "importConfirmTitle": "勤怠データのインポート",
     "importConfirmDescription": "既存の勤怠データがすべて上書きされます。この操作は元に戻せません。続行しますか？",
     "importConfirm": "インポート",
-    "importFailed": "インポートに失敗しました。ファイルが不正な可能性があります。"
+    "importFailed": "インポートに失敗しました。ファイルが不正な可能性があります。",
+    "taskSummary": "作業内容サマリ",
+    "taskSummaryCount": "タスク集計",
+    "taskSummaryDaily": "日別一覧",
+    "taskSummaryPeriod": "タスク期間",
+    "taskSummaryEmpty": "今月のタスクはありません。",
+    "taskSummaryTask": "タスク",
+    "taskSummaryDays": "日数",
+    "taskSummaryDate": "日付",
+    "taskSummaryPeriodRange": "期間"
   }
 }
