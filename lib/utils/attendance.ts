@@ -37,7 +37,7 @@ const STORAGE_KEY = "necobox-attendance";
 /**
  * 旧データ（note フィールド）からの移行
  */
-function migrateDailyAttendance(day: Record<string, unknown>): DailyAttendance {
+export function migrateDailyAttendance(day: Record<string, unknown>): DailyAttendance {
   if (Array.isArray(day.tasks)) {
     // TaskEntry 形式（{ task, status }）または string[] からの移行
     const tasks = (day.tasks as unknown[]).map((t) =>
@@ -177,6 +177,104 @@ export function getDaysInMonth(
     });
   }
   return days;
+}
+
+// エクスポートデータ型
+export interface AttendanceExportData {
+  version: 1;
+  exportedAt: string;
+  data: AttendanceData;
+}
+
+const MAX_IMPORT_SIZE = 10 * 1024 * 1024; // 10MB
+
+/**
+ * エクスポートデータのバリデーション
+ */
+export function validateAttendanceExportData(data: unknown): data is AttendanceExportData {
+  if (typeof data !== "object" || data === null) return false;
+  const obj = data as Record<string, unknown>;
+  if (obj.version !== 1) return false;
+  if (typeof obj.exportedAt !== "string") return false;
+  if (typeof obj.data !== "object" || obj.data === null) return false;
+  const inner = obj.data as Record<string, unknown>;
+  if (typeof inner.months !== "object" || inner.months === null) return false;
+  const months = inner.months as Record<string, unknown>;
+  for (const key of Object.keys(months)) {
+    const month = months[key] as Record<string, unknown>;
+    if (typeof month !== "object" || month === null) return false;
+    if (typeof month.yearMonth !== "string") return false;
+    if (typeof month.settings !== "object" || month.settings === null) return false;
+    const s = month.settings as Record<string, unknown>;
+    if (typeof s.defaultStartTime !== "string") return false;
+    if (typeof s.defaultEndTime !== "string") return false;
+    if (typeof s.defaultBreakMinutes !== "number") return false;
+    if (!Array.isArray(month.days)) return false;
+    for (const day of month.days as unknown[]) {
+      if (typeof day !== "object" || day === null) return false;
+      const d = day as Record<string, unknown>;
+      if (typeof d.date !== "string") return false;
+      if (d.startTime !== null && typeof d.startTime !== "string") return false;
+      if (d.endTime !== null && typeof d.endTime !== "string") return false;
+      // breakMinutes: number が望ましいが、旧形式では欠落しうるのでマイグレーションに任せる
+      if (d.breakMinutes !== undefined && typeof d.breakMinutes !== "number") return false;
+      // tasks: 旧形式（note, TaskEntry[]）もマイグレーションで対応するため、配列またはundefinedを許容
+      if (d.tasks !== undefined && !Array.isArray(d.tasks)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * 勤怠データをJSON文字列にエクスポート
+ */
+export function exportAttendanceData(data: AttendanceData): string {
+  const exportData: AttendanceExportData = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    data,
+  };
+  return JSON.stringify(exportData, null, 2);
+}
+
+/**
+ * 勤怠データをJSONファイルとしてダウンロード
+ */
+export function downloadAttendanceJson(data: AttendanceData): void {
+  const json = exportAttendanceData(data);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `attendance-${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * JSONファイルから勤怠データをインポート
+ * 失敗時は null を返す
+ */
+export async function importAttendanceJson(file: File): Promise<AttendanceData | null> {
+  if (file.size > MAX_IMPORT_SIZE) return null;
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    if (!validateAttendanceExportData(parsed)) return null;
+    // 各日のデータをマイグレーション（旧形式対応）
+    const importedData = parsed.data;
+    for (const key of Object.keys(importedData.months)) {
+      const month = importedData.months[key];
+      month.days = (month.days as unknown as Record<string, unknown>[]).map(migrateDailyAttendance);
+    }
+    return importedData;
+  } catch {
+    return null;
+  }
 }
 
 /**
