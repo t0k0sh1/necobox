@@ -47,6 +47,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.1.4
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@types/japanese-holidays':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@zxcvbn-ts/core':
         specifier: ^3.0.4
         version: 3.0.4
@@ -74,6 +77,9 @@ importers:
       encoding-japanese:
         specifier: ^2.2.0
         version: 2.2.0
+      japanese-holidays:
+        specifier: ^1.0.10
+        version: 1.0.10
       js-md5:
         specifier: ^0.8.3
         version: 0.8.3
@@ -2103,6 +2109,9 @@ packages:
   '@types/istanbul-reports@3.0.4':
     resolution: {integrity: sha512-pk2B1NWalF9toCRu6gjBzR69syFjP4Od8WRAX+0mmf9lAjCRicLOWc+ZrxZHx/0XRjotgkF9t6iaMJ+aXcOdZQ==}
 
+  '@types/japanese-holidays@1.0.3':
+    resolution: {integrity: sha512-IfAVHolZJ6xGC9S2D9+VYphDfq0tuZEe/nj4vB7oX14ZzvwGSO2UHqDKJfkcQBpd3WV8CAlmbb2YI2QE3E/ddQ==}
+
   '@types/jest@30.0.0':
     resolution: {integrity: sha512-XTYugzhuwqWjws0CVz8QpM36+T+Dz5mTEBKhNs/esGLnCIlGdRy+Dq78NRjd7ls7r8BC8ZRMOrKlkO1hU0JOwA==}
 
@@ -3406,6 +3415,9 @@ packages:
 
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
+
+  japanese-holidays@1.0.10:
+    resolution: {integrity: sha512-OiK5801c432ljumKnQ65TGw6HSEuetU0Fvlz1/BPPPqwxQZ2kPeCy3XHO6q5nf+6zJqIf1fqcpQjWp+/SimO6Q==}
 
   jest-changed-files@30.2.0:
     resolution: {integrity: sha512-L8lR1ChrRnSdfeOvTrwZMlnWV8G/LLjQ0nG9MBclwWZidA2N5FviRki0Bvh20WRMOX31/JYvzdqTJrk5oBdydQ==}
@@ -6692,6 +6704,8 @@ snapshots:
     dependencies:
       '@types/istanbul-lib-report': 3.0.3
 
+  '@types/japanese-holidays@1.0.3': {}
+
   '@types/jest@30.0.0':
     dependencies:
       expect: 30.2.0
@@ -8167,6 +8181,8 @@ snapshots:
       '@isaacs/cliui': 8.0.2
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
+
+  japanese-holidays@1.0.10: {}
 
   jest-changed-files@30.2.0:
     dependencies:

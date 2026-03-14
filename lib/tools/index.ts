@@ -13,6 +13,7 @@ export type IconName =
   | "Calendar"
   | "CalendarClock"
   | "CheckSquare"
+  | "ClipboardList"
   | "Clock"
   | "Code"
   | "Dices"
@@ -253,6 +254,13 @@ export const TOOLS: ToolDefinition[] = [
     icon: "CheckSquare",
     category: "tasks",
     i18nKey: "matrixTodo",
+  },
+  {
+    id: "attendance",
+    path: "/attendance",
+    icon: "ClipboardList",
+    category: "tasks",
+    i18nKey: "attendanceTracker",
   },
   // Network（ネットワーク・セキュリティ）
   {
