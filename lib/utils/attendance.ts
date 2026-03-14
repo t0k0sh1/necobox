@@ -360,8 +360,8 @@ export function aggregateTaskCounts(days: DailyAttendance[]): { task: string; da
  */
 export function getDailyTaskList(days: DailyAttendance[]): { date: string; tasks: string[] }[] {
   return days
-    .filter((day) => day.tasks.length > 0)
-    .map((day) => ({ date: day.date, tasks: [...day.tasks] }));
+    .map((day) => ({ date: day.date, tasks: day.tasks.filter(Boolean) }))
+    .filter((day) => day.tasks.length > 0);
 }
 
 /**

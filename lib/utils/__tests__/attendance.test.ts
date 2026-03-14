@@ -365,6 +365,17 @@ describe("getDailyTaskList", () => {
     ];
     expect(getDailyTaskList(days)).toEqual([]);
   });
+
+  it("空文字のタスクはフィルタリングされる", () => {
+    const days: DailyAttendance[] = [
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["", "開発"] },
+      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: [""] },
+    ];
+    const result = getDailyTaskList(days);
+    expect(result).toEqual([
+      { date: "2026-03-01", tasks: ["開発"] },
+    ]);
+  });
 });
 
 describe("getTaskPeriods", () => {

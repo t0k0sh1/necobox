@@ -14,15 +14,7 @@ interface TaskSummaryProps {
   days: DailyAttendance[];
 }
 
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-function formatDateWithDay(dateStr: string): string {
-  const date = new Date(dateStr + "T00:00:00");
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-  const dow = DAY_NAMES[date.getDay()];
-  return `${m}/${d} (${dow})`;
-}
+const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 function formatPeriodDate(dateStr: string): string {
   const parts = dateStr.split("-");
@@ -31,6 +23,14 @@ function formatPeriodDate(dateStr: string): string {
 
 export function TaskSummary({ days }: TaskSummaryProps) {
   const t = useTranslations("attendanceTracker");
+
+  const formatDateWithDay = (dateStr: string): string => {
+    const date = new Date(dateStr + "T00:00:00");
+    const m = date.getMonth() + 1;
+    const d = date.getDate();
+    const dow = t(DAY_KEYS[date.getDay()]);
+    return `${m}/${d} (${dow})`;
+  };
 
   const taskCounts = useMemo(() => aggregateTaskCounts(days), [days]);
   const dailyTasks = useMemo(() => getDailyTaskList(days), [days]);
