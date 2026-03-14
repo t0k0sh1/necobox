@@ -337,6 +337,59 @@ export function collectTaskSuggestions(data: AttendanceData): string[] {
 }
 
 /**
+ * タスク集計: タスク名ごとの作業日数（日数降順）
+ */
+export function aggregateTaskCounts(days: DailyAttendance[]): { task: string; days: number }[] {
+  const map = new Map<string, number>();
+  for (const day of days) {
+    const seen = new Set<string>();
+    for (const task of day.tasks) {
+      if (task && !seen.has(task)) {
+        seen.add(task);
+        map.set(task, (map.get(task) ?? 0) + 1);
+      }
+    }
+  }
+  return [...map.entries()]
+    .map(([task, count]) => ({ task, days: count }))
+    .sort((a, b) => b.days - a.days);
+}
+
+/**
+ * 日別一覧: タスクがある日のみ抽出
+ */
+export function getDailyTaskList(days: DailyAttendance[]): { date: string; tasks: string[] }[] {
+  return days
+    .filter((day) => day.tasks.length > 0)
+    .map((day) => ({ date: day.date, tasks: [...day.tasks] }));
+}
+
+/**
+ * タスク期間: タスクごとの開始日〜終了日・出現日数（開始日昇順）
+ */
+export function getTaskPeriods(days: DailyAttendance[]): { task: string; startDate: string; endDate: string; days: number }[] {
+  const map = new Map<string, { startDate: string; endDate: string; days: number }>();
+  for (const day of days) {
+    const seen = new Set<string>();
+    for (const task of day.tasks) {
+      if (!task || seen.has(task)) continue;
+      seen.add(task);
+      const existing = map.get(task);
+      if (existing) {
+        if (day.date < existing.startDate) existing.startDate = day.date;
+        if (day.date > existing.endDate) existing.endDate = day.date;
+        existing.days++;
+      } else {
+        map.set(task, { startDate: day.date, endDate: day.date, days: 1 });
+      }
+    }
+  }
+  return [...map.entries()]
+    .map(([task, v]) => ({ task, ...v }))
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
+}
+
+/**
  * 月内の最大タスク数を返す（最低1）
  */
 export function getMaxTaskCount(days: DailyAttendance[]): number {

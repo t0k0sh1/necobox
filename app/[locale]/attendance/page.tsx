@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { AttendanceHeader } from "@/app/components/attendance/AttendanceHeader";
 import { AttendanceTable } from "@/app/components/attendance/AttendanceTable";
+import { TaskSummary } from "@/app/components/attendance/TaskSummary";
 import { MonthSettingsDialog } from "@/app/components/attendance/MonthSettingsDialog";
 import {
   AlertDialog,
@@ -222,7 +223,7 @@ export default function AttendancePage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-64px-48px)]">
+    <div className="flex flex-col h-[calc(100dvh-64px-48px)] overflow-y-auto">
       <Breadcrumbs items={[{ label: t("breadcrumb") }]} />
       <div className="container mx-auto px-4">
         <AttendanceHeader
@@ -236,7 +237,7 @@ export default function AttendancePage() {
           onOpenSettings={() => setSettingsOpen(true)}
         />
       </div>
-      <div className="flex-1 overflow-x-auto overflow-y-auto container mx-auto px-4">
+      <div className="overflow-x-auto container mx-auto px-4">
         <AttendanceTable
           days={currentMonth.days}
           settings={currentMonth.settings}
@@ -247,6 +248,7 @@ export default function AttendancePage() {
           onUpdateTasks={handleUpdateTasks}
         />
       </div>
+      <TaskSummary days={currentMonth.days} />
       <MonthSettingsDialog
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
