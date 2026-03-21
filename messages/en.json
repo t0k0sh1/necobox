@@ -1574,6 +1574,8 @@
     "taskSummaryTask": "Task",
     "taskSummaryDays": "Days",
     "taskSummaryDate": "Date",
-    "taskSummaryPeriodRange": "Period"
+    "taskSummaryPeriodRange": "Period",
+    "taskSummaryCopy": "Copy",
+    "taskSummaryCopied": "Copied"
   }
 }

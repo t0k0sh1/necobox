@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CopyButton } from "@/app/components/CopyButton";
 import {
   aggregateTaskCounts,
   getDailyTaskList,
@@ -23,6 +24,7 @@ function formatPeriodDate(dateStr: string): string {
 
 export function TaskSummary({ days }: TaskSummaryProps) {
   const t = useTranslations("attendanceTracker");
+  const [activeTab, setActiveTab] = useState("count");
 
   const formatDateWithDay = (dateStr: string): string => {
     const date = new Date(dateStr + "T00:00:00");
@@ -38,9 +40,35 @@ export function TaskSummary({ days }: TaskSummaryProps) {
 
   const hasAnyTask = taskCounts.length > 0;
 
+  const copyText = useMemo((): string => {
+    if (activeTab === "count") {
+      const header = `${t("taskSummaryTask")}\t${t("taskSummaryDays")}`;
+      const rows = taskCounts.map((item) => `${item.task}\t${item.days}`);
+      return [header, ...rows].join("\n");
+    }
+    if (activeTab === "daily") {
+      const header = `${t("taskSummaryDate")}\t${t("taskSummaryTask")}`;
+      const rows = dailyTasks.map(
+        (item) => `${formatDateWithDay(item.date)}\t${item.tasks.join(", ")}`
+      );
+      return [header, ...rows].join("\n");
+    }
+    // period
+    const header = `${t("taskSummaryTask")}\t${t("taskSummaryPeriodRange")}\t${t("taskSummaryDays")}`;
+    const rows = taskPeriods.map((item) => {
+      const period =
+        item.startDate === item.endDate
+          ? formatPeriodDate(item.startDate)
+          : `${formatPeriodDate(item.startDate)} 〜 ${formatPeriodDate(item.endDate)}`;
+      return `${item.task}\t${period}\t${item.days}`;
+    });
+    return [header, ...rows].join("\n");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, taskCounts, dailyTasks, taskPeriods, t]);
+
   return (
     <div className="container mx-auto px-4 py-4">
-      <Tabs defaultValue="count">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex items-center gap-3 mb-3">
           <h2 className="text-sm font-semibold shrink-0">{t("taskSummary")}</h2>
           <TabsList className="h-8">
@@ -54,6 +82,14 @@ export function TaskSummary({ days }: TaskSummaryProps) {
               {t("taskSummaryPeriod")}
             </TabsTrigger>
           </TabsList>
+          {hasAnyTask && (
+            <CopyButton
+              text={copyText}
+              label={t("taskSummaryCopy")}
+              copiedLabel={t("taskSummaryCopied")}
+              className="h-7 text-xs"
+            />
+          )}
         </div>
 
         {!hasAnyTask ? (
