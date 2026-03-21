@@ -1574,6 +1574,8 @@
     "taskSummaryTask": "タスク",
     "taskSummaryDays": "日数",
     "taskSummaryDate": "日付",
-    "taskSummaryPeriodRange": "期間"
+    "taskSummaryPeriodRange": "期間",
+    "taskSummaryCopy": "コピー",
+    "taskSummaryCopied": "コピー済み"
   }
 }
