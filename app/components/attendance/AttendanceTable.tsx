@@ -20,6 +20,9 @@ interface AttendanceTableProps {
   year: number;
   month: number;
   taskSuggestions: string[];
+  checkboxLabel: string;
+  onUpdateCheckboxLabel: (label: string) => void;
+  onUpdateChecked: (date: string, checked: boolean) => void;
   onUpdateDay: (
     date: string,
     field: "startTime" | "endTime" | "breakMinutes",
@@ -35,6 +38,9 @@ export function AttendanceTable({
   year,
   month,
   taskSuggestions,
+  checkboxLabel,
+  onUpdateCheckboxLabel,
+  onUpdateChecked,
   onUpdateDay,
   onUpdateTasks,
 }: AttendanceTableProps) {
@@ -46,8 +52,8 @@ export function AttendanceTable({
     settings.defaultBreakMinutes
   );
 
-  // データ内の最大タスク数（最低5）を初期値にし、+ボタンで増やせる
-  const dataMax = Math.max(5, getMaxTaskCount(days));
+  // データ内の最大タスク数（最低3）を初期値にし、+ボタンで増やせる
+  const dataMax = Math.max(3, getMaxTaskCount(days));
   const [taskSlotCount, setTaskSlotCount] = useState(dataMax);
   // データが増えたら自動追従
   const effectiveSlotCount = Math.max(taskSlotCount, dataMax);
@@ -79,6 +85,15 @@ export function AttendanceTable({
             </th>
             <th className="px-1 py-0.5 text-center whitespace-nowrap">
               {t("workTime")}
+            </th>
+            <th className="px-0.5 py-0.5 text-center whitespace-nowrap">
+              <input
+                type="text"
+                className="h-5 w-16 text-xs border rounded px-0.5 bg-background text-center"
+                placeholder={t("checkboxLabel")}
+                value={checkboxLabel}
+                onChange={(e) => onUpdateCheckboxLabel(e.target.value)}
+              />
             </th>
             {Array.from({ length: effectiveSlotCount }, (_, i) => (
               <th key={`task-header-${i}`} className="px-0.5 py-0.5 text-center whitespace-nowrap">
@@ -114,6 +129,7 @@ export function AttendanceTable({
                 defaultWorkMinutes={defaultWorkMinutes}
                 taskSlotCount={effectiveSlotCount}
                 onUpdate={onUpdateDay}
+                onUpdateChecked={onUpdateChecked}
                 onUpdateTasks={onUpdateTasks}
               />
             );
