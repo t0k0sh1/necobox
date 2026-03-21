@@ -49,6 +49,7 @@ export function MonthSettingsDialog({
       defaultStartTime: startTime,
       defaultEndTime: endTime,
       defaultBreakMinutes: breakMinutes,
+      checkboxLabel: settings.checkboxLabel,
     });
     onOpenChange(false);
   };

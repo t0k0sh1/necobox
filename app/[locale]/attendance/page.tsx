@@ -175,6 +175,24 @@ export default function AttendancePage() {
     }));
   };
 
+  // チェックボックス更新
+  const handleUpdateChecked = (date: string, checked: boolean) => {
+    updateMonthData((monthData) => ({
+      ...monthData,
+      days: monthData.days.map((d) =>
+        d.date === date ? { ...d, checked } : d
+      ),
+    }));
+  };
+
+  // チェックボックスラベル更新
+  const handleUpdateCheckboxLabel = (label: string) => {
+    updateMonthData((monthData) => ({
+      ...monthData,
+      settings: { ...monthData.settings, checkboxLabel: label },
+    }));
+  };
+
   // タスク一覧更新
   const handleUpdateTasks = (date: string, tasks: string[]) => {
     updateMonthData((monthData) => ({
@@ -244,6 +262,9 @@ export default function AttendancePage() {
           year={year}
           month={month}
           taskSuggestions={taskSuggestions}
+          checkboxLabel={currentMonth.settings.checkboxLabel}
+          onUpdateCheckboxLabel={handleUpdateCheckboxLabel}
+          onUpdateChecked={handleUpdateChecked}
           onUpdateDay={handleUpdateDay}
           onUpdateTasks={handleUpdateTasks}
         />

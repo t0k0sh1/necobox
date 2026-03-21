@@ -10,6 +10,7 @@ export interface DailyAttendance {
   startTime: string | null; // "HH:mm" (null = 未入力)
   endTime: string | null; // "HH:mm"
   breakMinutes: number; // 休憩（分）、デフォルト60
+  checked: boolean; // チェックボックス状態
   tasks: string[]; // 作業タスク名一覧
 }
 
@@ -18,6 +19,7 @@ export interface MonthSettings {
   defaultStartTime: string; // "09:00"
   defaultEndTime: string; // "18:00"
   defaultBreakMinutes: number; // 60
+  checkboxLabel: string; // チェックボックス列のラベル
 }
 
 // 月次勤怠データ
@@ -48,6 +50,7 @@ export function migrateDailyAttendance(day: Record<string, unknown>): DailyAtten
       startTime: (day.startTime as string | null) ?? null,
       endTime: (day.endTime as string | null) ?? null,
       breakMinutes: typeof day.breakMinutes === "number" ? day.breakMinutes : 60,
+      checked: typeof day.checked === "boolean" ? day.checked : false,
       tasks,
     };
   }
@@ -58,6 +61,7 @@ export function migrateDailyAttendance(day: Record<string, unknown>): DailyAtten
     startTime: (day.startTime as string | null) ?? null,
     endTime: (day.endTime as string | null) ?? null,
     breakMinutes: typeof day.breakMinutes === "number" ? day.breakMinutes : 60,
+    checked: typeof day.checked === "boolean" ? day.checked : false,
     tasks: note ? [note] : [],
   };
 }
@@ -75,6 +79,10 @@ export function loadAttendanceData(): AttendanceData | null {
     for (const key of Object.keys(parsed.months)) {
       const month = parsed.months[key];
       month.days = month.days.map(migrateDailyAttendance) as unknown as Record<string, unknown>[];
+      // checkboxLabel がない旧データを補完
+      if (typeof month.settings.checkboxLabel !== "string") {
+        month.settings.checkboxLabel = "";
+      }
     }
     return parsed as unknown as AttendanceData;
   } catch {
@@ -131,6 +139,7 @@ export function getDefaultSettings(): MonthSettings {
     defaultStartTime: "09:00",
     defaultEndTime: "18:00",
     defaultBreakMinutes: 60,
+    checkboxLabel: "",
   };
 }
 
@@ -173,6 +182,7 @@ export function getDaysInMonth(
       startTime: null,
       endTime: null,
       breakMinutes: 60,
+      checked: false,
       tasks: [],
     });
   }
@@ -270,6 +280,10 @@ export async function importAttendanceJson(file: File): Promise<AttendanceData |
     for (const key of Object.keys(importedData.months)) {
       const month = importedData.months[key];
       month.days = (month.days as unknown as Record<string, unknown>[]).map(migrateDailyAttendance);
+      // checkboxLabel がない旧データを補完
+      if (typeof month.settings.checkboxLabel !== "string") {
+        month.settings.checkboxLabel = "";
+      }
     }
     return importedData;
   } catch {

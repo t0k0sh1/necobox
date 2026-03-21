@@ -23,6 +23,7 @@ interface AttendanceRowProps {
     field: "startTime" | "endTime" | "breakMinutes",
     value: string | number | null
   ) => void;
+  onUpdateChecked: (date: string, checked: boolean) => void;
   onUpdateTasks: (date: string, tasks: string[]) => void;
 }
 
@@ -56,6 +57,7 @@ export function AttendanceRow({
   defaultWorkMinutes,
   taskSlotCount,
   onUpdate,
+  onUpdateChecked,
   onUpdateTasks,
 }: AttendanceRowProps) {
   const t = useTranslations("attendanceTracker");
@@ -153,6 +155,15 @@ export function AttendanceRow({
         <span className={cn(isDefault && "italic text-muted-foreground")}>
           {workTimeDisplay}
         </span>
+      </td>
+      {/* チェックボックス */}
+      <td className="px-0.5 py-0.5 text-center">
+        <input
+          type="checkbox"
+          className="h-3.5 w-3.5"
+          checked={day.checked}
+          onChange={(e) => onUpdateChecked(day.date, e.target.checked)}
+        />
       </td>
       {/* タスクスロット */}
       {Array.from({ length: taskSlotCount }, (_, i) => (
