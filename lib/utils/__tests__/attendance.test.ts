@@ -550,6 +550,40 @@ describe("loadAttendanceData / saveAttendanceData", () => {
     expect(loaded!.months["2026-03"].days[1].tasks).toEqual(["テスト"]);
   });
 
+  it("旧データにcheckedがない場合はfalseで補完する", () => {
+    const oldData = {
+      months: {
+        "2026-03": {
+          yearMonth: "2026-03",
+          settings: getDefaultSettings(),
+          days: [
+            { date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: ["開発"] },
+          ],
+        },
+      },
+    };
+    localStorageMock.setItem("necobox-attendance", JSON.stringify(oldData));
+    const loaded = loadAttendanceData();
+    expect(loaded!.months["2026-03"].days[0].checked).toBe(false);
+  });
+
+  it("旧データにcheckboxLabelがない場合は空文字で補完する", () => {
+    const oldData = {
+      months: {
+        "2026-03": {
+          yearMonth: "2026-03",
+          settings: { defaultStartTime: "09:00", defaultEndTime: "18:00", defaultBreakMinutes: 60 },
+          days: [
+            { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
+          ],
+        },
+      },
+    };
+    localStorageMock.setItem("necobox-attendance", JSON.stringify(oldData));
+    const loaded = loadAttendanceData();
+    expect(loaded!.months["2026-03"].settings.checkboxLabel).toBe("");
+  });
+
   it("旧形式でbreakMinutesが欠落している場合はデフォルト60を補完する", () => {
     const oldData = {
       months: {
@@ -757,6 +791,27 @@ describe("importAttendanceJson", () => {
     const file = createFile("{}", 11 * 1024 * 1024);
     const result = await importAttendanceJson(file);
     expect(result).toBeNull();
+  });
+
+  it("checked/checkboxLabelがない旧データをインポート時に補完する", async () => {
+    const exportData = {
+      version: 1,
+      exportedAt: "2026-03-14T00:00:00.000Z",
+      data: {
+        months: {
+          "2026-03": {
+            yearMonth: "2026-03",
+            settings: { defaultStartTime: "09:00", defaultEndTime: "18:00", defaultBreakMinutes: 60 },
+            days: [{ date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: ["開発"] }],
+          },
+        },
+      },
+    };
+    const file = createFile(JSON.stringify(exportData));
+    const result = await importAttendanceJson(file);
+    expect(result).not.toBeNull();
+    expect(result!.months["2026-03"].days[0].checked).toBe(false);
+    expect(result!.months["2026-03"].settings.checkboxLabel).toBe("");
   });
 
   it("旧形式のデータもマイグレーションしてインポートできる", async () => {

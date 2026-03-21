@@ -52,7 +52,7 @@ export function AttendanceTable({
     settings.defaultBreakMinutes
   );
 
-  // データ内の最大タスク数（最低5）を初期値にし、+ボタンで増やせる
+  // データ内の最大タスク数（最低3）を初期値にし、+ボタンで増やせる
   const dataMax = Math.max(3, getMaxTaskCount(days));
   const [taskSlotCount, setTaskSlotCount] = useState(dataMax);
   // データが増えたら自動追従
