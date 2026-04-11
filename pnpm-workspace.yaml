@@ -2,3 +2,10 @@ onlyBuiltDependencies:
   - sharp
   - unrs-resolver
 minimumReleaseAge: 1440
+# GHSA-8f24-v5vv-gm5j (next-intl open redirect) の修正版 4.9.1 をリリース直後に取り込むため一時的に除外
+# next-intl と同一 monorepo から同時リリースされる関連パッケージもまとめて除外する
+minimumReleaseAgeExclude:
+  - next-intl
+  - next-intl-swc-plugin-extractor
+  - use-intl
+  - icu-minify
