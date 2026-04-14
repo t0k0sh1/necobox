@@ -1060,7 +1060,7 @@
   },
   "uuidGenerator": {
     "title": "UUID/ULIDジェネレーター",
-    "description": "UUID v4、UUID v7、ULID、Nanoidを生成",
+    "description": "UUID v4、UUID v7、ULID、Nanoidを生成します。UUID v7 と ULID では、埋め込む時刻を指定した日時の範囲内でランダムに選べます。",
     "breadcrumb": "UUID/ULIDジェネレーター",
     "tabs": {
       "uuidV4": "UUID v4",
@@ -1070,12 +1070,21 @@
     },
     "count": "生成数",
     "nanoidLength": "長さ",
+    "timeSourceTitle": "タイムスタンプ（UUID v7 / ULID）",
+    "timeModeNow": "現在の時刻を使う",
+    "timeModeRange": "期間内でランダムな時刻",
+    "rangeStart": "開始",
+    "rangeEnd": "終了",
+    "timeSourceHint": "日時はブラウザのローカルタイムゾーンで解釈されます。UUID v4 と Nanoid には時刻は埋め込まれません。",
     "generated": "生成されたID",
     "copyAll": "すべてコピー",
     "error": {
       "invalidCount": "生成数は1～100の間で指定してください",
       "invalidLength": "長さは1～256の間で指定してください",
-      "generateFailed": "生成に失敗しました"
+      "generateFailed": "生成に失敗しました",
+      "rangeRequired": "開始と終了の日時を入力してください。",
+      "invalidDateTime": "日時が無効です。",
+      "rangeInvalid": "時刻の範囲が無効です。開始が終了以前になるようにしてください。"
     }
   },
   "hashGenerator": {
