@@ -1,10 +1,18 @@
+import { decodeTime } from "ulid";
 import {
   generateUUIDv4,
   generateUUIDv7,
   generateULID,
   generateNanoid,
   batchGenerate,
+  pickRandomMsInRange,
 } from "../uuid-generator";
+
+/** UUID v7 先頭 48 ビットの Unix 時刻（ミリ秒）を取り出す */
+function parseUuidV7TimestampMs(uuid: string): number {
+  const hex = uuid.replace(/-/g, "").substring(0, 12);
+  return parseInt(hex, 16);
+}
 
 // UUID v4 のフォーマット: xxxxxxxx-xxxx-4xxx-[89ab]xxx-xxxxxxxxxxxx
 const UUID_V4_REGEX =
@@ -30,6 +38,32 @@ describe("generateUUIDv4", () => {
   });
 });
 
+describe("pickRandomMsInRange", () => {
+  it("区間内のミリ秒を返す", () => {
+    const min = 1_700_000_000_000;
+    const max = min + 10_000;
+    for (let i = 0; i < 50; i++) {
+      const ms = pickRandomMsInRange(min, max);
+      expect(ms).toBeGreaterThanOrEqual(min);
+      expect(ms).toBeLessThanOrEqual(max);
+    }
+  });
+
+  it("min と max が等しいときその値を返す", () => {
+    const t = 1_600_000_000_000;
+    expect(pickRandomMsInRange(t, t)).toBe(t);
+  });
+
+  it("min > max のとき RangeError", () => {
+    expect(() => pickRandomMsInRange(100, 50)).toThrow(RangeError);
+  });
+
+  it("非有限値のとき RangeError", () => {
+    expect(() => pickRandomMsInRange(NaN, 0)).toThrow(RangeError);
+    expect(() => pickRandomMsInRange(0, Infinity)).toThrow(RangeError);
+  });
+});
+
 describe("generateUUIDv7", () => {
   it("有効なUUID v7を生成する", () => {
     const uuid = generateUUIDv7();
@@ -41,12 +75,36 @@ describe("generateUUIDv7", () => {
     const uuid = generateUUIDv7();
     const after = Date.now();
 
-    // UUIDの先頭12文字（ハイフンを除く）がタイムスタンプ
-    const hex = uuid.replace(/-/g, "").substring(0, 12);
-    const timestamp = parseInt(hex, 16);
+    const timestamp = parseUuidV7TimestampMs(uuid);
 
     expect(timestamp).toBeGreaterThanOrEqual(before);
     expect(timestamp).toBeLessThanOrEqual(after);
+  });
+
+  it("UUID v7 range mode embeds timestamp in bounds", () => {
+    const minMs = 1_700_000_000_000;
+    const maxMs = minMs + 500_000;
+    for (let i = 0; i < 30; i++) {
+      const uuid = generateUUIDv7({
+        mode: "range",
+        minMs,
+        maxMs,
+      });
+      expect(uuid).toMatch(UUID_V7_REGEX);
+      const ts = parseUuidV7TimestampMs(uuid);
+      expect(ts).toBeGreaterThanOrEqual(minMs);
+      expect(ts).toBeLessThanOrEqual(maxMs);
+    }
+  });
+
+  it("期間が一点のとき常にそのタイムスタンプ", () => {
+    const t = 1_650_000_000_000;
+    const uuids = Array.from({ length: 20 }, () =>
+      generateUUIDv7({ mode: "range", minMs: t, maxMs: t })
+    );
+    uuids.forEach((uuid) => {
+      expect(parseUuidV7TimestampMs(uuid)).toBe(t);
+    });
   });
 });
 
@@ -61,6 +119,27 @@ describe("generateULID", () => {
     ids.forEach((id) => {
       expect(id).toHaveLength(26);
       expect(id).toMatch(ULID_REGEX);
+    });
+  });
+
+  it("ULID range mode keeps decodeTime in bounds", () => {
+    const minMs = 1_700_000_000_000;
+    const maxMs = minMs + 400_000;
+    for (let i = 0; i < 30; i++) {
+      const id = generateULID({ mode: "range", minMs, maxMs });
+      const ts = decodeTime(id);
+      expect(ts).toBeGreaterThanOrEqual(minMs);
+      expect(ts).toBeLessThanOrEqual(maxMs);
+    }
+  });
+
+  it("期間が一点のとき decodeTime が固定", () => {
+    const t = 1_640_000_000_000;
+    const ids = Array.from({ length: 15 }, () =>
+      generateULID({ mode: "range", minMs: t, maxMs: t })
+    );
+    ids.forEach((id) => {
+      expect(decodeTime(id)).toBe(t);
     });
   });
 });
@@ -99,5 +178,26 @@ describe("batchGenerate", () => {
   it("Nanoidのカスタム長さを指定できる", () => {
     const results = batchGenerate("nanoid", 3, { nanoidLength: 10 });
     results.forEach((id) => expect(id).toHaveLength(10));
+  });
+
+  it("UUID v7 で timeSource 期間指定が反映される", () => {
+    const minMs = 1_690_000_000_000;
+    const maxMs = minMs + 100_000;
+    const results = batchGenerate("uuidV7", 25, {
+      timeSource: { mode: "range", minMs, maxMs },
+    });
+    results.forEach((uuid) => {
+      const ts = parseUuidV7TimestampMs(uuid);
+      expect(ts).toBeGreaterThanOrEqual(minMs);
+      expect(ts).toBeLessThanOrEqual(maxMs);
+    });
+  });
+
+  it("無効な期間では batchGenerate が例外を投げる", () => {
+    expect(() =>
+      batchGenerate("uuidV7", 1, {
+        timeSource: { mode: "range", minMs: 100, maxMs: 50 },
+      })
+    ).toThrow(RangeError);
   });
 });

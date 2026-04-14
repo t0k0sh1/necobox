@@ -1060,7 +1060,7 @@
   },
   "uuidGenerator": {
     "title": "UUID/ULID Generator",
-    "description": "Generate UUID v4, UUID v7, ULID, and Nanoid",
+    "description": "Generate UUID v4, UUID v7, ULID, and Nanoid. For UUID v7 and ULID you can fix the embedded timestamp to a random millisecond within a date/time range.",
     "breadcrumb": "UUID/ULID Generator",
     "tabs": {
       "uuidV4": "UUID v4",
@@ -1070,12 +1070,21 @@
     },
     "count": "Count",
     "nanoidLength": "Length",
+    "timeSourceTitle": "Timestamp (UUID v7 / ULID)",
+    "timeModeNow": "Use current time",
+    "timeModeRange": "Random time within range",
+    "rangeStart": "Start",
+    "rangeEnd": "End",
+    "timeSourceHint": "Values use your browser\u2019s local timezone. UUID v4 and Nanoid have no embedded timestamp.",
     "generated": "Generated IDs",
     "copyAll": "Copy All",
     "error": {
       "invalidCount": "Count must be between 1 and 100",
       "invalidLength": "Length must be between 1 and 256",
-      "generateFailed": "Failed to generate"
+      "generateFailed": "Failed to generate",
+      "rangeRequired": "Enter both start and end date/time.",
+      "invalidDateTime": "Invalid date or time.",
+      "rangeInvalid": "Invalid time range. Ensure start is on or before end."
     }
   },
   "hashGenerator": {
