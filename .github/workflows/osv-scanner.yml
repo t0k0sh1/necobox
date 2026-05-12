@@ -22,16 +22,18 @@ on:
       - '**'
 
 permissions:
-  # Required to upload SARIF file to CodeQL. See: https://github.com/github/codeql-action/issues/2117
-  actions: read
-  # Require writing security events to upload SARIF file to security tab
-  security-events: write
-  # Read commit contents
   contents: read
 
 jobs:
   scan-scheduled:
     if: ${{ github.event_name == 'push' || github.event_name == 'schedule' }}
+    permissions:
+      # Required to upload SARIF file to CodeQL. See: https://github.com/github/codeql-action/issues/2117
+      actions: read
+      # Require writing security events to upload SARIF file to security tab
+      security-events: write
+      # Read commit contents
+      contents: read
     uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@f8af5221bae5d45891ae7a23c2f3d0c938334355" # v1.8.2
     with:
       # Example of specifying custom arguments
@@ -41,6 +43,8 @@ jobs:
         ./
   scan-pr:
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
+    permissions:
+      contents: read
     uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@f8af5221bae5d45891ae7a23c2f3d0c938334355" # v1.8.2
     with:
       # Example of specifying custom arguments
