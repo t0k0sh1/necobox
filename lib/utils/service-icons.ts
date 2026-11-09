@@ -1,27 +1,28 @@
 import {
   Activity,
+  AtSign,
   type LucideIcon,
   Box,
   Brain,
   Cloud,
   CloudCog,
   Code2,
-  Figma,
   GitBranch,
   Globe,
   HardDrive,
   MessageSquare,
   Monitor,
+  PenTool,
   Rocket,
   Shield,
   Sparkles,
-  Twitter,
   Video,
   Zap,
   CreditCard,
 } from "lucide-react";
 
 // サービスID→lucide-reactアイコンのマッピング
+// lucide-react 1.x でブランドアイコン(Figma / Twitter)が削除されたため、汎用アイコンで代用している
 const SERVICE_ICON_MAP: Record<string, LucideIcon> = {
   aws: Cloud,
   azure: CloudCog,
@@ -40,9 +41,9 @@ const SERVICE_ICON_MAP: Record<string, LucideIcon> = {
   cloudflare: Shield,
   openai: Brain,
   anthropic: Sparkles,
-  figma: Figma,
+  figma: PenTool,
   stripe: CreditCard,
-  x: Twitter,
+  x: AtSign,
 };
 
 export function getServiceIcon(serviceId: string): LucideIcon {
