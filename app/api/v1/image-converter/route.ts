@@ -1,4 +1,4 @@
-import archiver from "archiver";
+import { ZipArchive } from "archiver";
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     // Create ZIP file for multiple files or when explicitly requested
     return new Promise<Response>((resolve, reject) => {
       const chunks: Uint8Array[] = [];
-      const archive = archiver("zip", {
+      const archive = new ZipArchive({
         zlib: { level: 9 },
       });
 
