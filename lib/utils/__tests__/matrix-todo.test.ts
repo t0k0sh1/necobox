@@ -331,8 +331,8 @@ describe("matrix-todo", () => {
         },
       };
 
-      // description フィールドがないデータでも読み込める
-      saveMatrixData(data);
+      // description フィールドがないデータでも読み込める(旧形式データを表すため型を緩めて渡す)
+      saveMatrixData(data as unknown as Parameters<typeof saveMatrixData>[0]);
       const loaded = loadMatrixData();
       expect(loaded).not.toBeNull();
       expect(loaded?.tasks[0].description).toBeUndefined();

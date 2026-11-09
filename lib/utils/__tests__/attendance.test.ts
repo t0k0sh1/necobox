@@ -197,6 +197,7 @@ describe("getDaysInMonth", () => {
 
 describe("calcMonthlyTotal", () => {
   const settings: MonthSettings = {
+    checkboxLabel: "",
     defaultStartTime: "09:00",
     defaultEndTime: "18:00",
     defaultBreakMinutes: 60,
@@ -205,6 +206,7 @@ describe("calcMonthlyTotal", () => {
   it("入力済み日のみで正しく計算する", () => {
     const days: DailyAttendance[] = [
       {
+        checked: false,
         date: "2026-03-16",
         startTime: "09:00",
         endTime: "18:00",
@@ -212,6 +214,7 @@ describe("calcMonthlyTotal", () => {
         tasks: [],
       },
       {
+        checked: false,
         date: "2026-03-17",
         startTime: "10:00",
         endTime: "19:00",
@@ -229,6 +232,7 @@ describe("calcMonthlyTotal", () => {
   it("未入力の平日はデフォルト勤務時間で補完する", () => {
     const days: DailyAttendance[] = [
       {
+        checked: false,
         date: "2026-03-16",
         startTime: null,
         endTime: null,
@@ -246,6 +250,7 @@ describe("calcMonthlyTotal", () => {
   it("未入力の土日は加算しない", () => {
     const days: DailyAttendance[] = [
       {
+        checked: false,
         date: "2026-03-14",
         startTime: null,
         endTime: null,
@@ -263,6 +268,7 @@ describe("calcMonthlyTotal", () => {
   it("入力済みの土日は加算する", () => {
     const days: DailyAttendance[] = [
       {
+        checked: false,
         date: "2026-03-14",
         startTime: "10:00",
         endTime: "15:00",
@@ -286,8 +292,8 @@ describe("collectTaskSuggestions", () => {
           yearMonth: "2026-03",
           settings: getDefaultSettings(),
           days: [
-            { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発", "レビュー"] },
-            { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"] },
+            { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発", "レビュー"], checked: false },
+            { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"], checked: false },
           ],
         },
       },
@@ -299,16 +305,16 @@ describe("collectTaskSuggestions", () => {
 describe("getMaxTaskCount", () => {
   it("最大タスク数を返す", () => {
     const days: DailyAttendance[] = [
-      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["A"] },
-      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: ["A", "B", "C"] },
-      { date: "2026-03-03", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["A"], checked: false },
+      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: ["A", "B", "C"], checked: false },
+      { date: "2026-03-03", startTime: null, endTime: null, breakMinutes: 60, tasks: [], checked: false },
     ];
     expect(getMaxTaskCount(days)).toBe(3);
   });
 
   it("タスクがない場合は1を返す", () => {
     const days: DailyAttendance[] = [
-      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [], checked: false },
     ];
     expect(getMaxTaskCount(days)).toBe(1);
   });
@@ -317,9 +323,9 @@ describe("getMaxTaskCount", () => {
 describe("aggregateTaskCounts", () => {
   it("タスク名ごとの作業日数を集計し日数降順で返す", () => {
     const days: DailyAttendance[] = [
-      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発", "レビュー"] },
-      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"] },
-      { date: "2026-03-03", startTime: null, endTime: null, breakMinutes: 60, tasks: ["テスト", "レビュー"] },
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発", "レビュー"], checked: false },
+      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"], checked: false },
+      { date: "2026-03-03", startTime: null, endTime: null, breakMinutes: 60, tasks: ["テスト", "レビュー"], checked: false },
     ];
     const result = aggregateTaskCounts(days);
     expect(result).toEqual([
@@ -331,7 +337,7 @@ describe("aggregateTaskCounts", () => {
 
   it("同じ日に同じタスクが複数あっても1日としてカウントする", () => {
     const days: DailyAttendance[] = [
-      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発", "開発"] },
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発", "開発"], checked: false },
     ];
     const result = aggregateTaskCounts(days);
     expect(result).toEqual([{ task: "開発", days: 1 }]);
@@ -339,7 +345,7 @@ describe("aggregateTaskCounts", () => {
 
   it("タスクがない場合は空配列を返す", () => {
     const days: DailyAttendance[] = [
-      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [], checked: false },
     ];
     expect(aggregateTaskCounts(days)).toEqual([]);
   });
@@ -348,9 +354,9 @@ describe("aggregateTaskCounts", () => {
 describe("getDailyTaskList", () => {
   it("タスクがある日のみ抽出する", () => {
     const days: DailyAttendance[] = [
-      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"] },
-      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
-      { date: "2026-03-03", startTime: null, endTime: null, breakMinutes: 60, tasks: ["テスト", "レビュー"] },
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"], checked: false },
+      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: [], checked: false },
+      { date: "2026-03-03", startTime: null, endTime: null, breakMinutes: 60, tasks: ["テスト", "レビュー"], checked: false },
     ];
     const result = getDailyTaskList(days);
     expect(result).toEqual([
@@ -361,15 +367,15 @@ describe("getDailyTaskList", () => {
 
   it("タスクがない場合は空配列を返す", () => {
     const days: DailyAttendance[] = [
-      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [], checked: false },
     ];
     expect(getDailyTaskList(days)).toEqual([]);
   });
 
   it("空文字のタスクはフィルタリングされる", () => {
     const days: DailyAttendance[] = [
-      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["", "開発"] },
-      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: [""] },
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["", "開発"], checked: false },
+      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: [""], checked: false },
     ];
     const result = getDailyTaskList(days);
     expect(result).toEqual([
@@ -381,10 +387,10 @@ describe("getDailyTaskList", () => {
 describe("getTaskPeriods", () => {
   it("タスクごとの開始日・終了日・出現日数を開始日昇順で返す", () => {
     const days: DailyAttendance[] = [
-      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"] },
-      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: ["レビュー"] },
-      { date: "2026-03-03", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発", "レビュー"] },
-      { date: "2026-03-05", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"] },
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"], checked: false },
+      { date: "2026-03-02", startTime: null, endTime: null, breakMinutes: 60, tasks: ["レビュー"], checked: false },
+      { date: "2026-03-03", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発", "レビュー"], checked: false },
+      { date: "2026-03-05", startTime: null, endTime: null, breakMinutes: 60, tasks: ["開発"], checked: false },
     ];
     const result = getTaskPeriods(days);
     expect(result).toEqual([
@@ -395,7 +401,7 @@ describe("getTaskPeriods", () => {
 
   it("1日のみのタスクは開始日と終了日が同じになる", () => {
     const days: DailyAttendance[] = [
-      { date: "2026-03-10", startTime: null, endTime: null, breakMinutes: 60, tasks: ["ミーティング"] },
+      { date: "2026-03-10", startTime: null, endTime: null, breakMinutes: 60, tasks: ["ミーティング"], checked: false },
     ];
     const result = getTaskPeriods(days);
     expect(result).toEqual([
@@ -405,7 +411,7 @@ describe("getTaskPeriods", () => {
 
   it("タスクがない場合は空配列を返す", () => {
     const days: DailyAttendance[] = [
-      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [] },
+      { date: "2026-03-01", startTime: null, endTime: null, breakMinutes: 60, tasks: [], checked: false },
     ];
     expect(getTaskPeriods(days)).toEqual([]);
   });
@@ -430,6 +436,7 @@ describe("getOrCreateMonth", () => {
 
   it("存在しない月を前月設定を引き継いで生成する", () => {
     const customSettings: MonthSettings = {
+      checkboxLabel: "",
       defaultStartTime: "10:00",
       defaultEndTime: "19:00",
       defaultBreakMinutes: 45,
@@ -464,6 +471,7 @@ describe("getOrCreateMonth", () => {
 
   it("1月の場合は前年12月の設定を引き継ぐ", () => {
     const customSettings: MonthSettings = {
+      checkboxLabel: "",
       defaultStartTime: "08:30",
       defaultEndTime: "17:30",
       defaultBreakMinutes: 45,
@@ -609,7 +617,7 @@ describe("exportAttendanceData", () => {
         "2026-03": {
           yearMonth: "2026-03",
           settings: getDefaultSettings(),
-          days: [{ date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: ["開発"] }],
+          days: [{ date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: ["開発"], checked: false }],
         },
       },
     };
@@ -630,7 +638,7 @@ describe("validateAttendanceExportData", () => {
         "2026-03": {
           yearMonth: "2026-03",
           settings: getDefaultSettings(),
-          days: [{ date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: [] }],
+          days: [{ date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: [], checked: false }],
         },
       },
     },
@@ -764,7 +772,7 @@ describe("importAttendanceJson", () => {
           "2026-03": {
             yearMonth: "2026-03",
             settings: getDefaultSettings(),
-            days: [{ date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: ["開発"] }],
+            days: [{ date: "2026-03-01", startTime: "09:00", endTime: "18:00", breakMinutes: 60, tasks: ["開発"], checked: false }],
           },
         },
       },
