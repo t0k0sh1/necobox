@@ -29,7 +29,7 @@ async function getZxcvbn(): Promise<(password: string) => ZxcvbnResult> {
 
   zxcvbnPromise = (async () => {
     try {
-      const [{ zxcvbn, zxcvbnOptions }, common, en] = await Promise.all([
+      const [{ ZxcvbnFactory }, common, en] = await Promise.all([
         import("@zxcvbn-ts/core"),
         import("@zxcvbn-ts/language-common"),
         import("@zxcvbn-ts/language-en"),
@@ -41,7 +41,7 @@ async function getZxcvbn(): Promise<(password: string) => ZxcvbnResult> {
       const enDict = en.dictionary ?? en.default?.dictionary;
       const enTranslations = en.translations ?? en.default?.translations;
 
-      zxcvbnOptions.setOptions({
+      const factory = new ZxcvbnFactory({
         graphs: adjacencyGraphs,
         dictionary: {
           ...commonDict,
@@ -50,7 +50,7 @@ async function getZxcvbn(): Promise<(password: string) => ZxcvbnResult> {
         translations: enTranslations,
       });
 
-      return zxcvbn;
+      return (password: string) => factory.check(password);
     } catch (error) {
       // 初期化失敗時はキャッシュをクリアしてリトライ可能にする
       zxcvbnPromise = null;
@@ -166,8 +166,8 @@ export async function evaluatePasswordStrength(
 
   return {
     score: finalScore,
-    crackTimeDisplay:
-      result.crackTimesDisplay.offlineSlowHashing1e4PerSecond as string,
+    // オフライン・低速ハッシュ（既定で毎秒 1e4 回の試行）を想定した表示
+    crackTimeDisplay: result.crackTimes.offlineSlowHashingXPerSecond.display,
     feedback: {
       warning: result.feedback.warning ?? "",
       suggestions: result.feedback.suggestions ?? [],

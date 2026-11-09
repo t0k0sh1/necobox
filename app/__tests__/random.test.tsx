@@ -6,12 +6,17 @@ global.fetch = jest.fn();
 
 // Mock zxcvbn（動的importをモック）
 jest.mock("@zxcvbn-ts/core", () => ({
-  zxcvbn: (password: string) => ({
-    score: password.length >= 16 ? 4 : password.length >= 8 ? 2 : 0,
-    crackTimesDisplay: { offlineSlowHashing1e4PerSecond: "centuries" },
-    feedback: { warning: "", suggestions: [] },
-  }),
-  zxcvbnOptions: { setOptions: jest.fn() },
+  ZxcvbnFactory: class {
+    check(password: string) {
+      return {
+        score: password.length >= 16 ? 4 : password.length >= 8 ? 2 : 0,
+        crackTimes: {
+          offlineSlowHashingXPerSecond: { display: "centuries" },
+        },
+        feedback: { warning: "", suggestions: [] },
+      };
+    }
+  },
 }));
 jest.mock("@zxcvbn-ts/language-common", () => ({
   default: { adjacencyGraphs: {}, dictionary: {} },

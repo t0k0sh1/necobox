@@ -4,6 +4,7 @@ import {
   countCodePoints,
   estimateCharsetSize,
   calculateEntropy,
+  evaluatePasswordStrength,
 } from "../password-strength";
 
 describe("countCharacterTypes", () => {
@@ -257,5 +258,53 @@ describe("evaluateNistCompliance", () => {
     const result = evaluateNistCompliance("correct horse battery staple");
     expect(result.level).toBe("compliant");
     expect(result.currentLength).toBe(28);
+  });
+});
+
+// 実物の @zxcvbn-ts を通すテスト。
+// ライブラリの API 変更（結果の形・オプションの渡し方）を検知するため、モックを使わない。
+describe("evaluatePasswordStrength（実物の @zxcvbn-ts を使用）", () => {
+  it("空文字はスコア 0 で空の結果を返す", async () => {
+    const result = await evaluatePasswordStrength("");
+    expect(result).toEqual({
+      score: 0,
+      crackTimeDisplay: "",
+      feedback: { warning: "", suggestions: [] },
+    });
+  });
+
+  it("よく使われるパスワードはスコア 0 で、英語の警告文と提案が付く", async () => {
+    const result = await evaluatePasswordStrength("password");
+    expect(result.score).toBe(0);
+    // 辞書と英語の翻訳がオプションとして渡されていること（翻訳キーのままではない）
+    expect(result.feedback.warning).toMatch(/heavily used/i);
+    expect(result.feedback.suggestions.length).toBeGreaterThan(0);
+    expect(result.crackTimeDisplay).toMatch(/less than a second/i);
+  });
+
+  it("キーボード配列のパターンを検出する", async () => {
+    const result = await evaluatePasswordStrength("qwertyuiop");
+    expect(result.score).toBe(0);
+    expect(result.feedback.warning).toMatch(/frequently used/i);
+  });
+
+  it("警告がない場合 feedback.warning は空文字になる（null にならない）", async () => {
+    const result = await evaluatePasswordStrength("Xk9#mPq2$vLz8@wN4!");
+    expect(result.feedback.warning).toBe("");
+    expect(Array.isArray(result.feedback.suggestions)).toBe(true);
+  });
+
+  it("ランダムで長いパスワードは高スコアで、クラック推定時間が表示される", async () => {
+    // 95 文字種 × 18 文字 ≒ 118 ビットのため、エントロピー上限により最大 3
+    const result = await evaluatePasswordStrength("Xk9#mPq2$vLz8@wN4!");
+    expect(result.score).toBe(3);
+    expect(typeof result.crackTimeDisplay).toBe("string");
+    expect(result.crackTimeDisplay.length).toBeGreaterThan(0);
+  });
+
+  it("日本語のパスワードも評価できる", async () => {
+    const result = await evaluatePasswordStrength("あいうえおかきくけこ");
+    expect(result.score).toBeLessThanOrEqual(1);
+    expect(result.crackTimeDisplay.length).toBeGreaterThan(0);
   });
 });
