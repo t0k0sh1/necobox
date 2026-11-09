@@ -1087,6 +1087,7 @@ export const DomainModelingCanvas = forwardRef<CanvasHandle, DomainModelingCanva
                   label={t(`connection.pattern.${p}`)}
                   abbr={CONTEXT_MAPPING_PATTERN_ABBR[p]}
                   color={CONTEXT_MAPPING_CATEGORY_COLORS[CONTEXT_MAPPING_PATTERN_TO_CATEGORY[p]]}
+                  // eslint-disable-next-line react-hooks/refs -- handlePatternChange が boardRef を読むのはクリック時のみで、render 中には呼ばれない
                   onClick={() => handlePatternChange(patternPopup.connId, p)}
                 />
               ))}

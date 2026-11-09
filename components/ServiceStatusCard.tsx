@@ -19,7 +19,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { createElement, useMemo, useState } from "react";
 
 // DownDetector のページが存在しないサービス
 const SERVICES_WITHOUT_DOWNDETECTOR = new Set(["jira"]);
@@ -153,8 +153,6 @@ export function ServiceStatusCard({
     }
   };
 
-  const ServiceIcon = getServiceIcon(service.id);
-
   // ロケールに応じた DownDetector URL
   const downdetectorUrl = useMemo(() => {
     if (!service.downdetectorUrl || SERVICES_WITHOUT_DOWNDETECTOR.has(service.id)) return undefined;
@@ -179,7 +177,10 @@ export function ServiceStatusCard({
       {/* ヘッダー: アイコン + サービス名 + アクションボタン */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
-          <ServiceIcon className="w-5 h-5 mt-0.5 flex-shrink-0 text-gray-600 dark:text-gray-400" />
+          {createElement(getServiceIcon(service.id), {
+            className:
+              "w-5 h-5 mt-0.5 flex-shrink-0 text-gray-600 dark:text-gray-400",
+          })}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">

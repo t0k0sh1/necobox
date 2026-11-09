@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 
 interface MapViewProps {
   lat: number;
@@ -10,16 +10,19 @@ interface MapViewProps {
   country?: string;
 }
 
+// クライアントかどうかの判定用（購読する外部状態はない）
+const subscribeNoop = () => () => {};
+
 export function MapView({ lat, lon, city, country }: MapViewProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const [isClient, setIsClient] = useState(false);
+  const isClient = useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false
+  );
   const t = useTranslations("ipInfo");
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   useEffect(() => {
     if (!isClient || !mapContainerRef.current || mapRef.current) return;
