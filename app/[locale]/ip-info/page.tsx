@@ -73,7 +73,9 @@ export default function IPInfoPage() {
   const hasAutoSearched = useRef(false);
   // 翻訳関数の参照を安定化（useEffectの依存配列から除外するため）
   const tRef = useRef(t);
-  tRef.current = t;
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   /**
    * IP情報を検索する共通関数

@@ -98,6 +98,7 @@ export default function MatrixTodoPage() {
   useEffect(() => {
     const data = loadMatrixData();
     if (data) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- マウント時に localStorage から復元する（SSR との不一致を避けるため effect で実施）
       setTasks(data.tasks);
       setConfig(data.config);
       // taskOrder があればそれを使い、なければ createdAt 順で生成

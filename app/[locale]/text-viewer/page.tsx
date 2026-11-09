@@ -569,15 +569,15 @@ export default function TextViewerPage() {
     return baseFiltered.filter(item => !pinnedSet.has(item.originalIndex));
   }, [lines, searchText, isRegex, regexValidation.isValid, activeFile, getDelimiter, pinnedSet]);
 
-  // フィルタ変更時に選択を解除
-  useEffect(() => {
+  // フィルタ変更時・ファイル切り替え時に選択を解除
+  // （effect ではなく render 中に前回値と比較して state を調整する）
+  const selectionResetKey = JSON.stringify([activeFileId, searchText, isRegex]);
+  const [prevSelectionResetKey, setPrevSelectionResetKey] =
+    useState(selectionResetKey);
+  if (prevSelectionResetKey !== selectionResetKey) {
+    setPrevSelectionResetKey(selectionResetKey);
     setSelection({ anchorIndex: null, focusIndex: null });
-  }, [searchText, isRegex]);
-
-  // ファイル切り替え時に選択を解除
-  useEffect(() => {
-    setSelection({ anchorIndex: null, focusIndex: null });
-  }, [activeFileId]);
+  }
 
   // テキスト選択検出
   useEffect(() => {
@@ -1250,6 +1250,7 @@ export default function TextViewerPage() {
                 </TabsList>
 
                 {/* タブコンテンツ */}
+                {/* eslint-disable-next-line react-hooks/refs -- ref は onScroll / rangeChanged などのイベントコールバック内でのみ読み書きしており、render 中には参照していない */}
                 {files.map((file) => (
                   <TabsContent key={file.id} value={file.id} className="mt-4">
                     {/* ファイル情報 */}

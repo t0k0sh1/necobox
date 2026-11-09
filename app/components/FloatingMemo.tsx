@@ -72,6 +72,7 @@ export function FloatingMemo({
       const y = Math.max(50, window.innerHeight - size.height - 100);
       updatePosition({ x, y });
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 初期位置は一度だけ設定するためのフラグ（ウィンドウサイズ依存のため effect で実施）
     setHasSetInitialPosition(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- updatePosition is stable, size is only needed for initial calc
   }, [isInitialized, isOpen, hasSetInitialPosition]);

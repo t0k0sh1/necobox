@@ -99,16 +99,17 @@ export function Combobox({
   }, [highlightedIndex]);
 
   // ポップオーバーが閉じたらハイライトをリセット
-  React.useEffect(() => {
-    if (!open) {
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) {
       setHighlightedIndex(-1);
     }
-  }, [open]);
+  };
 
   const hasOptions = options.length > 0;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverAnchor asChild>
         <div className={cn("relative", className)} onKeyDown={handleKeyDown}>
           <input

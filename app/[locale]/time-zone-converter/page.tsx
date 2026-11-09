@@ -47,6 +47,7 @@ export default function TimeZoneConverterPage() {
 
   useEffect(() => {
     const now = new Date();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- マウント時にクライアントの現在時刻で初期化する（SSR との不一致を避けるため effect で実施）
     setYear(String(now.getFullYear()));
     setMonth(String(now.getMonth() + 1));
     setDay(String(now.getDate()));

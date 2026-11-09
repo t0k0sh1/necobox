@@ -172,13 +172,10 @@ export default function RandomPasswordPage() {
     }
   };
 
-  // noRepeat自動無効化
-  useEffect(() => {
-    if (!isNoRepeatAvailable() && noRepeat) {
-      setNoRepeat(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [length, uppercase, lowercase, numbers, symbols, spaces, unicode, noRepeat]);
+  // noRepeat自動無効化（利用不可になったら render 中に state を調整する）
+  if (!isNoRepeatAvailable() && noRepeat) {
+    setNoRepeat(false);
+  }
 
   // 長さデバウンス
   useEffect(() => {
@@ -190,6 +187,7 @@ export default function RandomPasswordPage() {
 
   // 生成タブ: 設定変更時にパスワード生成
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 設定変更に応じて API からパスワードを再生成する（結果は非同期で state に反映）
     generatePassword();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -207,6 +205,7 @@ export default function RandomPasswordPage() {
   // 生成タブ: パスワード変更時に強度評価
   useEffect(() => {
     if (activeTab === "generate" && generatedPassword) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- パスワード変更時に API で強度を評価する（結果は非同期で state に反映）
       evaluatePassword(generatedPassword);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -221,6 +220,7 @@ export default function RandomPasswordPage() {
     }
 
     if (!checkPassword) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 入力が空になったら評価結果をクリアする（入力内容に応じて API で評価）
       setStrengthResult(null);
       setNistResult(null);
       setHibpResult(null);
@@ -241,6 +241,7 @@ export default function RandomPasswordPage() {
 
   // タブ切替時に評価結果をリセットして再評価
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- タブ切替時に評価結果をリセットして再評価する（評価結果は非同期で state に反映）
     setStrengthResult(null);
     setNistResult(null);
     setHibpResult(null);
