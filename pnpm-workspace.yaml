@@ -1,9 +1,21 @@
-onlyBuiltDependencies:
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
+  '@parcel/watcher': false
+  '@swc/core': false
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - next-intl
   - use-intl
   - icu-minify
   - next-intl-swc-plugin-extractor
+overrides:
+  diff: ^8.0.3
+  ajv: ~6.14.0
+  flatted: '>=3.4.0'
+  minimatch: '>=10.2.3'
+  postcss: '>=8.5.10'
+  underscore: '>=1.13.8'
+peerDependencyRules:
+  ignoreMissing:
+    - '@playwright/test'
