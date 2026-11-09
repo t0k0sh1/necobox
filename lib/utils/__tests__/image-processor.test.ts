@@ -148,7 +148,7 @@ describe("image-processor", () => {
     });
 
     it("Canvas context取得失敗でrejectする", async () => {
-      mockGetContext.mockReturnValueOnce(null);
+      mockGetContext.mockReturnValueOnce(null as never);
       const file = createMockFile();
       await expect(processImage(file, 400)).rejects.toThrow(
         "Failed to get canvas context"
